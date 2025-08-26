@@ -1816,7 +1816,7 @@
         "testStrategy": "各種バリデーションルールの動作確認、エラーメッセージの正確性テスト、パフォーマンステスト（1000個のバリデーションルール）、スキーママイグレーションテスト",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1824,7 +1824,7 @@
             "description": "JSON Schema と Zod スキーマを統合管理する SchemaManager クラスを実装し、バリデーションの基盤を構築する",
             "dependencies": [],
             "details": "SchemaManager クラスを src/core/validation/SchemaManager.ts に実装。Zod スキーマと JSON Schema の両方を扱える統一インターフェースを提供。スキーマの登録、取得、更新、削除の基本操作を実装。バリデーション結果を統一フォーマットで返すメソッドを追加。既存の src/types/mindmap.ts の Zod スキーマを活用し、zod-to-json-schema パッケージを使用して JSON Schema への変換機能を実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "SchemaManager の基本操作（CRUD）のユニットテスト、Zod から JSON Schema への変換精度テスト、バリデーション結果の整合性テスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T14:43:04.423Z",
+      "updated": "2025-08-26T15:13:18.998Z",
       "description": "Tasks for master context"
     }
   }

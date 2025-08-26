@@ -6,6 +6,70 @@ import { MindmapTreeDataProvider, MindmapTreeItem } from './MindmapTreeDataProvi
 
 // アクティブなプレビューパネルを管理
 const previewPanels = new Map<string, vscode.WebviewPanel>();
+let diagnosticCollection: vscode.DiagnosticCollection | null = null;
+
+function ensureDiagnosticCollection(context: vscode.ExtensionContext) {
+    if (!diagnosticCollection) {
+        diagnosticCollection = vscode.languages.createDiagnosticCollection('mindmap');
+        context.subscriptions.push(diagnosticCollection);
+    }
+    return diagnosticCollection;
+}
+
+function makeRange(document: vscode.TextDocument, line: number, startCol = 0, endCol?: number) {
+    const l = Math.max(0, Math.min(line, document.lineCount - 1));
+    const textLine = document.lineAt(l);
+    const start = new vscode.Position(l, Math.max(0, Math.min(startCol, textLine.text.length)));
+    const end = new vscode.Position(l, endCol != null ? Math.max(0, Math.min(endCol, textLine.text.length)) : textLine.text.length);
+    return new vscode.Range(start, end);
+}
+
+async function validateDocumentToDiagnostics(document: vscode.TextDocument): Promise<{ errors: number; warnings: number }> {
+    const diags: vscode.Diagnostic[] = [];
+    const isJSON = document.languageId === 'json' || document.fileName.toLowerCase().endsWith('.json');
+    const isYAML = document.languageId === 'yaml' || /\.(ya?ml)$/i.test(document.fileName);
+
+    const add = (msg: string, severity: vscode.DiagnosticSeverity, line = 0) => {
+        diags.push(new vscode.Diagnostic(makeRange(document, line), msg, severity));
+    };
+
+    const text = document.getText();
+    let data: any = null;
+    if (isJSON) {
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            add(`JSON構文エラー: ${(e as Error).message}`, vscode.DiagnosticSeverity.Error, 0);
+        }
+    } else if (isYAML) {
+        // 依存を増やさないため、ここではYAML構文検証は行わない
+        add('YAMLの詳細検証は未対応です（JSON対象の検証のみ）', vscode.DiagnosticSeverity.Information, 0);
+    }
+
+    if (data && typeof data === 'object') {
+        const req: Array<[string, (v: any) => boolean, string]> = [
+            ['version', (v) => typeof v === 'string', 'version は文字列が必要です'],
+            ['title', (v) => typeof v === 'string', 'title は文字列が必要です'],
+            ['root', (v) => v && typeof v === 'object', 'root はオブジェクトが必要です'],
+        ];
+        for (const [k, pred, msg] of req) {
+            if (!(k in data) || !pred((data as any)[k])) {
+                add(`必須フィールド '${k}' が不正です: ${msg}`, vscode.DiagnosticSeverity.Error, 0);
+            }
+        }
+        if (data.root && typeof data.root === 'object') {
+            if (typeof data.root.id !== 'string') add('root.id は文字列が必要です', vscode.DiagnosticSeverity.Error, 0);
+            if (typeof data.root.title !== 'string') add('root.title は文字列が必要です', vscode.DiagnosticSeverity.Error, 0);
+        }
+    }
+
+    if (!diagnosticCollection) return { errors: 0, warnings: 0 };
+    diagnosticCollection.set(document.uri, diags);
+    return {
+        errors: diags.filter(d => d.severity === vscode.DiagnosticSeverity.Error).length,
+        warnings: diags.filter(d => d.severity === vscode.DiagnosticSeverity.Warning).length,
+    };
+}
 
 /**
  * VSCode拡張のメインエントリーポイント
@@ -208,7 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
 
-        // スキーマ検証コマンド
+        // スキーマ検証コマンド（VSCode Diagnostics へ反映）
         vscode.commands.registerCommand('mindmapTool.validateSchema', async () => {
             try {
                 const activeEditor = vscode.window.activeTextEditor;
@@ -218,10 +282,9 @@ export function activate(context: vscode.ExtensionContext) {
                 }
 
                 const document = activeEditor.document;
-                const _content = document.getText();
-
-                // スキーマ検証の実行（実装は将来追加）
-                vscode.window.showInformationMessage('スキーマ検証機能は開発中です');
+                ensureDiagnosticCollection(context);
+                const { errors, warnings } = await validateDocumentToDiagnostics(document);
+                vscode.window.showInformationMessage(`スキーマ検証: エラー ${errors} 件 / 警告 ${warnings} 件`);
                 
             } catch (error) {
                 vscode.window.showErrorMessage(`スキーマ検証に失敗しました: ${error}`);
@@ -609,7 +672,7 @@ async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscod
         );
 
         // ドキュメント変更の監視
-        const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
+        const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async e => {
             if (e.document.uri.toString() === panelKey) {
                 // ドキュメントが変更されたらWebviewに通知
                 panel?.webview.postMessage({
@@ -618,6 +681,9 @@ async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscod
                     fileName: e.document.fileName,
                     uri: e.document.uri.toString()
                 });
+                // Diagnostics更新
+                ensureDiagnosticCollection(context);
+                await validateDocumentToDiagnostics(e.document);
             }
         });
 
