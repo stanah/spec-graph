@@ -8,10 +8,15 @@ import { MindmapTreeDataProvider, MindmapTreeItem } from './MindmapTreeDataProvi
 const previewPanels = new Map<string, vscode.WebviewPanel>();
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 
-function ensureDiagnosticCollection(context: vscode.ExtensionContext) {
-    if (!diagnosticCollection) {
-        diagnosticCollection = vscode.languages.createDiagnosticCollection('mindmap');
-        context.subscriptions.push(diagnosticCollection);
+function ensureDiagnosticCollection(context: vscode.ExtensionContext): vscode.DiagnosticCollection | null {
+    try {
+        if (!diagnosticCollection && (vscode as any).languages?.createDiagnosticCollection) {
+            diagnosticCollection = vscode.languages.createDiagnosticCollection('mindmap');
+            context.subscriptions.push(diagnosticCollection);
+        }
+    } catch {
+        // テスト環境などで languages が無い場合は無視
+        diagnosticCollection = null;
     }
     return diagnosticCollection;
 }
@@ -63,8 +68,14 @@ async function validateDocumentToDiagnostics(document: vscode.TextDocument): Pro
         }
     }
 
-    if (!diagnosticCollection) return { errors: 0, warnings: 0 };
-    diagnosticCollection.set(document.uri, diags);
+    // DiagnosticCollection が利用可能な場合のみVSCodeに反映
+    if (diagnosticCollection) {
+        try {
+            diagnosticCollection.set(document.uri, diags);
+        } catch {
+            // テスト環境等では無視
+        }
+    }
     return {
         errors: diags.filter(d => d.severity === vscode.DiagnosticSeverity.Error).length,
         warnings: diags.filter(d => d.severity === vscode.DiagnosticSeverity.Warning).length,
