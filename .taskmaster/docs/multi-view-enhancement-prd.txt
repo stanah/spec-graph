@@ -1,0 +1,116 @@
+# req-mindmap Multi-View Enhancement PRD
+
+## Project Overview
+req-mindmapの大幅な機能拡張として、既存のマインドマップ表示に加えて、yamlファイルをもとにした複数の表示形式とドキュメント管理機能を追加する。
+
+## Feature Requirements
+
+### 1. Multi-View Display System
+- 既存のマインドマップ表示を基本とした切り替え可能な表示システム
+- 表示形式：
+  - マインドマップ表示（既存）
+  - 表形式表示（新規）
+  - リッチドキュメント表示（新規）
+
+### 2. Table View (表形式表示)
+- yamlファイルの内容を表形式で表示
+- フィルタリング・ソート機能
+- エクスポート機能（CSV、Excel等）
+- インライン編集機能（将来的）
+
+### 3. Rich Document Display (リッチドキュメント表示)
+- ヒューマンリーダブルなドキュメント形式での表示
+- 構造化されたドキュメントレンダリング
+- プリント対応のスタイリング
+
+### 4. Schema-based File Format Validation
+- yamlファイルのスキーマ定義機能
+- リアルタイムバリデーション
+- エラー表示とサジェスト機能
+- カスタムスキーマ対応
+
+### 5. Document Type Management System
+- 要件（Requirements）
+- ステークホルダー（Stakeholders）  
+- 設計（Design）
+- タスク（Tasks）
+- その他カスタムドキュメントタイプ
+
+### 6. ID-based Dependency System
+- 各ドキュメント内アイテムのユニークID管理
+- ID間の依存関係表示機能
+- ビジュアル依存関係図
+- 依存関係の追加・編集機能
+
+### 7. Link and Jump Functionality
+- ID参照によるリンク化
+- クリックによる関連アイテムへのジャンプ
+- ブレッドクラム機能
+- 履歴機能（前に戻る・次に進む）
+
+### 8. Data Consistency Check
+- ID間の整合性チェック機能
+- 孤立した参照の検出
+- 循環参照の検出
+- データ整合性レポート
+
+## Technical Architecture
+
+### Frontend
+- View switching system implementation
+- Table component with advanced features
+- Rich document renderer
+- Schema validator integration
+- Dependency visualization engine
+
+### Data Layer
+- YAML parser enhancement
+- Schema definition storage
+- ID management system
+- Dependency graph calculation
+
+### Validation Layer
+- JSON Schema integration
+- Custom validation rules
+- Real-time validation engine
+
+## Implementation Phases
+
+### Phase 1: Core Infrastructure
+- View switching system
+- Basic table view implementation
+- Schema validation foundation
+
+### Phase 2: Advanced Features  
+- Rich document display
+- ID management system
+- Basic dependency tracking
+
+### Phase 3: Enhanced Functionality
+- Advanced dependency visualization
+- Link/jump functionality
+- Data consistency checks
+
+### Phase 4: Polish & Optimization
+- Performance optimization
+- UI/UX improvements
+- Export/import enhancements
+
+## Success Criteria
+- 既存のマインドマップ機能を維持しながら新機能を追加
+- 表形式での効率的なデータ表示・操作
+- スキーマベースの堅牢なファイル形式チェック
+- ID依存関係の可視化と整合性管理
+- ユーザビリティの向上
+
+## Technical Requirements
+- TypeScript/JavaScript (existing tech stack)
+- YAML parsing libraries
+- JSON Schema validation
+- Graph visualization libraries
+- Table rendering components
+
+## Constraints
+- 既存コードベースとの互換性維持
+- パフォーマンスの維持
+- 設定ファイルの下位互換性
