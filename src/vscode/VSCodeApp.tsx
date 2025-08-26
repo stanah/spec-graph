@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MindmapViewer } from './components/MindmapViewer';
+import { ViewSwitcher } from './components/ViewSwitcher';
+import { ViewContainer } from './components/ViewContainer';
 import { AlertComponent } from '../components/shared/AlertComponent';
 import ErrorBoundary from '../components/shared/ErrorBoundary';
 import { useAppStore } from '../stores/appStore';
 import { PlatformAdapterFactory } from '../platform';
 import VSCodeApiSingleton from '../platform/vscode/VSCodeApiSingleton';
 import '../index.css';
+import { ViewProvider } from '../contexts/ViewContext';
 
 /**
  * VSCode拡張用のアプリケーションコンポーネント
@@ -190,31 +193,34 @@ function VSCodeApp() {
       {/* アラート表示 */}
       <AlertComponent />
       
-      {/* メインのマインドマップビュー */}
-      <div className="vscode-content">
-        <ErrorBoundary
-          fallback={
-            <div className="mindmap-error">
-              <h3>🗺️ マインドマップの表示でエラーが発生しました</h3>
-              <p>マインドマップのレンダリング中にエラーが発生しました。</p>
-              <button onClick={() => window.location.reload()}>
-                リロード
-              </button>
-            </div>
-          }
-          onError={(error, errorInfo) => {
-            console.error('MindmapViewer error:', error, errorInfo);
-            addNotification({
-              type: 'error',
-              message: `マインドマップエラー: ${error.message}`,
-              duration: 5000,
-              autoHide: true
-            });
-          }}
-        >
-          <MindmapViewer />
-        </ErrorBoundary>
-      </div>
+      {/* ビュー切り替え + コンテンツ */}
+      <ViewProvider>
+        <ViewSwitcher />
+        <div className="vscode-content">
+          <ErrorBoundary
+            fallback={
+              <div className="mindmap-error">
+                <h3>🗺️ ビュー表示でエラーが発生しました</h3>
+                <p>ビューのレンダリング中にエラーが発生しました。</p>
+                <button onClick={() => window.location.reload()}>
+                  リロード
+                </button>
+              </div>
+            }
+            onError={(error, errorInfo) => {
+              console.error('ViewContainer error:', error, errorInfo);
+              addNotification({
+                type: 'error',
+                message: `ビューエラー: ${error.message}`,
+                duration: 5000,
+                autoHide: true
+              });
+            }}
+          >
+            <ViewContainer />
+          </ErrorBoundary>
+        </div>
+      </ViewProvider>
       
       {/* VSCode用のステータス表示 */}
       <div className="vscode-status">

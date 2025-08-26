@@ -66,6 +66,7 @@ const initialParseState: ParseState = {
 const initialUIState: UIState = {
   editorSettings: settingsService.loadSettings().editor,
   mindmapSettings: settingsService.loadSettings().mindmap,
+  viewMode: 'mindmap',
   selectedNodeId: null,
   nodeSelection: null,
   editorCursorPosition: null,
@@ -655,6 +656,16 @@ export const useAppStore = create<AppStore>()(
             ui: {
               ...state.ui,
               darkMode: !state.ui.darkMode,
+            },
+          }));
+        },
+        
+        // ===== ビュー操作 =====
+        setViewMode: (mode) => {
+          set((state) => ({
+            ui: {
+              ...state.ui,
+              viewMode: mode,
             },
           }));
         },
