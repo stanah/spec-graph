@@ -57,8 +57,11 @@ export class SchemaManager {
    */
   async convertZodToJsonSchema(): Promise<SchemaConversionResult> {
     try {
-      // 動的ロード（依存が無い環境でも安全に実行可能）
-      const mod = await import('zod-to-json-schema').catch(() => null as unknown as undefined);
+      // 動的ロード（バンドラの静的解析を避けるため new Function 経由）
+      // 依存が無い環境でも安全にスキップ可能
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const dynamicImport = new Function('m', 'return import(m)') as (m: string) => Promise<unknown>;
+      const mod = await dynamicImport('zod-to-json-schema').catch(() => undefined);
       // 型の都合上 any 経由で呼び出す
       const converter: any = mod && (mod as any).zodToJsonSchema;
       if (!converter) {
