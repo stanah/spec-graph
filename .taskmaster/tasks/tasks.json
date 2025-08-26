@@ -1530,7 +1530,7 @@
         "testStrategy": "ViewSwitcher コンポーネントのレンダリングテスト、ビュー切り替え時の状態遷移テスト、useViewMode フックの単体テスト、既存機能との互換性確認テスト",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1583,7 +1583,7 @@
               "24.4"
             ],
             "details": "src/extension.tsまたはsrc/webview/index.tsxでViewContainerを既存のMindmapViewerの代わりに配置。ViewSwitcherをヘッダー領域に配置。既存のデータフローとの互換性確認。VSCode拡張機能としての動作テスト実行。開発者ツールでのパフォーマンスプロファイリング",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "E2Eテストによる統合動作確認、既存機能の回帰テスト、メモリリークチェック、VSCode拡張機能としての動作テスト"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T14:27:01.415Z",
+      "updated": "2025-08-26T14:43:04.423Z",
       "description": "Tasks for master context"
     }
   }
