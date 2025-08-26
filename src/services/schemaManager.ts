@@ -9,6 +9,7 @@
 import Ajv, { type ErrorObject, type Options as AjvOptions, type KeywordDefinition } from 'ajv';
 import addFormats from 'ajv-formats';
 import type { MindmapData, ValidationResult } from '../types';
+import { t, type Locale } from '../i18n';
 import { ZodMindmapValidator } from '../types';
 
 export type JsonSchema = Record<string, unknown>;
@@ -22,6 +23,7 @@ export interface SchemaConversionResult {
 export class SchemaManager {
   private ajv: Ajv | null = null;
   private currentSchema: JsonSchema | null = null;
+  private locale: Locale = 'ja';
 
   /** 現行Zodスキーマによる検証 */
   validateWithZod(data: unknown): ValidationResult {
@@ -32,7 +34,7 @@ export class SchemaManager {
       valid: false,
       errors: (result.errors || []).map((e) => ({
         path: e.path || 'root',
-        message: e.message,
+        message: this.translateZodMessage(e.code, e.message),
         code: e.code || 'VALIDATION_ERROR',
         value: undefined,
       })),
@@ -148,13 +150,41 @@ export class SchemaManager {
 
     const errors = (validate.errors || []).map((err: ErrorObject) => ({
       path: err.instancePath || err.schemaPath || 'root',
-      message: err.message || 'validation error',
+      message: this.translateAjvMessage(err.keyword, err.message || 'validation error'),
       value: err.data,
       expected: typeof err.params === 'object' ? JSON.stringify(err.params) : undefined,
       code: err.keyword,
     }));
 
     return { valid: false, errors };
+  }
+
+  setLocale(locale: Locale) {
+    this.locale = locale;
+  }
+
+  getLocale(): Locale {
+    return this.locale;
+  }
+
+  private translateAjvMessage(keyword: string, fallback: string): string {
+    switch (keyword) {
+      case 'nonEmptyString':
+        return t('errors.nonEmptyString', this.locale, fallback);
+      case 'uniqueNodeIds':
+        return t('errors.uniqueNodeIds', this.locale, fallback);
+      default:
+        return fallback;
+    }
+  }
+
+  private translateZodMessage(code?: string, fallback?: string): string {
+    switch (code) {
+      case 'invalid_type':
+        return t('errors.invalid_type', this.locale, fallback);
+      default:
+        return fallback || 'validation error';
+    }
   }
 
   /** 現在のスキーマ情報（簡易） */

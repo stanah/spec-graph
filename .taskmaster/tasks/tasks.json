@@ -1835,7 +1835,7 @@
               "28.1"
             ],
             "details": "src/core/validation/CustomValidators.ts にカスタムキーワード定義を実装。マインドマップ固有のバリデーション（ノードID一意性、循環参照チェック、最大深度制限など）を Ajv カスタムキーワードとして実装。バリデーションルールをプラグイン形式で追加可能な仕組みを構築。既存の validateNodeStructure 関数を拡張して Ajv バリデーションと統合",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各カスタムキーワードの動作テスト、エッジケース（循環参照、深度超過）のテスト、1000個のバリデーションルールでのパフォーマンステスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T15:34:28.601Z",
+      "updated": "2025-08-26T15:40:25.696Z",
       "description": "Tasks for master context"
     }
   }
