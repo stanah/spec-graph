@@ -59,7 +59,7 @@ export class SchemaManager {
     try {
       // 動的ロード（バンドラの静的解析を避けるため new Function 経由）
       // 依存が無い環境でも安全にスキップ可能
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+       
       const dynamicImport = new Function('m', 'return import(m)') as (m: string) => Promise<unknown>;
       const mod = await dynamicImport('zod-to-json-schema').catch(() => undefined);
       // 型の都合上 any 経由で呼び出す
