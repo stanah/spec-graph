@@ -1847,7 +1847,7 @@
               "28.2"
             ],
             "details": "src/components/editor/ValidationProvider.tsx を作成し、バリデーション結果を Monaco Editor のマーカー API に変換。エラー位置の特定と行番号マッピング機能を実装。既存の EditorComponent.tsx を拡張してバリデーションフィードバックを統合。エラーホバーでの詳細メッセージ表示、クイックフィックス提案機能を追加",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "エラー位置マッピングの精度テスト、リアルタイム更新のパフォーマンステスト、エラー表示の UI/UX テスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T15:13:18.998Z",
+      "updated": "2025-08-26T15:34:28.601Z",
       "description": "Tasks for master context"
     }
   }

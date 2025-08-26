@@ -6,7 +6,7 @@
  * Zodバリデーション/任意のJSON Schema + Ajvバリデーションを実装する。
  */
 
-import Ajv, { type ErrorObject, type Options as AjvOptions } from 'ajv';
+import Ajv, { type ErrorObject, type Options as AjvOptions, type KeywordDefinition } from 'ajv';
 import addFormats from 'ajv-formats';
 import type { MindmapData, ValidationResult } from '../types';
 import { ZodMindmapValidator } from '../types';
@@ -21,6 +21,7 @@ export interface SchemaConversionResult {
 
 export class SchemaManager {
   private ajv: Ajv | null = null;
+  private currentSchema: JsonSchema | null = null;
 
   /** 現行Zodスキーマによる検証 */
   validateWithZod(data: unknown): ValidationResult {
@@ -62,8 +63,79 @@ export class SchemaManager {
     if (!this.ajv) {
       this.ajv = new Ajv({ allErrors: true, strict: false, ...options });
       addFormats(this.ajv);
+      this.registerDefaultKeywords(this.ajv);
     }
     return this.ajv;
+  }
+
+  /** 既定のカスタムキーワード登録 */
+  private registerDefaultKeywords(ajv: Ajv) {
+    // 非空文字列
+    const nonEmptyString: KeywordDefinition = {
+      keyword: 'nonEmptyString',
+      type: 'string',
+      errors: true,
+      validate: function (_schema: true, data: unknown) {
+        const ok = typeof data === 'string' && data.trim().length > 0;
+        // @ts-expect-error Ajv error typing at runtime
+        (nonEmptyString.validate as any).errors = ok
+          ? null
+          : [{ keyword: 'nonEmptyString', message: 'string must be non-empty' }];
+        return ok;
+      },
+    };
+
+    // ノードIDのユニーク性チェック（MindmapData向け）
+    const uniqueNodeIds: KeywordDefinition = {
+      keyword: 'uniqueNodeIds',
+      type: 'object',
+      errors: true,
+      validate: function (_schema: true, data: unknown) {
+        const seen = new Set<string>();
+        let ok = true;
+        function walk(node: any) {
+          if (!ok || !node) return;
+          const id = node.id;
+          if (typeof id === 'string') {
+            if (seen.has(id)) {
+              ok = false;
+              return;
+            }
+            seen.add(id);
+          }
+          const children = Array.isArray(node.children) ? node.children : [];
+          for (const c of children) walk(c);
+        }
+        if (data && typeof data === 'object' && (data as any).root) {
+          walk((data as any).root);
+        }
+        // @ts-expect-error Ajv error typing at runtime
+        (uniqueNodeIds.validate as any).errors = ok
+          ? null
+          : [{ keyword: 'uniqueNodeIds', message: 'node ids must be unique' }];
+        return ok;
+      },
+    };
+
+    ajv.addKeyword(nonEmptyString);
+    ajv.addKeyword(uniqueNodeIds);
+  }
+
+  /** カスタムキーワードを登録 */
+  registerKeyword(def: KeywordDefinition) {
+    const ajv = this.getAjv();
+    ajv.addKeyword(def);
+  }
+
+  /** 既定/現在のJSON Schemaを設定 */
+  setJsonSchema(schema: JsonSchema) {
+    this.currentSchema = schema;
+  }
+
+  /** 現在スキーマで検証 */
+  validateCurrentSchema(data: unknown): ValidationResult {
+    if (!this.currentSchema) return { valid: true, errors: [] };
+    return this.validateWithAjv(this.currentSchema, data);
   }
 
   /** 任意のJSON Schemaで Ajv 検証を行う */
@@ -96,4 +168,3 @@ export class SchemaManager {
 }
 
 export const schemaManager = new SchemaManager();
-
