@@ -8,7 +8,7 @@
 
 import Ajv, { type ErrorObject, type Options as AjvOptions, type KeywordDefinition } from 'ajv';
 import addFormats from 'ajv-formats';
-import type { MindmapData, ValidationResult } from '../types';
+import type { ValidationResult } from '../types';
 import { t, type Locale } from '../i18n';
 import { ZodMindmapValidator } from '../types';
 

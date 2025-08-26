@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MindmapViewer } from './components/MindmapViewer';
 import { ViewSwitcher } from './components/ViewSwitcher';
 import { ViewContainer } from './components/ViewContainer';
 import { AlertComponent } from '../components/shared/AlertComponent';

@@ -1816,7 +1816,7 @@
         "testStrategy": "各種バリデーションルールの動作確認、エラーメッセージの正確性テスト、パフォーマンステスト（1000個のバリデーションルール）、スキーママイグレーションテスト",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1872,7 +1872,7 @@
               "28.4"
             ],
             "details": "src/core/validation/SchemaVersionManager.ts でバージョン管理機能を実装。スキーママイグレーション機能（古いバージョンから新しいバージョンへの自動変換）を追加。src/templates/schemas/ にデフォルトスキーマテンプレートを配置。UI コンポーネントでテンプレート選択とカスタマイズ機能を提供。localStorage を使用したユーザー定義テンプレートの保存機能を実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "スキーママイグレーションの正確性テスト、テンプレート適用テスト、バージョン互換性テスト、ユーザー定義テンプレートの保存・読み込みテスト"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T15:46:52.457Z",
+      "updated": "2025-08-26T15:50:42.404Z",
       "description": "Tasks for master context"
     }
   }

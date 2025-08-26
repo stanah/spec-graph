@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useMemo } from 'react';
 import { useAppStore } from '../stores/appStore';
 import type { ViewMode } from '../types/store';
@@ -22,4 +23,3 @@ export const useViewContext = (): ViewContextValue => {
   if (!ctx) throw new Error('useViewContext must be used within ViewProvider');
   return ctx;
 };
-
