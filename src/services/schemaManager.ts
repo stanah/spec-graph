@@ -20,10 +20,21 @@ export interface SchemaConversionResult {
   error?: string;
 }
 
+export interface RegisteredSchemaMeta {
+  name: string;
+  version: string;
+  description?: string;
+  createdAt?: string;
+}
+
+type SchemaRecord = { schema: JsonSchema; meta: RegisteredSchemaMeta };
+
 export class SchemaManager {
   private ajv: Ajv | null = null;
   private currentSchema: JsonSchema | null = null;
   private locale: Locale = 'ja';
+  private registry: Map<string, Map<string, SchemaRecord>> = new Map(); // name -> version -> record
+  private active: { name: string; version: string } | null = null;
 
   /** 現行Zodスキーマによる検証 */
   validateWithZod(data: unknown): ValidationResult {
@@ -138,6 +149,79 @@ export class SchemaManager {
   validateCurrentSchema(data: unknown): ValidationResult {
     if (!this.currentSchema) return { valid: true, errors: [] };
     return this.validateWithAjv(this.currentSchema, data);
+  }
+
+  /**
+   * バージョニング: スキーマ登録
+   */
+  registerSchema(name: string, version: string, schema: JsonSchema, meta?: Partial<RegisteredSchemaMeta>) {
+    const versions = this.registry.get(name) || new Map<string, SchemaRecord>();
+    versions.set(version, {
+      schema,
+      meta: {
+        name,
+        version,
+        createdAt: new Date().toISOString(),
+        ...meta,
+      },
+    });
+    this.registry.set(name, versions);
+  }
+
+  /** スキーマ取得 */
+  getSchema(name: string, version: string): JsonSchema | null {
+    const versions = this.registry.get(name);
+    return versions?.get(version)?.schema || null;
+  }
+
+  /** メタ情報取得 */
+  getSchemaMeta(name: string, version: string): RegisteredSchemaMeta | null {
+    const versions = this.registry.get(name);
+    return versions?.get(version)?.meta || null;
+  }
+
+  /** バージョン一覧 */
+  listSchemaVersions(name: string): RegisteredSchemaMeta[] {
+    const versions = this.registry.get(name);
+    if (!versions) return [];
+    return Array.from(versions.values()).map(r => r.meta);
+  }
+
+  /** アクティブスキーマ設定 */
+  setActiveSchema(name: string, version: string) {
+    const s = this.getSchema(name, version);
+    if (!s) throw new Error(`Schema not found: ${name}@${version}`);
+    this.active = { name, version };
+    this.currentSchema = s;
+  }
+
+  /** アクティブスキーマ情報取得 */
+  getActiveSchemaInfo(): { name: string; version: string } | null {
+    return this.active;
+  }
+
+  /**
+   * 単純マイグレーション: 新版に存在しない必須プロパティのチェックのみ記録
+   * 実データ変換はプロジェクト要件に応じて拡張する。
+   */
+  migrate(name: string, fromVersion: string, toVersion: string): { ok: boolean; log: string[] } {
+    const from = this.getSchema(name, fromVersion);
+    const to = this.getSchema(name, toVersion);
+    const log: string[] = [];
+    if (!from || !to) {
+      log.push('source or target schema not found');
+      return { ok: false, log };
+    }
+    // 例: required の差分だけログに残す簡易実装
+    const fromReq = Array.isArray((from as any).required) ? (from as any).required as string[] : [];
+    const toReq = Array.isArray((to as any).required) ? (to as any).required as string[] : [];
+    for (const r of fromReq) {
+      if (!toReq.includes(r)) log.push(`required dropped in target: ${r}`);
+    }
+    for (const r of toReq) {
+      if (!fromReq.includes(r)) log.push(`new required in target: ${r}`);
+    }
+    return { ok: true, log };
   }
 
   /** 任意のJSON Schemaで Ajv 検証を行う */
