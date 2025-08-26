@@ -1530,7 +1530,7 @@
         "testStrategy": "ViewSwitcher コンポーネントのレンダリングテスト、ビュー切り替え時の状態遷移テスト、useViewMode フックの単体テスト、既存機能との互換性確認テスト",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1538,7 +1538,7 @@
             "description": "ビューモードの型定義を作成し、zustandストアに統合する",
             "dependencies": [],
             "details": "src/types/view.tsにViewMode型（'mindmap' | 'table' | 'document'）を定義。src/store/appStore.tsにviewModeステートとsetViewModeアクションを追加。初期値は'mindmap'に設定。ストアの永続化設定も更新して、リロード時もビューモードを保持",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "zustandストアのviewMode更新テスト、永続化の動作確認テスト、TypeScript型チェックの通過確認"
           },
           {
@@ -1549,7 +1549,7 @@
               "24.1"
             ],
             "details": "src/contexts/ViewContext.tsxを作成し、ViewContextProviderコンポーネントを実装。useViewModeカスタムフックでストアのviewModeとsetViewModeを提供。src/hooks/useViewMode.tsでフックをエクスポート。Context.Providerをsrc/App.tsxのルートに配置",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "useViewModeフックの単体テスト、Context値の更新伝播テスト、複数コンポーネント間での状態共有テスト"
           },
           {
@@ -1560,7 +1560,7 @@
               "24.2"
             ],
             "details": "src/components/ViewSwitcher/ViewSwitcher.tsxを作成。VSCode風のタブUIデザインを採用。各ビューモード（マインドマップ、テーブル、ドキュメント）用のアイコンとラベルを表示。アクティブタブのハイライト、キーボードショートカット対応（Ctrl+1,2,3）。src/components/ViewSwitcher/ViewSwitcher.module.cssでスタイル定義",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "ViewSwitcherのレンダリングテスト、タブクリック時のviewMode更新テスト、キーボードショートカットの動作テスト、アクセシビリティテスト"
           },
           {
@@ -1572,7 +1572,7 @@
               "24.3"
             ],
             "details": "src/components/ViewContainer/ViewContainer.tsxを作成。useViewModeフックでcurrentViewModeを取得。switch文で条件分岐し、mindmapの場合は既存のMindmapViewerをレンダリング。table/documentモードは一時的にプレースホルダー表示。React.Suspenseでラップして遅延読み込みに対応。エラーバウンダリーも実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各ビューモードでの正しいコンポーネント表示テスト、ビュー切り替え時の再レンダリングテスト、プレースホルダー表示の確認"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T12:48:29.667Z",
+      "updated": "2025-08-26T14:27:01.415Z",
       "description": "Tasks for master context"
     }
   }
