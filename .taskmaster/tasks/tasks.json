@@ -1976,7 +1976,7 @@
               "30.1"
             ],
             "details": "src/core/dependencies/DependencyGraph.ts を作成し、Map<string, Set<string>> 形式の隣接リストでグラフ構造を管理。addNode、removeNode、addEdge、removeEdge、getNeighbors、hasPath などの基本メソッドを実装。ノードとエッジのメタデータ管理機能も含める",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "グラフの基本操作テスト（追加・削除・検索）、大規模グラフ（10000ノード）でのパフォーマンステスト、エッジケースのテスト（存在しないノードへの操作など）"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-27T15:53:09.754Z",
+      "updated": "2025-08-27T16:09:52.400Z",
       "description": "Tasks for master context"
     }
   }
