@@ -2012,7 +2012,7 @@
               "30.4"
             ],
             "details": "src/core/dependencies/DependencyEventStore.ts を作成し、AddDependency、RemoveDependency、UpdateNode などのイベントを記録。タイムスタンプ付きイベントログ、スナップショット機能、任意時点への復元機能を実装。EventEmitter を使用してリアルタイム変更通知も提供",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "イベント記録と再生テスト、スナップショット作成・復元テスト、並行変更時の整合性テスト、大量イベント（10000件）でのパフォーマンステスト"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-27T16:33:06.216Z",
+      "updated": "2025-08-27T16:52:54.254Z",
       "description": "Tasks for master context"
     }
   }
