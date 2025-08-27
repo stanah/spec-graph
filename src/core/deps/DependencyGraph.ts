@@ -152,4 +152,55 @@ export class DependencyGraph {
     }
     return sccs;
   }
+
+  /**
+   * Topological sort returning dependencies before dependents.
+   * Throws an error if the graph contains a cycle.
+   */
+  topologicalSort(): string[] {
+    // Build set of all nodes present in the graph
+    const nodes = new Set<string>();
+    for (const k of this.adj.keys()) nodes.add(k);
+    for (const k of this.rev.keys()) nodes.add(k);
+
+    // Build reversed adjacency: dependency -> [dependents]
+    const out: Map<string, Set<string>> = new Map();
+    for (const n of nodes) out.set(n, new Set());
+    for (const [from, tos] of this.adj.entries()) {
+      for (const to of tos) {
+        if (!out.has(to)) out.set(to, new Set());
+        out.get(to)!.add(from);
+      }
+    }
+
+    // Compute indegree in reversed graph
+    const indeg: Map<string, number> = new Map();
+    for (const n of nodes) indeg.set(n, 0);
+    for (const [u, neigh] of out.entries()) {
+      for (const v of neigh) indeg.set(v, (indeg.get(v) || 0) + 1);
+    }
+
+    // Initialize queue with nodes of indegree 0 (deterministic order)
+    const queue: string[] = [...nodes].sort().filter((n) => (indeg.get(n) || 0) === 0);
+    const result: string[] = [];
+
+    while (queue.length) {
+      const n = queue.shift()!;
+      result.push(n);
+      for (const v of out.get(n) ?? []) {
+        indeg.set(v, indeg.get(v)! - 1);
+        if (indeg.get(v) === 0) {
+          // keep queue sorted for deterministic output
+          const pos = queue.findIndex((x) => x > v);
+          if (pos === -1) queue.push(v);
+          else queue.splice(pos, 0, v);
+        }
+      }
+    }
+
+    if (result.length !== nodes.size) {
+      throw new Error('DependencyGraph: cycle detected during topologicalSort');
+    }
+    return result;
+  }
 }
