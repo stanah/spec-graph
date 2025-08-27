@@ -1965,7 +1965,7 @@
             "description": "ユニークID生成のための IDManager クラスを実装し、nanoid v5.0 を使用した ID 生成機能を構築する",
             "dependencies": [],
             "details": "src/core/dependencies/IDManager.ts を作成し、nanoid を使用したユニークID生成機能を実装。名前空間管理のためのプレフィックス機能、自動生成と手動設定の切り替え機能、ID の一意性検証機能を含む。シングルトンパターンで実装し、全体で一貫したID管理を保証する",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "ID の一意性テスト（10000回生成）、プレフィックス付きID生成テスト、手動ID設定時の重複検出テスト、並行生成時のスレッドセーフティテスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-27T13:15:56.718Z",
+      "updated": "2025-08-27T15:53:09.754Z",
       "description": "Tasks for master context"
     }
   }
