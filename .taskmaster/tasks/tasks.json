@@ -1957,7 +1957,7 @@
         "testStrategy": "ID の一意性保証テスト、循環参照検出のアルゴリズムテスト、大規模グラフ（10000ノード）でのパフォーマンステスト、依存関係変更時の整合性テスト",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T15:50:42.404Z",
+      "updated": "2025-08-27T13:15:56.718Z",
       "description": "Tasks for master context"
     }
   }
