@@ -1999,7 +1999,7 @@
               "30.3"
             ],
             "details": "src/core/dependencies/TopologicalSort.ts を作成し、Kahn のアルゴリズムによるトポロジカルソートを実装。循環参照が検出された場合は適切なエラーを返す。部分的なソート（特定ノードからの依存チェーン）も可能にし、getExecutionOrder メソッドで依存関係を満たす実行順序を返す",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "DAG（有向非循環グラフ）でのソート正確性テスト、循環グラフでのエラー処理テスト、部分グラフのソートテスト、複雑な依存関係での順序保証テスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-27T16:15:15.832Z",
+      "updated": "2025-08-27T16:33:06.216Z",
       "description": "Tasks for master context"
     }
   }
