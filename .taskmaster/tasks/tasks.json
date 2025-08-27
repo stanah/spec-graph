@@ -1987,7 +1987,7 @@
               "30.2"
             ],
             "details": "src/core/dependencies/CycleDetector.ts を作成し、強連結成分（SCC）を検出するTarjanのアルゴリズムを実装。detectCycles メソッドで循環参照のあるノード群を特定し、詳細な循環パスを返す。計算量 O(V+E) を保証し、大規模グラフでも高速動作を実現",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "単純な循環（A→B→A）検出テスト、複雑な循環（複数の循環が絡み合うケース）テスト、循環なしグラフでの false negative テスト、1000ノード規模での性能テスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-27T16:09:52.400Z",
+      "updated": "2025-08-27T16:15:15.832Z",
       "description": "Tasks for master context"
     }
   }
