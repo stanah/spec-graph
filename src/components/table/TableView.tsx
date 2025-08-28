@@ -24,9 +24,13 @@ export type TableViewProps<T extends object> = {
   // Global filter (applied before table for simplicity)
   globalFilter?: string;
   onGlobalFilterChange?: OnChangeFn<string>;
+  // Selection
+  selectedRowId?: string | null;
+  onRowSelect?: (rowId: string) => void;
+  getRowId?: (row: T) => string;
 };
 
-export function TableView<T extends object>({ data, columns, className, sorting, onSortingChange, columnFilters, onColumnFiltersChange, globalFilter }: TableViewProps<T>) {
+export function TableView<T extends object>({ data, columns, className, sorting, onSortingChange, columnFilters, onColumnFiltersChange, globalFilter, selectedRowId, onRowSelect, getRowId }: TableViewProps<T>) {
   const preFiltered = applyGlobalFilter(data, columns, globalFilter);
   const table = useReactTable<T>({
     data: preFiltered,
@@ -59,19 +63,30 @@ export function TableView<T extends object>({ data, columns, className, sorting,
         ))}
       </thead>
       <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <td key={cell.id}>
-                {flexRender(
-                  // Fallback to value rendering when no custom cell renderer is provided
-                  (cell.column.columnDef.cell as any) ?? ((info: any) => info.getValue?.()),
-                  cell.getContext(),
-                )}
-              </td>
-            ))}
-          </tr>
-        ))}
+        {table.getRowModel().rows.map((row) => {
+          const original = row.original as any;
+          const rid: string | undefined = getRowId ? getRowId(row.original) : original?.id;
+          const selected = rid && selectedRowId === rid;
+          return (
+            <tr
+              key={row.id}
+              data-rowid={rid}
+              data-selected={selected ? 'true' : undefined}
+              aria-selected={selected}
+              onClick={() => rid && onRowSelect?.(rid)}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <td key={cell.id}>
+                  {flexRender(
+                    // Fallback to value rendering when no custom cell renderer is provided
+                    (cell.column.columnDef.cell as any) ?? ((info: any) => info.getValue?.()),
+                    cell.getContext(),
+                  )}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
