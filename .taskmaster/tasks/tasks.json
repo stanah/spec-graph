@@ -1651,7 +1651,7 @@
               "25.2"
             ],
             "details": "getRowSelectionRowModelの設定と選択状態管理。チェックボックスカラムの追加（全選択/個別選択）。selectedNodeIdとの双方向バインディング実装。選択行のハイライト表示（CSSクラス適用）。キーボードショートカット（Shift+クリックで範囲選択）。選択状態変更時のコールバック処理とイベント発火",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "行選択の動作確認、selectedNodeIdとの同期テスト、複数選択時のパフォーマンス測定、キーボード操作のE2Eテスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-28T15:56:59.011Z",
+      "updated": "2025-08-28T16:01:41.070Z",
       "description": "Tasks for master context"
     }
   }
