@@ -9,6 +9,8 @@ export { MindmapCore } from './core/MindmapCore';
 
 // VSCode用コンポーネント
 export { MindmapViewer } from './vscode/components/MindmapViewer';
+export { TableView } from './components/table/TableView';
+export { buildMindmapColumns } from './components/table/buildMindmapColumns';
 
 // 型定義
 export type {
