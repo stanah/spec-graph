@@ -1606,7 +1606,7 @@
             "description": "@tanstack/react-table v8.20のインストールと基本的なテーブルコンポーネントの枠組みを作成する",
             "dependencies": [],
             "details": "packages/vscode-extension/webview-ui/src/componentsディレクトリにTableViewコンポーネントを作成。@tanstack/react-tableとその型定義をインストール。基本的なuseReactTableフックの設定とflexRenderを使用したテーブル構造の実装。TanStackテーブルのコアインスタンス作成とMindmapNode型に基づくデータ構造の定義",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "テーブルコンポーネントの正常なレンダリング確認、useReactTableフックの初期化テスト、空データでのエラーハンドリング確認"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-27T17:04:41.164Z",
+      "updated": "2025-08-28T14:23:45.768Z",
       "description": "Tasks for master context"
     }
   }
