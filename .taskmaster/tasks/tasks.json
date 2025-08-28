@@ -142,7 +142,7 @@
         "id": 3,
         "title": "エディタコンポーネントの実装",
         "description": "JSON/YAML編集用のコードエディタを実装し、リアルタイム構文チェックと自動補完機能を提供する",
-        "status": "in-progress",
+        "status": "deferred",
         "dependencies": [
           1,
           2
@@ -1639,7 +1639,7 @@
               "25.2"
             ],
             "details": "StatusBadgeコンポーネント（done、in-progress、pending等の状態表示）。PriorityIndicatorコンポーネント（high/medium/lowの色分け表示）。ProgressBarコンポーネント（進捗率の視覚化）。DateCellコンポーネント（日付のフォーマット表示）。TagsCellコンポーネント（複数タグのチップ表示）。セルレンダラーのメモ化によるパフォーマンス最適化",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各カスタムレンダラーのスナップショットテスト、異なるデータ型での表示確認、レンダリングパフォーマンスの計測"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-28T14:45:04.746Z",
+      "updated": "2025-08-28T15:56:59.011Z",
       "description": "Tasks for master context"
     }
   }
