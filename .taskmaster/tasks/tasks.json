@@ -1617,7 +1617,7 @@
               "25.1"
             ],
             "details": "createColumnsFromNode関数の実装でMindmapNodeのプロパティを解析。ColumnDefオブジェクトの自動生成（id、title、description、metadata内の各フィールド）。ネストされたchildrenの展開とフラット化処理。アクセサー関数の定義とヘッダーラベルの自動生成。型安全性を保証するためのTypeScriptジェネリクスの活用",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "様々なMindmapNode構造でのカラム生成テスト、ネストデータの正しい展開確認、メタデータフィールドの適切な処理検証"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-28T14:23:45.768Z",
+      "updated": "2025-08-28T14:32:04.351Z",
       "description": "Tasks for master context"
     }
   }
