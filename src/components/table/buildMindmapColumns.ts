@@ -1,5 +1,7 @@
+import React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { MindmapNode } from '../../types';
+import { StatusBadge, PriorityBadge } from './Badges';
 
 export type BuildColumnsOptions = {
   include?: string[]; // explicit base fields to include additionally
@@ -53,6 +55,20 @@ export function buildMindmapColumns(
         header: 'Tags',
         accessorFn: (row) => Array.isArray(row.tags) ? row.tags.join(', ') : '',
       });
+    } else if (key === 'status') {
+      baseColumns.push({
+        id: 'status',
+        header: 'Status',
+        accessorKey: 'status',
+        cell: (info) => React.createElement(StatusBadge, { status: String(info.getValue() ?? '') }),
+      });
+    } else if (key === 'priority') {
+      baseColumns.push({
+        id: 'priority',
+        header: 'Priority',
+        accessorKey: 'priority',
+        cell: (info) => React.createElement(PriorityBadge, { priority: String(info.getValue() ?? '') }),
+      });
     } else {
       baseColumns.push({
         id: key as string,
@@ -93,4 +109,3 @@ function formatValue(v: unknown): string | number | boolean | null {
   if (typeof v === 'object') return JSON.stringify(v);
   return v as any;
 }
-
