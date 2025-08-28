@@ -1665,7 +1665,7 @@
               "25.5"
             ],
             "details": "columnResizeModeの設定とリサイズハンドルの実装。@tanstack/react-virtualとの統合による仮想スクロール。VirtualizedTableコンポーネントの作成（windowサイズ計算）。getPaginationRowModelによるページネーション。ページサイズ選択とナビゲーションUI。表示モード切り替え（仮想スクロール/ページネーション）。ResizeObserverによる動的サイズ調整",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1000件以上のデータでの仮想スクロールパフォーマンステスト、カラムリサイズの動作確認、ページネーション切り替えテスト、メモリ使用量の計測"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-28T16:01:41.070Z",
+      "updated": "2025-08-28T16:12:46.194Z",
       "description": "Tasks for master context"
     }
   }
