@@ -21,31 +21,31 @@ describe('TableView sorting and filtering', () => {
   afterEach(() => cleanup());
 
   it('applies sorting state (name asc/desc)', async () => {
-    const Wrapper = ({ initial }: { initial: SortingState }) => {
-      const [sorting, setSorting] = useState<SortingState>(initial);
-      return (
-        <TableView<Row>
-          data={data}
-          columns={columns}
-          sorting={sorting}
-          onSortingChange={setSorting}
-        />
-      );
-    };
+    const { rerender } = render(
+      <TableView<Row>
+        data={data}
+        columns={columns}
+        sorting={[{ id: 'name', desc: false }]}
+      />
+    );
 
-    const { rerender } = render(<Wrapper initial={[{ id: 'name', desc: false }]} />);
-
-    const rowsAsc = screen.getAllByRole('row').slice(1);
-    expect(rowsAsc.map((r) => r.textContent)).toEqual([
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(rows.map((r) => r.textContent)).toEqual([
       expect.stringContaining('Alpha'),
       expect.stringContaining('Beta'),
       expect.stringContaining('Charlie'),
     ]);
 
-    rerender(<Wrapper initial={[{ id: 'name', desc: true }]} />);
+    rerender(
+      <TableView<Row>
+        data={data}
+        columns={columns}
+        sorting={[{ id: 'name', desc: true }]}
+      />
+    );
 
-    const rowsDesc = screen.getAllByRole('row').slice(1);
-    expect(rowsDesc.map((r) => r.textContent)).toEqual([
+    rows = screen.getAllByRole('row').slice(1);
+    expect(rows.map((r) => r.textContent)).toEqual([
       expect.stringContaining('Charlie'),
       expect.stringContaining('Beta'),
       expect.stringContaining('Alpha'),
@@ -74,27 +74,16 @@ describe('TableView sorting and filtering', () => {
   });
 
   it('applies globalFilter to all columns', () => {
-    const Wrapper = ({ gf }: { gf: string }) => {
-      const [globalFilter, setGlobalFilter] = useState<string>(gf);
-      return (
-        <TableView<Row>
-          data={data}
-          columns={columns}
-          globalFilter={globalFilter}
-          onGlobalFilterChange={setGlobalFilter}
-        />
-      );
-    };
-
-    const { rerender } = render(<Wrapper gf="Alpha" />);
+    const { rerender } = render(
+      <TableView<Row> data={data} columns={columns} globalFilter="Alpha" />
+    );
     let rows = screen.getAllByRole('row').slice(1);
     expect(rows.length).toBe(1);
     expect(rows[0].textContent).toContain('Alpha');
 
-    rerender(<Wrapper gf="open" />);
+    rerender(<TableView<Row> data={data} columns={columns} globalFilter="open" />);
     rows = screen.getAllByRole('row').slice(1);
     expect(rows.length).toBe(2);
     rows.forEach((r) => expect(r.textContent).toMatch(/open/));
   });
 });
-
