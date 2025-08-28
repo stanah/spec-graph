@@ -8,6 +8,8 @@ import {
   type SortingState,
   type ColumnFiltersState,
   type OnChangeFn,
+  getPaginationRowModel,
+  type PaginationState,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -28,42 +30,90 @@ export type TableViewProps<T extends object> = {
   selectedRowId?: string | null;
   onRowSelect?: (rowId: string) => void;
   getRowId?: (row: T) => string;
+  // Pagination
+  pagination?: PaginationState;
+  onPaginationChange?: OnChangeFn<PaginationState>;
+  // Virtualization (simple initial windowing)
+  virtualized?: boolean;
+  containerHeight?: number;
+  rowHeight?: number; // used for simple windowing calculation
+  // Column sizing
+  columnSizing?: Record<string, number>;
+  onColumnSizingChange?: OnChangeFn<Record<string, number>>;
+  columnResizeMode?: 'onChange' | 'onEnd';
 };
 
-export function TableView<T extends object>({ data, columns, className, sorting, onSortingChange, columnFilters, onColumnFiltersChange, globalFilter, selectedRowId, onRowSelect, getRowId }: TableViewProps<T>) {
+export function TableView<T extends object>({ data, columns, className, sorting, onSortingChange, columnFilters, onColumnFiltersChange, globalFilter, selectedRowId, onRowSelect, getRowId, pagination, onPaginationChange, virtualized, containerHeight, rowHeight = 32, columnSizing, onColumnSizingChange, columnResizeMode = 'onChange' }: TableViewProps<T>) {
   const preFiltered = applyGlobalFilter(data, columns, globalFilter);
   const table = useReactTable<T>({
     data: preFiltered,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: pagination ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
       columnFilters,
       globalFilter,
+      pagination,
+      columnSizing,
     },
     onSortingChange,
     onColumnFiltersChange,
+    onPaginationChange,
+    onColumnSizingChange,
+    columnResizeMode,
   });
 
-  return (
-    <table className={className}>
+  const headerContent = (
       <thead>
         {table.getHeaderGroups().map((headerGroup) => (
           <tr key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
-              <th key={header.id} scope="col">
+              <th
+                key={header.id}
+                scope="col"
+                style={{
+                  width:
+                    columnSizing && (header as any).column?.id && columnSizing[(header as any).column.id]
+                      ? `${columnSizing[(header as any).column.id]}px`
+                      : undefined,
+                }}
+              >
                 {header.isPlaceholder
                   ? null
                   : flexRender(header.column.columnDef.header, header.getContext())}
+                {header.column?.getCanResize?.() && (
+                  <div
+                    onMouseDown={header.getResizeHandler?.()}
+                    onTouchStart={header.getResizeHandler?.()}
+                    style={{
+                      display: 'inline-block',
+                      width: 6,
+                      marginLeft: 4,
+                      cursor: 'col-resize',
+                      userSelect: 'none',
+                    }}
+                  />
+                )}
               </th>
             ))}
           </tr>
         ))}
       </thead>
+  );
+
+  const fullRows = pagination ? table.getPaginationRowModel().rows : table.getRowModel().rows;
+  const windowedRows = (() => {
+    if (!virtualized || !containerHeight) return fullRows;
+    const visible = Math.ceil(containerHeight / rowHeight) + 10; // overscan = 10
+    return fullRows.slice(0, Math.min(visible, fullRows.length));
+  })();
+
+  const bodyContent = (
       <tbody>
-        {table.getRowModel().rows.map((row) => {
+        {windowedRows.map((row) => {
           const original = row.original as any;
           const rid: string | undefined = getRowId ? getRowId(row.original) : original?.id;
           const selected = rid && selectedRowId === rid;
@@ -88,7 +138,15 @@ export function TableView<T extends object>({ data, columns, className, sorting,
           );
         })}
       </tbody>
-    </table>
+  );
+
+  return (
+    <div style={virtualized && containerHeight ? { maxHeight: containerHeight, overflow: 'auto' } : undefined}>
+      <table className={className}>
+        {headerContent}
+        {bodyContent}
+      </table>
+    </div>
   );
 }
 
