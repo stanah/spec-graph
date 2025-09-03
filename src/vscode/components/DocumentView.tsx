@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppStore } from '../../stores/appStore';
 import { buildDocumentOutline, type DocumentOutline, type SectionBlock, type ParagraphBlock } from '../document/buildDocumentOutline';
+import { buildTOC } from '../document/buildTOC';
 
 const theme = {
   paragraph: 'lexical-paragraph',
@@ -121,10 +122,38 @@ export const DocumentView: React.FC = () => {
   }, [collapsed, toggle]);
 
   const outline = React.useMemo(() => (parsedData?.root ? buildDocumentOutline(parsedData.root) : null), [parsedData]);
+  const tocItems = React.useMemo(() => (outline ? buildTOC(outline) : []), [outline]);
+  const onClickTOC = React.useCallback((nodeId: string) => {
+    const el = document.querySelector(`[data-nodeid="${nodeId}"]`) as HTMLElement | null;
+    if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   return (
     <div data-testid="document-view" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
-      {outline ? renderOutline(outline) : <div style={{ opacity: 0.7 }}>ドキュメントを表示するデータがありません。</div>}
+      {outline ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 12 }}>
+          <nav data-testid="doc-toc" aria-label="Table of contents" style={{ borderRight: '1px solid var(--vscode-panel-border)', paddingRight: 12 }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {tocItems.map((t) => (
+                <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>
+                  <button
+                    data-testid={`toc-item-${t.nodeId}`}
+                    onClick={() => onClickTOC(t.nodeId)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--vscode-foreground)', cursor: 'pointer' }}
+                  >
+                    {t.text}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div>
+            {renderOutline(outline)}
+          </div>
+        </div>
+      ) : (
+        <div style={{ opacity: 0.7 }}>ドキュメントを表示するデータがありません。</div>
+      )}
       {Loaded ? <div aria-hidden>{/* Lexical view mount point (optional) */}<Loaded /></div> : null}
     </div>
   );
