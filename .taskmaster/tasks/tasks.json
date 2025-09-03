@@ -1768,7 +1768,7 @@
               "27.1"
             ],
             "details": "1. MindmapNodeToLexicalConverter クラスの実装\n2. 階層深度に応じたHeadingNodeレベル（H1-H6）の自動計算\n3. メタデータの保持とカスタムノードへのマッピング\n4. 子ノードの再帰的変換処理\n5. 循環参照検出とエラーハンドリング\n6. 変換パフォーマンスの最適化（大規模データ対応）",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "様々な階層構造での変換テスト、メタデータ保持の検証、大規模データでのパフォーマンステスト、エッジケースのテスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-03T13:15:20.264Z",
+      "updated": "2025-09-03T13:29:34.150Z",
       "description": "Tasks for master context"
     }
   }
