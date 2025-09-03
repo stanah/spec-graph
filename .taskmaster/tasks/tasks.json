@@ -1757,7 +1757,7 @@
             "description": "Lexical v0.22をVSCode拡張に統合し、RequirementNode、TaskNodeなどのカスタムノードタイプを実装する",
             "dependencies": [],
             "details": "1. Lexicalフレームワークの依存関係追加とTypeScript設定\n2. カスタムノードタイプの基底クラス作成（BaseRequirementNode extends ElementNode）\n3. RequirementNode、TaskNode、MetadataNode、PriorityNodeの実装\n4. ノードレンダラーとシリアライザーの定義\n5. EditorConfigとテーマの設定（VSCodeテーマとの統合）\n6. カスタムプラグインアーキテクチャの基盤構築",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "カスタムノードの作成・レンダリング・シリアライゼーションテスト、EditorStateの整合性テスト、VSCodeテーマ適用の視覚的回帰テスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-03T11:50:12.563Z",
+      "updated": "2025-09-03T13:15:20.264Z",
       "description": "Tasks for master context"
     }
   }
