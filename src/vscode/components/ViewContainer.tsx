@@ -1,6 +1,7 @@
 import React from 'react';
 import { useViewMode } from '../../hooks/useViewMode';
 import { MindmapViewer } from './MindmapViewer';
+import { DocumentView } from './DocumentView';
 
 const Placeholder: React.FC<{ title: string }> = ({ title }) => (
   <div style={{ padding: 24 }}>
@@ -18,9 +19,8 @@ export const ViewContainer: React.FC = () => {
     case 'table':
       return <Placeholder title="テーブルビュー" />;
     case 'document':
-      return <Placeholder title="ドキュメントビュー" />;
+      return <DocumentView />;
     default:
       return null;
   }
 };
-

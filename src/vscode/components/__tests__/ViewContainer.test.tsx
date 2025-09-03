@@ -28,10 +28,9 @@ describe('ViewContainer', () => {
     expect(screen.getByText('テーブルビュー')).toBeInTheDocument();
   });
 
-  it('viewMode=documentでドキュメントプレースホルダーを表示', () => {
+  it('viewMode=documentでDocumentViewを表示（data-testidで確認）', () => {
     useAppStore.getState().setViewMode('document');
     setup();
-    expect(screen.getByText('ドキュメントビュー')).toBeInTheDocument();
+    expect(screen.getByTestId('document-view')).toBeInTheDocument();
   });
 });
-
