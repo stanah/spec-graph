@@ -1791,7 +1791,7 @@
               "27.3"
             ],
             "details": "1. TableOfContentsPlugin の実装\n2. HeadingNodeの自動検出と階層構造の構築\n3. TOCコンポーネントの作成（固定サイドバー/フローティング切り替え）\n4. スムーズスクロールナビゲーション\n5. 現在位置のハイライト（IntersectionObserver使用）\n6. TOCの展開・折りたたみ機能\n7. 検索機能の統合（セクション内検索）",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "TOC生成の正確性テスト、ナビゲーション動作のテスト、IntersectionObserverの動作検証、レスポンシブデザインテスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-03T14:14:22.315Z",
+      "updated": "2025-09-03T14:17:24.678Z",
       "description": "Tasks for master context"
     }
   }
