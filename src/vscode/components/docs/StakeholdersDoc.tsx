@@ -16,6 +16,9 @@ export const StakeholdersDocView: React.FC<{ doc: StakeholdersDoc }> = ({ doc })
               <th>役割</th>
               <th>連絡先</th>
               <th>可用性</th>
+              <th>責務</th>
+              <th>担当コンポーネント</th>
+              <th>メモ</th>
             </tr>
           </thead>
           <tbody>
@@ -26,6 +29,17 @@ export const StakeholdersDocView: React.FC<{ doc: StakeholdersDoc }> = ({ doc })
                 <td>{s.role}</td>
                 <td>{s.contact || '-'}</td>
                 <td>{s.availability || '-'}</td>
+                <td>{s.responsibilities || '-'}</td>
+                <td>
+                  {Array.isArray(s.components) && s.components.length > 0 ? (
+                    s.components.map((c: string, idx: number) => (
+                      <span key={idx} style={{ display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 }}>{c}</span>
+                    ))
+                  ) : (
+                    '-'
+                  )}
+                </td>
+                <td style={{ whiteSpace: 'pre-wrap' }}>{s.notes || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -34,4 +48,3 @@ export const StakeholdersDocView: React.FC<{ doc: StakeholdersDoc }> = ({ doc })
     </div>
   );
 };
-

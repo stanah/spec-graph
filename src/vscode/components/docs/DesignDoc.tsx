@@ -10,6 +10,42 @@ function ComponentTree({ node }: { node: any }) {
       {(node.dependencies && node.dependencies.length > 0) && (
         <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8 }}>依存: {node.dependencies.join(', ')}</div>
       )}
+      {(node.interfaces && node.interfaces.length > 0) && (
+        <div style={{ marginTop: 4, fontSize: 12 }}>
+          <span style={{ fontWeight: 600, opacity: 0.8 }}>インターフェース:</span>{' '}
+          {node.interfaces.map((itf: string, i: number) => (
+            <span key={i} style={{ display: 'inline-block', marginRight: 8 }}>{itf}</span>
+          ))}
+        </div>
+      )}
+      {(node.dataModels && node.dataModels.length > 0) && (
+        <div style={{ marginTop: 4, fontSize: 12 }}>
+          <span style={{ fontWeight: 600, opacity: 0.8 }}>データモデル:</span>{' '}
+          {node.dataModels.map((m: string, i: number) => (
+            <span key={i} style={{ display: 'inline-block', marginRight: 8 }}>{m}</span>
+          ))}
+        </div>
+      )}
+      {(node.techStack && node.techStack.length > 0) && (
+        <div style={{ marginTop: 4 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>Tech</span>
+          {node.techStack.map((t: string, i: number) => (
+            <span key={i} style={{ display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 }}>{t}</span>
+          ))}
+        </div>
+      )}
+      {node.criticality && (
+        <div style={{ marginTop: 4, fontSize: 12 }}>
+          <span style={{ fontWeight: 600, opacity: 0.8 }}>criticality:</span>{' '}
+          <span>{node.criticality}</span>
+        </div>
+      )}
+      {(node.risks && node.risks.length > 0) && (
+        <div style={{ marginTop: 4, fontSize: 12 }}>
+          <span style={{ fontWeight: 600, opacity: 0.8 }}>リスク:</span>{' '}
+          {node.risks.map((r: string, i: number) => <span key={i} style={{ marginRight: 8 }}>{r}</span>)}
+        </div>
+      )}
       {Array.isArray(node.children) && node.children.length > 0 && (
         <ul style={{ marginTop: 6, paddingLeft: 16 }}>
           {node.children.map((c: any, idx: number) => <ComponentTree key={c.id || idx} node={c} />)}
@@ -33,4 +69,3 @@ export const DesignDocView: React.FC<{ doc: DesignDoc }> = ({ doc }) => {
     </div>
   );
 };
-

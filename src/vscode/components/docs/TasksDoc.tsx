@@ -5,10 +5,29 @@ function TaskTree({ item }: { item: any }) {
   return (
     <li>
       <strong>{item.id || '(no id)'}: {item.title || '(no title)'}</strong>
+      {item.type && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>{item.type}</span>}
       {item.status && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>{item.status}</span>}
+      {item.priority && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>[{item.priority}]</span>}
       {item.assignee && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>@{item.assignee}</span>}
+      {typeof item.estimate === 'number' && (
+        <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>見積: {item.estimate}</span>
+      )}
+      {item.dueDate && (
+        <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>期限: {new Date(item.dueDate).toISOString()}</span>
+      )}
       {item.relatesTo && item.relatesTo.length > 0 && (
         <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8 }}>関連: {item.relatesTo.map((r: any)=>`${r.type}:${r.id}`).join(', ')}</div>
+      )}
+      {Array.isArray(item.tags) && item.tags.length > 0 && (
+        <div style={{ marginTop: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>タグ</span>
+          {item.tags.map((t: string, i: number) => (
+            <span key={i} style={{ display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 }}>{t}</span>
+          ))}
+        </div>
+      )}
+      {item.notes && (
+        <div style={{ marginTop: 4, opacity: 0.9 }}>{item.notes}</div>
       )}
       {Array.isArray(item.children) && item.children.length > 0 && (
         <ul style={{ marginTop: 6, paddingLeft: 16 }}>
@@ -33,4 +52,3 @@ export const TasksDocView: React.FC<{ doc: TasksDoc }> = ({ doc }) => {
     </div>
   );
 };
-
