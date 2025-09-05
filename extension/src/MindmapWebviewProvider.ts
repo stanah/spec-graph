@@ -179,34 +179,8 @@ export class MindmapWebviewProvider {
             attributeFilter: ['class', 'style']
         });
         
-        // VSCode拡張との通信設定
-        window.addEventListener('message', (event) => {
-            const message = event.data;
-            
-            switch (message.command) {
-                case 'updateContent':
-                    // エディタ内容の更新
-                    if (window.mindmapApp && window.mindmapApp.updateContent) {
-                        window.mindmapApp.updateContent(message.content);
-                    }
-                    break;
-                case 'themeChanged':
-                    applyVSCodeTheme();
-                    break;
-                case 'saveFile':
-                    // ファイル保存の要求
-                    if (window.mindmapApp && window.mindmapApp.saveFile) {
-                        window.mindmapApp.saveFile();
-                    }
-                    break;
-                case 'exportMindmap':
-                    // マインドマップエクスポートの要求
-                    if (window.mindmapApp && window.mindmapApp.exportMindmap) {
-                        window.mindmapApp.exportMindmap(message.format);
-                    }
-                    break;
-            }
-        });
+        // 注記: Reactアプリケーション（index.vscode.js）でメッセージハンドリングを行うため、
+        // ここでは重複するメッセージハンドラーを設定しない
         
         // アプリケーション準備完了の通知
         window.addEventListener('load', () => {

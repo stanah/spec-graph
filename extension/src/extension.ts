@@ -139,12 +139,15 @@ export function activate(context: vscode.ExtensionContext) {
     // アクティブエディタの変更を監視してツリーとプレビューを更新
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
+            console.log('[DEBUG] onDidChangeActiveTextEditor fired');
             if (editor) {
                 const fileName = editor.document.fileName;
                 const ext = path.extname(fileName).toLowerCase();
+                console.log(`[DEBUG] Active editor changed: ${fileName}, ext: ${ext}`);
                 
                 // マインドマップファイルの場合のみツリーとプレビューを更新
                 if (ext === '.json' || ext === '.yaml' || ext === '.yml') {
+                    console.log('[DEBUG] File extension matches mindmap format');
                     try {
                         const content = editor.document.getText();
                         // マインドマップデータかどうかをチェック
@@ -159,16 +162,21 @@ export function activate(context: vscode.ExtensionContext) {
                         
                         // rootプロパティがある場合のみマインドマップとして扱う
                         if (data && typeof data === 'object' && 'root' in data) {
+                            console.log('[DEBUG] Detected mindmap file with root property');
                             // ツリーを更新
                             await treeDataProvider.setCurrentDocument(editor.document);
                             
                             // 対応するプレビューパネルがあれば更新
                             await updatePreviewForActiveEditor(editor.document);
+                        } else {
+                            console.log('[DEBUG] File does not have root property, not a mindmap');
                         }
-                    } catch {
-                        // 解析エラーは無視
+                    } catch (error) {
+                        console.log('[DEBUG] Parse error (ignored):', error);
                     }
                 }
+            } else {
+                console.log('[DEBUG] No active editor');
             }
         })
     );
@@ -673,15 +681,23 @@ async function updatePreviewForActiveEditor(document: vscode.TextDocument): Prom
         const panelKey = document.uri.toString();
         const panel = previewPanels.get(panelKey);
         
+        console.log(`[DEBUG] updatePreviewForActiveEditor: panelKey=${panelKey}`);
+        console.log(`[DEBUG] previewPanels size=${previewPanels.size}, keys=`, Array.from(previewPanels.keys()));
+        
         if (panel) {
             // 既存のプレビューパネルがある場合、コンテンツを更新
-            panel.webview.postMessage({
+            const message = {
                 command: 'updateContent',
                 content: document.getText(),
                 fileName: document.fileName,
                 uri: document.uri.toString()
-            });
+            };
+            console.log('[DEBUG] Sending updateContent message:', message);
+            
+            panel.webview.postMessage(message);
             console.log('プレビューパネルを更新しました:', path.basename(document.fileName));
+        } else {
+            console.log('[DEBUG] プレビューパネルが見つかりませんでした:', path.basename(document.fileName));
         }
     } catch (error) {
         console.error('プレビューパネルの更新に失敗しました:', error);
