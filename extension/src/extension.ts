@@ -136,14 +136,14 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(treeView);
 
-    // アクティブエディタの変更を監視してツリーを更新
+    // アクティブエディタの変更を監視してツリーとプレビューを更新
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
             if (editor) {
                 const fileName = editor.document.fileName;
                 const ext = path.extname(fileName).toLowerCase();
                 
-                // マインドマップファイルの場合のみツリーを更新
+                // マインドマップファイルの場合のみツリーとプレビューを更新
                 if (ext === '.json' || ext === '.yaml' || ext === '.yml') {
                     try {
                         const content = editor.document.getText();
@@ -159,7 +159,11 @@ export function activate(context: vscode.ExtensionContext) {
                         
                         // rootプロパティがある場合のみマインドマップとして扱う
                         if (data && typeof data === 'object' && 'root' in data) {
+                            // ツリーを更新
                             await treeDataProvider.setCurrentDocument(editor.document);
+                            
+                            // 対応するプレビューパネルがあれば更新
+                            await updatePreviewForActiveEditor(editor.document);
                         }
                     } catch {
                         // 解析エラーは無視
@@ -448,6 +452,41 @@ export function activate(context: vscode.ExtensionContext) {
     // すべてのコマンドを登録
     context.subscriptions.push(...commands);
 
+    // グローバルドキュメント変更監視（全プレビューパネルの自動更新）
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeTextDocument(async (event) => {
+            const document = event.document;
+            const ext = path.extname(document.fileName).toLowerCase();
+            
+            // マインドマップファイルの場合のみ処理
+            if (ext === '.json' || ext === '.yaml' || ext === '.yml') {
+                try {
+                    const content = document.getText();
+                    let data: unknown;
+                    
+                    if (ext === '.yaml' || ext === '.yml') {
+                        // eslint-disable-next-line @typescript-eslint/no-require-imports
+                        const yaml = require('js-yaml');
+                        data = yaml.load(content);
+                    } else {
+                        data = JSON.parse(content);
+                    }
+                    
+                    // rootプロパティがある場合のみマインドマップとして扱い、プレビューを更新
+                    if (data && typeof data === 'object' && 'root' in data) {
+                        await updatePreviewForActiveEditor(document);
+                        
+                        // Diagnostics更新
+                        ensureDiagnosticCollection(context);
+                        await validateDocumentToDiagnostics(document);
+                    }
+                } catch {
+                    // 解析エラーは無視（入力中の不正なJSONなど）
+                }
+            }
+        })
+    );
+
     // 設定変更の監視
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((event) => {
@@ -627,6 +666,29 @@ root:
 }
 
 /**
+ * アクティブエディタに対応するプレビューパネルを更新する関数
+ */
+async function updatePreviewForActiveEditor(document: vscode.TextDocument): Promise<void> {
+    try {
+        const panelKey = document.uri.toString();
+        const panel = previewPanels.get(panelKey);
+        
+        if (panel) {
+            // 既存のプレビューパネルがある場合、コンテンツを更新
+            panel.webview.postMessage({
+                command: 'updateContent',
+                content: document.getText(),
+                fileName: document.fileName,
+                uri: document.uri.toString()
+            });
+            console.log('プレビューパネルを更新しました:', path.basename(document.fileName));
+        }
+    } catch (error) {
+        console.error('プレビューパネルの更新に失敗しました:', error);
+    }
+}
+
+/**
  * マインドマッププレビューを開く関数
  */
 async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscode.ViewColumn, context: vscode.ExtensionContext): Promise<void> {
@@ -704,26 +766,12 @@ async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscod
             }
         );
 
-        // ドキュメント変更の監視
-        const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async e => {
-            if (e.document.uri.toString() === panelKey) {
-                // ドキュメントが変更されたらWebviewに通知
-                panel?.webview.postMessage({
-                    command: 'updateContent',
-                    content: e.document.getText(),
-                    fileName: e.document.fileName,
-                    uri: e.document.uri.toString()
-                });
-                // Diagnostics更新
-                ensureDiagnosticCollection(context);
-                await validateDocumentToDiagnostics(e.document);
-            }
-        });
+        // 注記: ドキュメント変更の監視は、グローバル監視で処理されるため、
+        // 個別のプレビューパネルでは不要（重複監視を避ける）
 
         // パネルが閉じられた時にリスナーを削除
         panel.onDidDispose(() => {
             webviewMsgSubscription?.dispose();
-            changeDocumentSubscription.dispose();
         });
 
     } catch (error) {
