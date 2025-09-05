@@ -1,25 +1,24 @@
 title: req-mindmap ステークホルダー
 version: "1.0.0"
 stakeholders:
-  - id: STKH-PO
+  - id: STK-001
     name: プロダクトオーナー
     role: product-owner
     responsibilities: 方針・優先度の意思決定
     contact: po@example.com
     availability: on-demand
     components: [ui]
-  - id: STKH-TL
+  - id: STK-002
     name: テックリード
     role: tech-lead
     responsibilities: 技術判断・設計レビュー
     contact: tl@example.com
     availability: part-time
     components: [core]
-  - id: STKH-DEV
+  - id: STK-003
     name: 開発者
     role: developer
     responsibilities: 実装・テスト・リファクタリング
     contact: dev@example.com
     availability: full-time
     components: [services]
-

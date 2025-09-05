@@ -52,7 +52,7 @@
         },
         {
           "if": { "properties": { "type": { "const": "stakeholder" } } },
-          "then": { "properties": { "id": { "pattern": "^STK-[A-Z]{3,4}-\\d{3}$" } } }
+          "then": { "properties": { "id": { "pattern": "^STK-\\d{3}$" } } }
         },
         {
           "if": { "properties": { "type": { "const": "design" } } },
@@ -60,7 +60,7 @@
         },
         {
           "if": { "properties": { "type": { "const": "task" } } },
-          "then": { "properties": { "id": { "pattern": "^TSK-[A-Z]{3,4}-\\d{3}$" } } }
+          "then": { "properties": { "id": { "pattern": "^TASK-[A-Z]{3,4}-\\d{3}$" } } }
         }
       ],
       "additionalProperties": false

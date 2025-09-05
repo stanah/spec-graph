@@ -21,8 +21,8 @@ userRequirements:
       - 入力から表示更新までの遅延100ms以内
       - 1万ノードでも編集が破綻しない
     relatesTo:
-      - { type: design, id: DSGN-CORE }
-      - { type: task, id: TASK-RENDER-OPT }
+      - { type: design, id: DSG-CORE-001 }
+      - { type: task, id: TASK-PERF-002 }
 
   - id: FR-OFFL-001
     title: オフラインで全機能を利用したい
