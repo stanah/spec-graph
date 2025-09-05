@@ -55,6 +55,9 @@ export const ALLOWED_VSCODE_COMMANDS = {
     THEME_CHANGED: 'themeChanged',
     READY: 'ready',
     INITIAL_CONTENT: 'initialContent',
+    UPDATE_CONTENT: 'updateContent',
+    UPDATE_DOCUMENT: 'updateDocument',
+    DOCUMENT_CHANGED: 'documentChanged',
     UNKNOWN_COMMAND: 'unknownCommand',
     INVALID_COMMAND: 'invalidCommand'
   }
@@ -69,18 +72,18 @@ export class VSCodeMessageValidator {
    */
   static validateIncoming(message: any): message is VSCodeWebViewMessage {
     if (!message || typeof message !== 'object') {
-      console.warn('[VSCode] Invalid message format: not an object');
+      // console.warn('[VSCode] Invalid message format: not an object');
       return false;
     }
 
     if (!message.command || typeof message.command !== 'string') {
-      console.warn('[VSCode] Invalid message: missing or invalid command');
+      // console.warn('[VSCode] Invalid message: missing or invalid command');
       return false;
     }
 
     const allowedCommands = Object.values(ALLOWED_VSCODE_COMMANDS.OUT);
     if (!allowedCommands.includes(message.command as any)) {
-      console.warn('[VSCode] Invalid message: command not allowed:', message.command);
+      // console.warn('[VSCode] Invalid message: command not allowed:', message.command);
       return false;
     }
 
@@ -92,18 +95,18 @@ export class VSCodeMessageValidator {
    */
   static validateOutgoing(message: any): message is VSCodeMessage {
     if (!message || typeof message !== 'object') {
-      console.warn('[VSCode] Invalid message format: not an object');
+      // console.warn('[VSCode] Invalid message format: not an object');
       return false;
     }
 
     if (!message.command || typeof message.command !== 'string') {
-      console.warn('[VSCode] Invalid message: missing or invalid command');
+      // console.warn('[VSCode] Invalid message: missing or invalid command');
       return false;
     }
 
     const allowedCommands = Object.values(ALLOWED_VSCODE_COMMANDS.IN);
     if (!allowedCommands.includes(message.command as any)) {
-      console.warn('[VSCode] Invalid message: command not allowed:', message.command);
+      // console.warn('[VSCode] Invalid message: command not allowed:', message.command);
       return false;
     }
 

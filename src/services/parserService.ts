@@ -165,7 +165,6 @@ export class ParserServiceImpl implements ParserService {
           
           // YAML構文自体は正しいが、Zodバリデーションで失敗している可能性を確認
           try {
-            console.log('YAMLの基本的なパースを再試行...');
             const rawYamlData = yaml.load(content, {
               schema: yaml.JSON_SCHEMA,
               json: true
