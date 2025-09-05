@@ -1803,7 +1803,7 @@
               "27.4"
             ],
             "details": "1. プリント用CSS（@media print）の実装\n2. ページ区切り制御（page-break-before/after/inside）\n3. ヘッダー・フッター・ページ番号の追加\n4. jsPDF v2.5の統合とカスタマイズ\n5. 日本語フォント対応（IPAフォント埋め込み）\n6. PDFエクスポートダイアログの実装\n7. プリントプレビュー機能\n8. エクスポート設定（用紙サイズ、余白、向き）",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "プリントレイアウトの視覚的回帰テスト、PDF生成の整合性テスト、日本語表示テスト、各種用紙サイズでの出力テスト"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-03T15:17:48.032Z",
+      "updated": "2025-09-05T18:43:04.709Z",
       "description": "Tasks for master context"
     }
   }
