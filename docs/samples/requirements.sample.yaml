@@ -1,0 +1,46 @@
+title: req-mindmap 要件ドキュメント
+version: "1.0.0"
+goals:
+  - ローカルで高速・安定の要件編集体験
+  - Gitベースの差分レビューしやすさ
+userRequirements:
+  - id: REQ-USER-FAST
+    title: 体感の良い編集レスポンス
+    description: 入力に対する表示反映が遅延少なく行えること
+    priority: high
+    status: in-progress
+    owner: core-team
+    component: core
+    effort: 5
+    risk: medium
+    acceptanceCriteria:
+      - 入力から表示更新までの遅延100ms以内
+      - 1万ノードでも編集が破綻しない
+systemRequirements:
+  - id: REQ-PARSE-ZOD
+    title: YAML/JSONの安全なパースと検証
+    description: Zodベースの検証で構造整合性を担保する
+    priority: critical
+    status: done
+    component: services
+    acceptanceCriteria:
+      - 不正データ時の詳細エラー
+  - id: REQ-DOC-TYPES
+    title: 文書タイプの管理
+    description: Requirements/Stakeholders/Design/Tasks をプラグイン可能に
+    priority: high
+    status: done
+    component: services
+nonFunctionalRequirements:
+  - id: REQ-PERF
+    title: パフォーマンス
+    description: 大規模データでも快適に動作
+    priority: high
+    status: in-progress
+glossary:
+  - term: MCP
+    definition: Model Context Protocol
+traceability:
+  - from: REQ-USER-FAST
+    to: REQ-PERF
+

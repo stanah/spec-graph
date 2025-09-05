@@ -1,0 +1,39 @@
+title: req-mindmap タスク
+version: "1.0.0"
+epics:
+  - id: TASK-EPIC-DOC-TYPES
+    title: ドキュメントタイプ管理
+    type: feature
+    status: done
+    priority: medium
+    children:
+      - id: TASK-REGISTRY
+        title: Registryと抽象クラス
+        status: done
+        assignee: STKH-DEV
+        estimate: 3
+      - id: TASK-BUILTINS
+        title: 組み込みタイプ（Req/Stake/Design/Tasks）
+        status: done
+        assignee: STKH-DEV
+        estimate: 5
+      - id: TASK-RELATIONS
+        title: 依存グラフとカスタム登録
+        status: done
+        assignee: STKH-DEV
+        estimate: 5
+  - id: TASK-EPIC-PERF
+    title: パフォーマンス最適化
+    type: chore
+    status: in-progress
+    priority: high
+    children:
+      - id: TASK-RENDER-OPT
+        title: レンダリング最適化
+        status: in-progress
+        assignee: STKH-DEV
+        estimate: 8
+        relatesTo:
+          - type: requirement
+            id: REQ-PERF
+

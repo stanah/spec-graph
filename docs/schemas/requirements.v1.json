@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:req-mindmap:schemas:requirements.v1",
+  "title": "Requirements Document",
+  "type": "object",
+  "required": ["title", "version", "systemRequirements"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "goals": { "type": "array", "items": { "type": "string" } },
+    "userRequirements": { "$ref": "#/$defs/RequirementList" },
+    "systemRequirements": { "$ref": "#/$defs/RequirementList" },
+    "nonFunctionalRequirements": { "$ref": "#/$defs/RequirementList" },
+    "glossary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["term", "definition"],
+        "properties": {
+          "term": { "type": "string" },
+          "definition": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "traceability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "RequirementList": { "type": "array", "items": { "$ref": "#/$defs/Requirement" } },
+    "Ref": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["stakeholder", "design", "task", "requirement"] },
+        "id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Requirement": {
+      "type": "object",
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^REQ-[A-Z0-9_-]+$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "owner": { "type": "string" },
+        "priority": { "enum": ["critical", "high", "medium", "low"] },
+        "status": { "enum": ["draft", "pending", "in-progress", "review", "done", "cancelled", "deferred"] },
+        "component": { "enum": ["core", "services", "vscode", "mcp-server", "ui"] },
+        "effort": { "type": "number", "minimum": 0 },
+        "risk": { "enum": ["low", "medium", "high"] },
+        "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
+        "dependsOn": { "type": "array", "items": { "type": "string", "pattern": "^REQ-[A-Z0-9_-]+$" } },
+        "relatesTo": { "type": "array", "items": { "$ref": "#/$defs/Ref" } },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

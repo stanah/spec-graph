@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:req-mindmap:schemas:stakeholders.v1",
+  "title": "Stakeholders Document",
+  "type": "object",
+  "required": ["title", "version", "stakeholders"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "stakeholders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^STKH-[A-Z0-9_-]+$" },
+          "name": { "type": "string" },
+          "role": { "enum": ["product-owner", "tech-lead", "developer", "qa", "analyst"] },
+          "responsibilities": { "type": "string" },
+          "contact": { "type": "string" },
+          "availability": { "enum": ["full-time", "part-time", "on-demand"] },
+          "components": { "type": "array", "items": { "enum": ["core", "services", "ui", "vscode", "mcp-server"] } },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:req-mindmap:schemas:tasks.v1",
+  "title": "Tasks Document",
+  "type": "object",
+  "required": ["title", "version", "epics"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "epics": { "type": "array", "items": { "$ref": "#/$defs/TaskItem" } }
+  },
+  "$defs": {
+    "Relation": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["requirement", "design"] },
+        "id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "TaskItem": {
+      "type": "object",
+      "required": ["id", "title", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^TASK-[A-Z0-9_-]+$" },
+        "title": { "type": "string" },
+        "type": { "enum": ["feature", "bug", "chore", "doc"], "default": "feature" },
+        "status": { "enum": ["todo", "in-progress", "review", "done", "deferred", "cancelled"] },
+        "priority": { "enum": ["critical", "high", "medium", "low"] },
+        "assignee": { "type": "string", "pattern": "^STKH-[A-Z0-9_-]+$" },
+        "estimate": { "type": "number", "minimum": 0 },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "relatesTo": { "type": "array", "items": { "$ref": "#/$defs/Relation" } },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/TaskItem" } },
+        "notes": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+
