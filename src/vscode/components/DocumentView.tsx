@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore } from '../../stores/appStore';
 import { buildDocumentOutline, type DocumentOutline, type SectionBlock, type ParagraphBlock } from '../document/buildDocumentOutline';
 import { buildTOC } from '../document/buildTOC';
+import './DocumentView.print.css';
 
 const theme = {
   paragraph: 'lexical-paragraph',
@@ -97,6 +98,7 @@ export const DocumentView: React.FC = () => {
         <section key={sec.heading.nodeId} data-nodeid={sec.heading.nodeId} data-collapsed={isCollapsed ? 'true' : 'false'}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
+              data-print-hide="true"
               aria-label={isCollapsed ? 'expand' : 'collapse'}
               data-testid={`dv-toggle-${sec.heading.nodeId}`}
               onClick={() => toggle(sec.heading.nodeId)}
@@ -129,10 +131,10 @@ export const DocumentView: React.FC = () => {
   }, []);
 
   return (
-    <div data-testid="document-view" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
+    <div data-testid="document-view" data-print-root="true" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
       {outline ? (
         <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 12 }}>
-          <nav data-testid="doc-toc" aria-label="Table of contents" style={{ borderRight: '1px solid var(--vscode-panel-border)', paddingRight: 12 }}>
+          <nav data-testid="doc-toc" data-print-hide="true" aria-label="Table of contents" style={{ borderRight: '1px solid var(--vscode-panel-border)', paddingRight: 12 }}>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {tocItems.map((t) => (
                 <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>

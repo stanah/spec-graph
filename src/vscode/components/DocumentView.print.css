@@ -1,0 +1,23 @@
+/* Print-specific styles for DocumentView */
+@media print {
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  [data-print-root="true"] {
+    padding: 0 !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}
+
