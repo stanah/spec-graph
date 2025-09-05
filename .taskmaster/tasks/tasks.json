@@ -1906,7 +1906,7 @@
               "29.1"
             ],
             "details": "src/core/document-types/built-in/RequirementsType.ts と StakeholdersType.ts を作成。各タイプ固有のスキーマ定義（優先度、ステータス、担当者などのフィールド）、バリデーションルール、デフォルトアイコン（lucide-react使用）とカラーテーマを実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各タイプのスキーマバリデーション（正常系・異常系）、必須フィールドの存在確認、データ型の妥当性チェック"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-05T20:03:04.103Z",
+      "updated": "2025-09-05T20:08:49.573Z",
       "description": "Tasks for master context"
     }
   }
