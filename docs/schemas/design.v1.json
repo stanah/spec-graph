@@ -17,11 +17,11 @@
       "type": "object",
       "required": ["id", "name", "type"],
       "properties": {
-        "id": { "type": "string", "pattern": "^DSGN-[A-Z0-9_-]+$" },
+        "id": { "type": "string", "pattern": "^DSG-[A-Z]{3,4}-\\d{3}$" },
         "name": { "type": "string" },
         "type": { "enum": ["service", "module", "ui", "library", "adapter"] },
         "responsibilities": { "type": "string" },
-        "dependencies": { "type": "array", "items": { "type": "string", "pattern": "^DSGN-[A-Z0-9_-]+$" } },
+        "dependencies": { "type": "array", "items": { "type": "string", "pattern": "^DSG-[A-Z]{3,4}-\\d{3}$" } },
         "interfaces": { "type": "array", "items": { "type": "string" } },
         "dataModels": { "type": "array", "items": { "type": "string" } },
         "techStack": { "type": "array", "items": { "enum": ["typescript", "react", "vite", "vitest", "zod", "d3", "vscode-api", "ajv"] } },
@@ -34,4 +34,3 @@
   },
   "additionalProperties": false
 }
-

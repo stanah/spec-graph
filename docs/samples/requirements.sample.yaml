@@ -1,10 +1,14 @@
 title: req-mindmap 要件ドキュメント
 version: "1.0.0"
+
 goals:
   - ローカルで高速・安定の要件編集体験
   - Gitベースの差分レビューしやすさ
+  - VSCodeワークフローへの自然な統合
+  - 文書タイプ別の最適化と拡張性
+
 userRequirements:
-  - id: REQ-USER-FAST
+  - id: FR-EDIT-001
     title: 体感の良い編集レスポンス
     description: 入力に対する表示反映が遅延少なく行えること
     priority: high
@@ -16,8 +20,80 @@ userRequirements:
     acceptanceCriteria:
       - 入力から表示更新までの遅延100ms以内
       - 1万ノードでも編集が破綻しない
+    relatesTo:
+      - { type: design, id: DSGN-CORE }
+      - { type: task, id: TASK-RENDER-OPT }
+
+  - id: FR-OFFL-001
+    title: オフラインで全機能を利用したい
+    description: ネットワーク接続なしに編集・プレビュー・保存が可能
+    priority: high
+    status: pending
+    component: services
+    acceptanceCriteria:
+      - 拡張機能動作に外部API不要
+
+  - id: FR-DIFF-001
+    title: 差分レビューしやすい形式
+    description: テキスト（YAML/JSON）で変更点が明瞭に確認できる
+    priority: high
+    status: review
+    component: services
+    acceptanceCriteria:
+      - 保存時に安定したフォーマット順序
+      - 行単位の差分で主要変更が分かる
+
+  - id: FR-KEYB-001
+    title: キーボード中心の操作
+    description: 主要操作がショートカットで完結し、生産性を高める
+    priority: medium
+    status: pending
+    component: ui
+
+  - id: FR-VSCD-001
+    title: VSCodeワークフローへの自然統合
+    description: 右上ボタンでプレビューをサイド表示し、双方向同期
+    priority: medium
+    status: in-progress
+    component: vscode
+
+  - id: FR-TBLV-001
+    title: テーブルビューで一覧操作
+    description: ソート/フィルタ/選択/バルク操作に適したビュー
+    priority: medium
+    status: pending
+    component: ui
+
+  - id: FR-DOCV-001
+    title: ドキュメントビューで章立て表示
+    description: アウトライン/印刷/エクスポートを想定した整形表示
+    priority: medium
+    status: in-progress
+    component: ui
+
+  - id: FR-SRCH-001
+    title: 高機能検索/フィルタ
+    description: 正規表現/属性/階層レベル/ランキング
+    priority: medium
+    status: pending
+    component: ui
+
+  - id: FR-EXPT-001
+    title: PDF/クリップボード/画像エクスポート
+    description: レビュー/共有のための多様な出力手段
+    priority: medium
+    status: pending
+    component: ui
+
+  - id: FR-ERRS-001
+    title: 分かりやすいエラーメッセージ
+    description: 位置情報/原因/対処を提示して復旧容易に
+    priority: high
+    status: in-progress
+    component: services
+
 systemRequirements:
-  - id: REQ-PARSE-ZOD
+  - id: FR-PARS-001
     title: YAML/JSONの安全なパースと検証
     description: Zodベースの検証で構造整合性を担保する
     priority: critical
@@ -25,22 +101,253 @@ systemRequirements:
     component: services
     acceptanceCriteria:
       - 不正データ時の詳細エラー
-  - id: REQ-DOC-TYPES
+
+  - id: FR-AJV-001
+    title: JSON Schema(Ajv) 併用拡張
+    description: カスタムルールや型制約を柔軟に定義できる
+    priority: high
+    status: done
+    component: services
+    acceptanceCriteria:
+      - 独自キーワードの登録/検証が可能
+
+  - id: FR-SCMA-001
+    title: スキーマのバージョニング
+    description: 互換性と移行ログを管理する
+    priority: medium
+    status: done
+    component: services
+
+  - id: FR-AKEY-001
+    title: Ajvカスタムキーワード
+    description: nonEmptyString / uniqueNodeIds 等の拡張
+    priority: medium
+    status: done
+    component: services
+
+  - id: FR-UIDS-001
+    title: ノードIDのユニーク性
+    description: 全ノードでID重複がないこと
+    priority: high
+    status: done
+    component: core
+
+  - id: FR-DTYP-001
     title: 文書タイプの管理
     description: Requirements/Stakeholders/Design/Tasks をプラグイン可能に
     priority: high
     status: done
     component: services
-nonFunctionalRequirements:
-  - id: REQ-PERF
-    title: パフォーマンス
-    description: 大規模データでも快適に動作
+
+  - id: FR-DEPS-001
+    title: タイプ間の依存関係グラフ
+    description: 循環検出と解決順序（トポロジカル）
+    priority: medium
+    status: done
+    component: services
+
+  - id: FR-SRCH-002
+    title: 検索/フィルタ（実装）
+    description: 正規表現/属性/階層レベルの絞り込み
+    priority: medium
+    status: pending
+    component: ui
+
+  - id: FR-RANK-001
+    title: 検索結果ランキング
+    description: 一致度/重み付けでソート
+    priority: medium
+    status: pending
+    component: ui
+
+  - id: FR-TBLV-002
+    title: テーブルの仮想化（実装）
+    description: 大量データでもスクロールが滑らか
+    priority: high
+    status: done
+    component: ui
+
+  - id: FR-OUTL-001
+    title: ドキュメントアウトライン
+    description: 見出し/目次生成
+    priority: medium
+    status: done
+    component: ui
+
+  - id: FR-LXCL-001
+    title: Lexical描画統合
+    description: リッチテキスト出力の準備
+    priority: low
+    status: in-progress
+    component: ui
+
+  - id: FR-EXPT-002
+    title: PDFエクスポート
+    description: 印刷/共有に適した出力
+    priority: medium
+    status: done
+    component: ui
+
+  - id: FR-VSCD-002
+    title: VSCodeコマンド統合
+    description: プレビューを開く/横に開く/保存/エクスポート
+    priority: medium
+    status: done
+    component: vscode
+
+  - id: FR-VSCD-003
+    title: ツリービュー連携
+    description: ファイル内の構造をツリー表示
+    priority: low
+    status: done
+    component: vscode
+
+  - id: FR-SYNC-001
+    title: エディタ↔Webviewの同期
+    description: updateContent メッセージで双方向更新
     priority: high
     status: in-progress
+    component: vscode
+
+  - id: FR-NOPS-001
+    title: ノード操作（追加/移動/削除）
+    description: ツールバー/ボタン/ショートカットから直感的に
+    priority: high
+    status: done
+    component: ui
+
+  - id: FR-NDET-001
+    title: ノード詳細パネル
+    description: 選択ノードのプロパティ編集
+    priority: medium
+    status: in-progress
+    component: ui
+
+  - id: FR-TBAR-001
+    title: ツールバー
+    description: ズーム/展開/折りたたみ/フォーカス等の操作
+    priority: low
+    status: done
+    component: ui
+
+  - id: FR-INTL-001
+    title: i18n
+    description: エラーメッセージやUIラベルの多言語対応
+    priority: low
+    status: done
+    component: services
+
+  - id: FR-PMON-001
+    title: パフォーマンス計測
+    description: メトリクス収集と閾値検知
+    priority: medium
+    status: done
+    component: services
+
+  - id: FR-ERRH-001
+    title: エラーハンドリング
+    description: 例外捕捉/ユーザー通知/復旧導線
+    priority: high
+    status: in-progress
+    component: services
+
+  - id: FR-MEML-001
+    title: メモリリーク防止
+    description: クリーンアップ/破棄の徹底
+    priority: medium
+    status: done
+    component: services
+
+  - id: FR-PLAT-001
+    title: プラットフォームアダプター
+    description: VSCode/ブラウザ差異の吸収
+    priority: low
+    status: done
+    component: services
+
+  - id: FR-MCP-001
+    title: MCP連携
+    description: Task Master AI等のツール連携
+    priority: low
+    status: draft
+    component: mcp-server
+
+nonFunctionalRequirements:
+  - id: NFR-PERF-001
+    title: 大規模データ対応
+    description: 1万〜5万ノードでも操作可能
+    priority: high
+    status: in-progress
+    acceptanceCriteria:
+      - 初期描画3秒以内（1万ノード）
+      - スクロール60fps近似
+
+  - id: NFR-PERF-002
+    title: レンダリング時間
+    description: 再描画の平均応答を抑制
+    priority: medium
+    status: in-progress
+
+  - id: NFR-USAB-001
+    title: キーボード操作性
+    description: 主要操作が2ストローク以内
+    priority: medium
+    status: pending
+
+  - id: NFR-RELI-001
+    title: 信頼性/復旧
+    description: 保存失敗時の再試行/差分保持
+    priority: medium
+    status: pending
+
+  - id: NFR-SECU-001
+    title: セキュリティ（オフライン）
+    description: 外部送信ゼロ、ローカル保護
+    priority: medium
+    status: draft
+
+  - id: NFR-TEST-001
+    title: テスト網羅
+    description: 主要機能の単体/統合/E2E
+    priority: medium
+    status: in-progress
+
+  - id: NFR-COMP-001
+    title: VSCode互換性
+    description: 安定版とLTSでの動作保証
+    priority: medium
+    status: pending
+
+  - id: NFR-ACCS-001
+    title: アクセシビリティ
+    description: 色覚/キーボード/ARIA対応
+    priority: low
+    status: draft
+
+  - id: NFR-INTL-001
+    title: 国際化
+    description: 日英切替、エラーi18n完備
+    priority: low
+    status: done
+
+  - id: NFR-DOCS-001
+    title: ドキュメント整備
+    description: README/拡張の使い方/サンプルの入門
+    priority: low
+    status: in-progress
+
 glossary:
   - term: MCP
     definition: Model Context Protocol
-traceability:
-  - from: REQ-USER-FAST
-    to: REQ-PERF
+  - term: Ajv
+    definition: JSON Schema バリデータ
 
+traceability:
+  - from: FR-EDIT-001
+    to: NFR-PERF-001
+  - from: FR-DOCV-001
+    to: FR-OUTL-001
+  - from: FR-SRCH-001
+    to: FR-SRCH-002
+  - from: FR-VSCD-001
+    to: FR-VSCD-002

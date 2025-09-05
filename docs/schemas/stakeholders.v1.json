@@ -13,7 +13,7 @@
         "type": "object",
         "required": ["id", "name", "role"],
         "properties": {
-          "id": { "type": "string", "pattern": "^STKH-[A-Z0-9_-]+$" },
+          "id": { "type": "string", "pattern": "^STK-[A-Z]{3,4}-\\d{3}$" },
           "name": { "type": "string" },
           "role": { "enum": ["product-owner", "tech-lead", "developer", "qa", "analyst"] },
           "responsibilities": { "type": "string" },
@@ -28,4 +28,3 @@
   },
   "additionalProperties": false
 }
-

@@ -45,13 +45,31 @@
         "type": { "enum": ["stakeholder", "design", "task", "requirement"] },
         "id": { "type": "string" }
       },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "requirement" } } },
+          "then": { "properties": { "id": { "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "stakeholder" } } },
+          "then": { "properties": { "id": { "pattern": "^STK-[A-Z]{3,4}-\\d{3}$" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "design" } } },
+          "then": { "properties": { "id": { "pattern": "^DSG-[A-Z]{3,4}-\\d{3}$" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "task" } } },
+          "then": { "properties": { "id": { "pattern": "^TSK-[A-Z]{3,4}-\\d{3}$" } } }
+        }
+      ],
       "additionalProperties": false
     },
     "Requirement": {
       "type": "object",
       "required": ["id", "title"],
       "properties": {
-        "id": { "type": "string", "pattern": "^REQ-[A-Z0-9_-]+$" },
+        "id": { "type": "string", "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "owner": { "type": "string" },
@@ -61,7 +79,7 @@
         "effort": { "type": "number", "minimum": 0 },
         "risk": { "enum": ["low", "medium", "high"] },
         "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
-        "dependsOn": { "type": "array", "items": { "type": "string", "pattern": "^REQ-[A-Z0-9_-]+$" } },
+        "dependsOn": { "type": "array", "items": { "type": "string", "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" } },
         "relatesTo": { "type": "array", "items": { "$ref": "#/$defs/Ref" } },
         "tags": { "type": "array", "items": { "type": "string" } }
       },
@@ -70,4 +88,3 @@
   },
   "additionalProperties": false
 }
-
