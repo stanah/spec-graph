@@ -16,10 +16,14 @@ describe('ViewContainer', () => {
     </ViewProvider>
   );
 
-  it('デフォルトでMindmapViewerを表示（プレースホルダー文言が出ない）', () => {
+  it('デフォルトでドキュメント系ビューを表示する', () => {
     setup();
+    // 初期viewModeがdocumentであること
+    expect(useAppStore.getState().ui.viewMode).toBe('document');
+    // テーブルのプレースホルダーは表示されない
     expect(screen.queryByText('テーブルビュー')).not.toBeInTheDocument();
-    expect(screen.queryByText('ドキュメントビュー')).not.toBeInTheDocument();
+    // コンテンツ未設定時は汎用ドキュメントビューの案内が出る
+    expect(screen.getByText('サポート外のドキュメント形式')).toBeInTheDocument();
   });
 
   it('viewMode=tableでテーブルプレースホルダーを表示', () => {
@@ -28,9 +32,10 @@ describe('ViewContainer', () => {
     expect(screen.getByText('テーブルビュー')).toBeInTheDocument();
   });
 
-  it('viewMode=documentでDocumentViewを表示（data-testidで確認）', () => {
+  it('viewMode=documentでドキュメント系ビューが表示される', () => {
     useAppStore.getState().setViewMode('document');
     setup();
-    expect(screen.getByTestId('document-view')).toBeInTheDocument();
+    // コンテンツ未設定のため汎用ビューの案内が出る
+    expect(screen.getByText('サポート外のドキュメント形式')).toBeInTheDocument();
   });
 });

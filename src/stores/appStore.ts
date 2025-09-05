@@ -48,6 +48,106 @@ const initialFileState: FileState = {
 };
 
 /**
+ * パースエラー時のフォールバック用データを作成
+ */
+function createFallbackData(content: string, parsedYaml?: any): MindmapData {
+  // ファイル名を取得（VSCode環境から取得できない場合のフォールバック）
+  let fallbackTitle = `テキスト (${content.length} 文字)`;
+  let rootTitle = fallbackTitle;
+  let children: any[] = [];
+  
+  // YAMLが正常にパースされている場合は、その構造を活用する
+  if (parsedYaml && typeof parsedYaml === 'object') {
+    try {
+      // タイトルが指定されている場合は使用
+      if (parsedYaml.title) {
+        rootTitle = String(parsedYaml.title);
+        fallbackTitle = rootTitle;
+      }
+      
+      // オブジェクトの各プロパティを子ノードとして追加
+      const topLevelKeys = Object.keys(parsedYaml).filter(key => 
+        key !== 'title' && key !== 'version' && key !== 'metadata'
+      );
+      
+      children = topLevelKeys.map((key, index) => {
+        const value = parsedYaml[key];
+        let childContent = "";
+        let grandchildren: any[] = [];
+        
+        // 値の型に応じてコンテンツを作成
+        if (Array.isArray(value)) {
+          childContent = `${value.length}件のアイテム`;
+          grandchildren = value.map((item, itemIndex) => ({
+            id: `${key}-item-${itemIndex}`,
+            title: typeof item === 'object' && item.name ? item.name : 
+                   typeof item === 'object' && item.title ? item.title :
+                   typeof item === 'string' ? item : `アイテム ${itemIndex + 1}`,
+            content: typeof item === 'object' ? 
+              Object.entries(item).filter(([k, v]) => k !== 'name' && k !== 'title')
+                .map(([k, v]) => `${k}: ${v}`).join('\n') : 
+              String(item),
+            children: [],
+            metadata: { itemIndex }
+          }));
+        } else if (typeof value === 'object') {
+          childContent = `${Object.keys(value).length}個のプロパティ`;
+          grandchildren = Object.entries(value).map(([subKey, subValue]) => ({
+            id: `${key}-${subKey}`,
+            title: subKey,
+            content: String(subValue),
+            children: [],
+            metadata: {}
+          }));
+        } else {
+          childContent = String(value);
+        }
+        
+        return {
+          id: `fallback-${key}`,
+          title: key,
+          content: childContent,
+          children: grandchildren,
+          metadata: { originalKey: key }
+        };
+      });
+      
+      console.log(`[createFallbackData] YAML構造を ${children.length} 個の子ノードに変換`);
+    } catch (error) {
+      console.warn('[createFallbackData] YAML構造の変換中にエラー:', error);
+      // エラーが発生した場合は通常のフォールバック処理を継続
+    }
+  }
+  
+  return {
+    version: "1.0",
+    title: fallbackTitle,
+    metadata: {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      description: parsedYaml ? "構造化データとして表示しています" : "パースエラーが発生したため、生テキストとして表示しています"
+    },
+    tags: [],
+    schema: {
+      version: "1.0",
+      fields: []
+    },
+    root: {
+      id: "fallback-root",
+      title: rootTitle,
+      content: children.length > 0 ? `${children.length}個のセクション` : 
+               content.substring(0, 200) + (content.length > 200 ? "..." : ""),
+      children: children,
+      metadata: {
+        hasParseError: !parsedYaml,
+        originalContent: content,
+        wasYamlParsed: !!parsedYaml
+      }
+    }
+  };
+}
+
+/**
  * 初期パース状態
  */
 const initialParseState: ParseState = {
@@ -66,7 +166,7 @@ const initialParseState: ParseState = {
 const initialUIState: UIState = {
   editorSettings: settingsService.loadSettings().editor,
   mindmapSettings: settingsService.loadSettings().mindmap,
-  viewMode: 'mindmap',
+  viewMode: 'document',
   selectedNodeId: null,
   nodeSelection: null,
   editorCursorPosition: null,
@@ -1011,6 +1111,11 @@ export const useAppStore = create<AppStore>()(
               })));
               parseErrors.push(...result.errors);
               currentNodeMapping = null;
+              
+              // パースエラーでも最低限の表示用データを作成
+              console.log('パースエラーのため、生テキスト表示用データを作成');
+              // 中間データ（YAML構文は正しい）がある場合はそれを使用
+              parsedData = createFallbackData(content, result.intermediateData);
             }
 
             set((state) => ({
@@ -1039,10 +1144,14 @@ export const useAppStore = create<AppStore>()(
             console.error('Parse error:', error);
             currentNodeMapping = null;
             
+            // catchブロックでも最低限の表示用データを作成
+            console.log('例外発生のため、生テキスト表示用データを作成');
+            const fallbackData = createFallbackData(content);
+            
             set((state) => ({
               parse: {
                 ...state.parse,
-                parsedData: null,
+                parsedData: fallbackData,
                 parseErrors: [{
                   line: 1,
                   column: 1,

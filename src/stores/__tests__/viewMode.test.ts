@@ -10,9 +10,9 @@ describe('ViewMode in AppStore', () => {
     useAppStore.getState().reset();
   });
 
-  it('初期値は mindmap である', () => {
+  it('初期値は document である', () => {
     const state = useAppStore.getState();
-    expect(state.ui.viewMode).toBe('mindmap');
+    expect(state.ui.viewMode).toBe('document');
   });
 
   it('setViewMode でビューモードを更新できる', () => {
@@ -23,4 +23,3 @@ describe('ViewMode in AppStore', () => {
     expect(useAppStore.getState().ui.viewMode).toBe('document');
   });
 });
-
