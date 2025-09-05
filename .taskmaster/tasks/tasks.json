@@ -1895,7 +1895,7 @@
             "description": "ドキュメントタイプを管理するレジストリクラスと、全タイプの基底となる抽象クラスを実装する",
             "dependencies": [],
             "details": "src/core/document-types/DocumentTypeRegistry.ts にシングルトンパターンでレジストリクラスを実装。BaseDocumentType.ts に抽象クラスを定義し、getSchema()、validate()、getIcon()、getColor()、getRelations()などの抽象メソッドを定義。タイプの登録・削除・取得のAPIを提供",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "レジストリへのタイプ登録・削除・重複登録のテスト、BaseDocumentTypeの継承と必須メソッド実装の確認、シングルトンインスタンスの動作確認"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-05T19:57:44.317Z",
+      "updated": "2025-09-05T20:03:04.103Z",
       "description": "Tasks for master context"
     }
   }
