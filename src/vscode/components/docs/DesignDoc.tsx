@@ -1,6 +1,8 @@
 import React from 'react';
 import type { DesignDoc } from '../../../services/docTypes';
 
+const chipStyle: React.CSSProperties = { display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 };
+
 function ComponentTree({ node }: { node: any }) {
   return (
     <li>
@@ -30,7 +32,7 @@ function ComponentTree({ node }: { node: any }) {
         <div style={{ marginTop: 4 }}>
           <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>Tech</span>
           {node.techStack.map((t: string, i: number) => (
-            <span key={i} style={{ display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 }}>{t}</span>
+            <span key={i} style={chipStyle}>{t}</span>
           ))}
         </div>
       )}

@@ -2,6 +2,7 @@ import React from 'react';
 import type { StakeholdersDoc } from '../../../services/docTypes';
 
 export const StakeholdersDocView: React.FC<{ doc: StakeholdersDoc }> = ({ doc }) => {
+  const chipStyle: React.CSSProperties = { display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 };
   return (
     <div>
       <header style={{ padding: '12px 16px', borderBottom: '1px solid var(--vscode-panel-border)' }}>
@@ -33,7 +34,7 @@ export const StakeholdersDocView: React.FC<{ doc: StakeholdersDoc }> = ({ doc })
                 <td>
                   {Array.isArray(s.components) && s.components.length > 0 ? (
                     s.components.map((c: string, idx: number) => (
-                      <span key={idx} style={{ display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 }}>{c}</span>
+                      <span key={idx} style={chipStyle}>{c}</span>
                     ))
                   ) : (
                     '-'
