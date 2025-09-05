@@ -7,6 +7,8 @@ import { MindmapTreeDataProvider, MindmapTreeItem } from './MindmapTreeDataProvi
 // アクティブなプレビューパネルを管理
 const previewPanels = new Map<string, vscode.WebviewPanel>();
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
+// Webviewプロバイダーの参照（パネル再初期化用）
+let webviewProviderSingleton: MindmapWebviewProvider | null = null;
 
 function ensureDiagnosticCollection(context: vscode.ExtensionContext): vscode.DiagnosticCollection | null {
     try {
@@ -112,6 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Webviewプロバイダーの登録
     const _webviewProvider = new MindmapWebviewProvider(context.extensionUri);
+    webviewProviderSingleton = _webviewProvider;
     
     // カスタムエディタープロバイダーの登録
     const editorProvider = new MindmapEditorProvider(context);
@@ -140,6 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
             console.log('[DEBUG] onDidChangeActiveTextEditor fired');
+            console.log('[DEBUG] Editor:', editor ? editor.document.fileName : 'null');
             if (editor) {
                 const fileName = editor.document.fileName;
                 const ext = path.extname(fileName).toLowerCase();
@@ -174,16 +178,35 @@ export function activate(context: vscode.ExtensionContext) {
                         );
                         
                         if (isLikelyMindmapFile) {
-                            console.log('[DEBUG] Detected structured data file (potential mindmap)');
+                            console.log('[DEBUG] ✅ Detected structured data file (potential mindmap)');
+                            console.log('[DEBUG] Data keys:', Object.keys(data as object));
                             // ツリーを更新（rootプロパティがある場合のみ）
                             if ('root' in (data as object)) {
+                                console.log('[DEBUG] Updating tree data provider...');
                                 await treeDataProvider.setCurrentDocument(editor.document);
                             }
                             
                             // プレビューは常に更新（構造化データとして表示）
+                            console.log('[DEBUG] 🚀 Calling updatePreviewForActiveEditor...');
                             await updatePreviewForActiveEditor(editor.document);
+                            console.log('[DEBUG] ✅ updatePreviewForActiveEditor completed');
+
+                            // フォロー設定に応じて、プレビューが開かれていなければ自動で開く
+                            try {
+                                const cfg = vscode.workspace.getConfiguration('mindmapTool');
+                                const follow = cfg.get<boolean>('preview.followActiveEditor', true);
+                                const autoOpen = cfg.get<boolean>('preview.autoOpenOnFileOpen', true);
+                                const hasVisiblePreview = Array.from(previewPanels.values()).some(p => p.visible);
+                                if (follow && autoOpen && !hasVisiblePreview) {
+                                    console.log('[DEBUG] No visible preview panel. Auto opening beside.');
+                                    await openMindmapPreview(editor.document.uri, vscode.ViewColumn.Beside, context);
+                                }
+                            } catch (e) {
+                                console.log('[DEBUG] Auto-open preview skipped due to error or unsupported environment:', e);
+                            }
                         } else {
-                            console.log('[DEBUG] File does not contain recognizable structured data');
+                            console.log('[DEBUG] ❌ File does not contain recognizable structured data');
+                            console.log('[DEBUG] Data:', data);
                         }
                     } catch (error) {
                         console.log('[DEBUG] Parse error (ignored):', error);
@@ -697,18 +720,76 @@ async function updatePreviewForActiveEditor(document: vscode.TextDocument): Prom
         
         // 開いているすべてのプレビューパネルに新しいコンテンツを送信
         let updated = false;
+        const currentKey = document.uri.toString();
         for (const [panelKey, panel] of previewPanels) {
-            if (panel && panel.visible) {
-                const message = {
-                    command: 'updateContent',
-                    content: document.getText(),
+            console.log(`[DEBUG] Checking panel ${panelKey}, visible: ${panel?.visible}, active: ${panel?.active}`);
+            if (panel) {
+                // パネルが別ファイル用に作られている場合は、再初期化して追従させる
+                if (panelKey !== currentKey) {
+                    try {
+                        console.log(`[DEBUG] 🔁 Re-initializing webview for new document. oldKey=${panelKey} newKey=${currentKey}`);
+                        if (webviewProviderSingleton) {
+                            webviewProviderSingleton.createWebview(panel, document);
+                            panel.title = `Mindmap Preview: ${path.basename(document.fileName)}`;
+                            previewPanels.delete(panelKey);
+                            previewPanels.set(currentKey, panel);
+                            updated = true;
+                            // このループではメッセージ送信をスキップ（初期データで最新化される）
+                            continue;
+                        }
+                    } catch (e) {
+                        console.error('[DEBUG] ❌ Failed to re-initialize webview panel:', e);
+                    }
+                }
+                const content = document.getText();
+                const ext = path.extname(document.fileName).toLowerCase();
+                const language = (ext === '.yaml' || ext === '.yml') ? 'yaml' : 'json';
+                const updateDocMessage = {
+                    command: 'updateDocument',
+                    content: content,
                     fileName: document.fileName,
-                    uri: document.uri.toString()
-                };
-                console.log(`[DEBUG] Updating panel ${panelKey} with content from ${path.basename(document.fileName)}`);
+                    uri: document.uri.toString(),
+                    data: {
+                        content: content,
+                        fileName: document.fileName,
+                        uri: document.uri.toString()
+                    }
+                } as const;
+                const updateContentMessage = {
+                    command: 'updateContent',
+                    content: content,
+                    fileName: document.fileName,
+                    language
+                } as const;
+                const documentChangedMessage = {
+                    command: 'documentChanged',
+                    content: content,
+                    fileName: document.fileName,
+                    uri: document.uri.toString(),
+                    language
+                } as const;
+                console.log(`[DEBUG] 📤 Sending messages to panel ${panelKey}:`, {
+                    commands: [updateDocMessage.command, updateContentMessage.command, documentChangedMessage.command],
+                    fileName: document.fileName,
+                    contentLength: content.length,
+                    contentPreview: content.substring(0, 100)
+                });
                 
-                panel.webview.postMessage(message);
+                try {
+                    // アクティブドキュメントに合わせてパネルタイトルも更新
+                    panel.title = `Mindmap Preview: ${path.basename(document.fileName)}`;
+                    await Promise.all([
+                        panel.webview.postMessage(updateDocMessage),
+                        panel.webview.postMessage(updateContentMessage),
+                        panel.webview.postMessage(documentChangedMessage)
+                    ]);
+                    console.log(`[DEBUG] ✅ Messages posted successfully to panel ${panelKey}`);
+                } catch (error) {
+                    console.error(`[DEBUG] ❌ Failed to post messages to panel ${panelKey}:`, error);
+                }
                 updated = true;
+            } else {
+                console.log(`[DEBUG] ❌ Panel ${panelKey} is not available or visible`);
             }
         }
         
