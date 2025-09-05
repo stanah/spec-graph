@@ -1,0 +1,53 @@
+import React, { useMemo } from 'react';
+import { useAppStore } from '../../stores/appStore';
+import { parseAny, detectDocType } from '../../services/docTypes';
+import { RequirementsDocView } from './docs/RequirementsDoc';
+import { StakeholdersDocView } from './docs/StakeholdersDoc';
+import { DesignDocView } from './docs/DesignDoc';
+import { TasksDocView } from './docs/TasksDoc';
+
+export const AnyDocumentView: React.FC = () => {
+  const content = useAppStore(s => s.file.fileContent);
+
+  const { data, type, error } = useMemo(() => {
+    try {
+      const d = parseAny(content || '');
+      const t = detectDocType(d);
+      return { data: d as any, type: t as string, error: null as string | null };
+    } catch (e) {
+      return { data: null, type: 'unknown', error: e instanceof Error ? e.message : String(e) };
+    }
+  }, [content]);
+
+  if (error) {
+    return (
+      <div style={{ padding: 16 }}>
+        <h3>ドキュメント解析エラー</h3>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{error}</pre>
+      </div>
+    );
+  }
+
+  switch (type) {
+    case 'requirements':
+      return <RequirementsDocView doc={data} />;
+    case 'stakeholders':
+      return <StakeholdersDocView doc={data} />;
+    case 'design':
+      return <DesignDocView doc={data} />;
+    case 'tasks':
+      return <TasksDocView doc={data} />;
+    default:
+      return (
+        <div style={{ padding: 16 }}>
+          <h3>サポート外のドキュメント形式</h3>
+          <p>利用可能: Requirements / Stakeholders / Design / Tasks</p>
+          <details>
+            <summary>生データ</summary>
+            <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{content?.slice(0, 4000)}</pre>
+          </details>
+        </div>
+      );
+  }
+};
+

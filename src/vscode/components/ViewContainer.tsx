@@ -2,6 +2,8 @@ import React from 'react';
 import { useViewMode } from '../../hooks/useViewMode';
 import { MindmapViewer } from './MindmapViewer';
 import { DocumentView } from './DocumentView';
+import { AnyDocumentView } from './AnyDocumentView';
+import { useAppStore } from '../../stores/appStore';
 
 const Placeholder: React.FC<{ title: string }> = ({ title }) => (
   <div style={{ padding: 24 }}>
@@ -12,6 +14,7 @@ const Placeholder: React.FC<{ title: string }> = ({ title }) => (
 
 export const ViewContainer: React.FC = () => {
   const { viewMode } = useViewMode();
+  const parsedData = useAppStore(s => s.parse.parsedData);
 
   switch (viewMode) {
     case 'mindmap':
@@ -19,7 +22,9 @@ export const ViewContainer: React.FC = () => {
     case 'table':
       return <Placeholder title="テーブルビュー" />;
     case 'document':
-      return <DocumentView />;
+      // Mindmap がパースできている場合は従来の DocumentView を優先。
+      // パースできていない場合は、任意スキーマの汎用レンダラーで表示する。
+      return parsedData ? <DocumentView /> : <AnyDocumentView />;
     default:
       return null;
   }
