@@ -678,26 +678,30 @@ root:
  */
 async function updatePreviewForActiveEditor(document: vscode.TextDocument): Promise<void> {
     try {
-        const panelKey = document.uri.toString();
-        const panel = previewPanels.get(panelKey);
-        
-        console.log(`[DEBUG] updatePreviewForActiveEditor: panelKey=${panelKey}`);
+        console.log(`[DEBUG] updatePreviewForActiveEditor called for: ${path.basename(document.fileName)}`);
         console.log(`[DEBUG] previewPanels size=${previewPanels.size}, keys=`, Array.from(previewPanels.keys()));
         
-        if (panel) {
-            // 既存のプレビューパネルがある場合、コンテンツを更新
-            const message = {
-                command: 'updateContent',
-                content: document.getText(),
-                fileName: document.fileName,
-                uri: document.uri.toString()
-            };
-            console.log('[DEBUG] Sending updateContent message:', message);
-            
-            panel.webview.postMessage(message);
-            console.log('プレビューパネルを更新しました:', path.basename(document.fileName));
+        // 開いているすべてのプレビューパネルに新しいコンテンツを送信
+        let updated = false;
+        for (const [panelKey, panel] of previewPanels) {
+            if (panel && panel.visible) {
+                const message = {
+                    command: 'updateContent',
+                    content: document.getText(),
+                    fileName: document.fileName,
+                    uri: document.uri.toString()
+                };
+                console.log(`[DEBUG] Updating panel ${panelKey} with content from ${path.basename(document.fileName)}`);
+                
+                panel.webview.postMessage(message);
+                updated = true;
+            }
+        }
+        
+        if (updated) {
+            console.log(`プレビューパネルを更新しました: ${path.basename(document.fileName)}`);
         } else {
-            console.log('[DEBUG] プレビューパネルが見つかりませんでした:', path.basename(document.fileName));
+            console.log('[DEBUG] 更新可能なプレビューパネルが見つかりませんでした');
         }
     } catch (error) {
         console.error('プレビューパネルの更新に失敗しました:', error);
