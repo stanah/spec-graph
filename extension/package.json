@@ -277,6 +277,16 @@
           "minimum": 100,
           "maximum": 10000,
           "description": "自動保存の遅延時間（ミリ秒）"
+        },
+        "mindmapTool.preview.followActiveEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "アクティブなエディタにプレビューを自動追従させる"
+        },
+        "mindmapTool.preview.autoOpenOnFileOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "対応ファイルを開いたとき、プレビューが開いていなければ自動で表示する"
         }
       }
     },
