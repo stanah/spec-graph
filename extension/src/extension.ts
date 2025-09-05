@@ -160,16 +160,30 @@ export function activate(context: vscode.ExtensionContext) {
                             data = JSON.parse(content);
                         }
                         
-                        // rootプロパティがある場合のみマインドマップとして扱う
-                        if (data && typeof data === 'object' && 'root' in data) {
-                            console.log('[DEBUG] Detected mindmap file with root property');
-                            // ツリーを更新
-                            await treeDataProvider.setCurrentDocument(editor.document);
+                        // マインドマップファイルかどうかを柔軟にチェック
+                        const isLikelyMindmapFile = data && typeof data === 'object' && (
+                            // 標準的なマインドマップファイル
+                            'root' in data ||
+                            // その他の構造化データファイルも対象とする
+                            'title' in data || 
+                            'version' in data ||
+                            'stakeholders' in data ||
+                            'epics' in data ||
+                            'requirements' in data ||
+                            Array.isArray(data) // 配列形式のデータも対象
+                        );
+                        
+                        if (isLikelyMindmapFile) {
+                            console.log('[DEBUG] Detected structured data file (potential mindmap)');
+                            // ツリーを更新（rootプロパティがある場合のみ）
+                            if ('root' in (data as object)) {
+                                await treeDataProvider.setCurrentDocument(editor.document);
+                            }
                             
-                            // 対応するプレビューパネルがあれば更新
+                            // プレビューは常に更新（構造化データとして表示）
                             await updatePreviewForActiveEditor(editor.document);
                         } else {
-                            console.log('[DEBUG] File does not have root property, not a mindmap');
+                            console.log('[DEBUG] File does not contain recognizable structured data');
                         }
                     } catch (error) {
                         console.log('[DEBUG] Parse error (ignored):', error);
@@ -730,8 +744,8 @@ async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscod
         let panel = previewPanels.get(panelKey);
         
         if (panel) {
-            // 既存パネルがある場合は表示
-            panel.reveal(viewColumn);
+            // 既存パネルがある場合は表示（フォーカスは移さない）
+            panel.reveal(viewColumn, true); // preserveFocus: true でエディタのフォーカスを維持
             return;
         }
 
@@ -739,7 +753,7 @@ async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscod
         panel = vscode.window.createWebviewPanel(
             'mindmapPreview',
             `Mindmap Preview: ${path.basename(document.fileName)}`,
-            viewColumn,
+            { viewColumn: viewColumn, preserveFocus: true }, // フォーカスを維持
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
