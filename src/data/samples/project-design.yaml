@@ -1,0 +1,45 @@
+version: "1.0"
+title: req-mindmap - 設計
+description: アーキテクチャ概要と主要コンポーネント
+metadata:
+  templateType: design
+  createdAt: "2025-01-10T00:00:00Z"
+  updatedAt: "2025-01-10T00:00:00Z"
+root:
+  id: root
+  title: 設計
+  description: レイヤ構造とコンポーネントの関係
+  children:
+    - id: comp-core
+      title: Core
+      description: State/Logic/Renderer/ID/Deps の中核
+      children:
+        - id: comp-logic
+          title: Logic
+          description: MindmapCoreLogic（状態遷移、イベント処理）
+          status: in-progress
+        - id: comp-parser
+          title: Parser
+          description: JSON/YAML解析とZod検証
+          status: done
+        - id: comp-renderer
+          title: Renderer
+          description: D3等を使った視覚化コンポーネント
+          status: draft
+    - id: comp-vscode
+      title: VSCode Extension
+      description: Webview + TreeDataProvider + EditorProvider
+      children:
+        - id: comp-webview
+          title: Webview UI
+          description: Mindmap/Document/Tableの表示切替
+          status: in-progress
+        - id: comp-api
+          title: VSCode API
+          description: メッセージ通信・ファイルI/O
+          status: in-progress
+    - id: comp-mcp
+      title: MCP Server
+      description: Task Master AI 連携とツール提供
+      status: draft
+

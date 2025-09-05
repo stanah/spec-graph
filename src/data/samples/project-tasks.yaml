@@ -1,0 +1,49 @@
+version: "1.0"
+title: req-mindmap - タスク一覧
+description: 主要タスクと進捗（サンプル）
+metadata:
+  templateType: tasks
+  createdAt: "2025-01-10T00:00:00Z"
+  updatedAt: "2025-01-10T00:00:00Z"
+root:
+  id: root
+  title: タスク
+  description: エピック/タスク構造の例
+  children:
+    - id: epic-doc-types
+      title: ドキュメントタイプ管理
+      description: Registry/依存グラフ/UI
+      priority: medium
+      status: done
+      children:
+        - id: t-29-1
+          title: RegistryとBase抽象クラス
+          status: done
+        - id: t-29-2
+          title: 組み込みタイプ（Req/Stake）
+          status: done
+        - id: t-29-3
+          title: 組み込みタイプ（Design/Tasks）
+          status: done
+        - id: t-29-4
+          title: 依存グラフ＋カスタム登録API
+          status: done
+        - id: t-29-5
+          title: DocumentTypeSelector UI
+          status: done
+    - id: epic-search
+      title: 検索・フィルタリング
+      description: 16系タスク
+      priority: medium
+      status: in-progress
+      children:
+        - id: t-16-1
+          title: キーワード検索
+          status: pending
+        - id: t-16-2
+          title: 属性フィルタ
+          status: pending
+        - id: t-16-3
+          title: 正規表現/階層レベル
+          status: pending
+
