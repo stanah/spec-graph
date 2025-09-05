@@ -256,8 +256,27 @@ export class MindmapWebviewProvider {
                         this.handleThemeChangeRequest(webview, message);
                         break;
 
+                    case 'updateDocument':
+                        // 外部からのドキュメント更新要求（プレビュー連動用）
+                        console.log('[WebviewProvider] 📥 updateDocument メッセージを受信:', message);
+                        if (message.content && typeof message.content === 'string') {
+                            const forwardMessage = {
+                                command: 'updateContent',
+                                content: message.content,
+                                fileName: message.fileName,
+                                uri: message.uri
+                            };
+                            console.log('[WebviewProvider] 📤 Webview側に転送:', forwardMessage);
+                            // Webview側に新しいコンテンツを送信
+                            webview.postMessage(forwardMessage);
+                            console.log('[WebviewProvider] ✅ 転送完了');
+                        } else {
+                            console.log('[WebviewProvider] ❌ updateDocument: contentが無効');
+                        }
+                        break;
+
                     default:
-                        console.log('未知のメッセージ:', message);
+                        console.log('未処理のメッセージ:', message.command);
                         break;
                 }
             },
