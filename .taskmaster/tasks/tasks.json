@@ -1944,7 +1944,7 @@
               "29.4"
             ],
             "details": "packages/vscode/src/components/DocumentTypeSelector.tsx にセレクタコンポーネントを実装。各タイプのアイコンとカラーを表示し、選択時にコンテキストを切り替え。タイプ固有のツールバーアクションを動的に表示。Radix UIのSelectコンポーネントを活用",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "タイプ切り替え時の状態保持テスト、UIの表示崩れテスト、アクセシビリティテスト（キーボード操作、スクリーンリーダー対応）"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-05T20:17:25.067Z",
+      "updated": "2025-09-05T20:21:02.153Z",
       "description": "Tasks for master context"
     }
   }
