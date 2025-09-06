@@ -2,6 +2,8 @@ import React from 'react';
 import { useAppStore } from '../../stores/appStore';
 import { buildDocumentOutline, type DocumentOutline, type SectionBlock, type ParagraphBlock } from '../document/buildDocumentOutline';
 import { buildTOC } from '../document/buildTOC';
+import { findNodeById } from '../../utils/helpers';
+import type { MindmapNode } from '../../types';
 import './DocumentView.print.css';
 
 const theme = {
@@ -94,6 +96,17 @@ export const DocumentView: React.FC = () => {
     const renderSection = (sec: SectionBlock) => {
       const Tag = (`h${Math.min(6, Math.max(1, sec.heading.level))}`) as keyof JSX.IntrinsicElements;
       const isCollapsed = collapsed.has(sec.heading.nodeId);
+      const node: MindmapNode | null = parsedData?.root ? findNodeById(parsedData.root as unknown as MindmapNode, sec.heading.nodeId) : null;
+      const chip: React.CSSProperties = {
+        display: 'inline-block',
+        padding: '2px 6px',
+        borderRadius: 4,
+        border: '1px solid var(--vscode-panel-border)',
+        marginRight: 6,
+        fontSize: 12,
+        opacity: 0.9,
+      };
+      const metaRow: React.CSSProperties = { marginTop: 4, fontSize: 12, opacity: 0.8 };
       return (
         <section key={sec.heading.nodeId} data-nodeid={sec.heading.nodeId} data-collapsed={isCollapsed ? 'true' : 'false'}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -110,6 +123,41 @@ export const DocumentView: React.FC = () => {
           </div>
           {!isCollapsed && (
             <div style={{ paddingLeft: 24 }}>
+              {/* ノードのメタ情報（優先度・ステータス・タグ・期限など） */}
+              {node ? (
+                <div>
+                  <div style={metaRow}>
+                    {node.priority && (<><span style={{ fontWeight: 600 }}>priority:</span> <span>{node.priority}</span>{' '}</>)}
+                    {node.status && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>status:</span> <span>{node.status}</span>{' '}</>)}
+                    {node.deadline && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>期限:</span> <span>{new Date(node.deadline).toLocaleString()}</span>{' '}</>)}
+                  </div>
+                  {Array.isArray(node.tags) && node.tags.length > 0 && (
+                    <div style={{ marginTop: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>タグ</span>
+                      {node.tags.map((t, i) => <span key={i} style={chip}>{t}</span>)}
+                    </div>
+                  )}
+                  {(node.createdAt || node.updatedAt) && (
+                    <div style={metaRow}>
+                      {node.createdAt && (<><span style={{ fontWeight: 600 }}>作成:</span> <span>{new Date(node.createdAt).toLocaleString()}</span>{' '}</>)}
+                      {node.updatedAt && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>更新:</span> <span>{new Date(node.updatedAt).toLocaleString()}</span></>)}
+                    </div>
+                  )}
+                  {node.customFields && Object.keys(node.customFields).length > 0 && (
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>カスタムフィールド</div>
+                      <ul style={{ margin: '2px 0 0 18px', padding: 0 }}>
+                        {Object.entries(node.customFields).map(([k, v]) => (
+                          <li key={k} style={{ fontSize: 12, opacity: 0.9 }}>
+                            <strong>{k}:</strong>{' '}
+                            <span>{typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? String(v) : JSON.stringify(v)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : null}
               {sec.children.map((c, i) => (
                 (c as SectionBlock).type === 'section'
                   ? renderSection(c as SectionBlock)
