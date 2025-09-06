@@ -149,6 +149,45 @@ async function createYamlNodeMapping(content: string): Promise<NodeMappingResult
 /**
  * JSONノードの位置を再帰的にマッピング
  */
+function mapNode(
+  node: MindmapNode,
+  lines: string[],
+  path: string,
+  result: NodeMappingResult,
+  findNodeLines: (node: MindmapNode, lines: string[]) => number[],
+  childPathBuilder: (parentPath: string, index: number) => string,
+  level: number = 0
+): void {
+  if (!node.id) return;
+
+  const nodeLines = findNodeLines(node, lines);
+  if (nodeLines.length > 0) {
+    const startLine = Math.min(...nodeLines) + 1; // 1-based
+    const endLine = Math.max(...nodeLines) + 1; // 1-based
+
+    const position: NodePosition = {
+      nodeId: node.id,
+      startLine,
+      startColumn: 1,
+      endLine,
+      endColumn: lines[endLine - 1]?.length || 1,
+      jsonPath: path,
+    };
+    result.nodePositions.set(node.id, position);
+
+    for (let line = startLine; line <= endLine; line++) {
+      result.lineToNodeId.set(line, node.id);
+    }
+  }
+
+  if (node.children) {
+    node.children.forEach((child, index) => {
+      const childPath = childPathBuilder(path, index);
+      mapNode(child, lines, childPath, result, findNodeLines, childPathBuilder, level + 1);
+    });
+  }
+}
+
 function mapJsonNode(
   node: MindmapNode,
   lines: string[],
@@ -156,39 +195,15 @@ function mapJsonNode(
   result: NodeMappingResult,
   level: number = 0
 ): void {
-  if (!node.id) return;
-
-  // ノードIDに関連する行を検索
-  const nodeLines = findJsonNodeLines(node, lines);
-  
-  if (nodeLines.length > 0) {
-    const startLine = Math.min(...nodeLines) + 1; // 1-based
-    const endLine = Math.max(...nodeLines) + 1; // 1-based
-    
-    const position: NodePosition = {
-      nodeId: node.id,
-      startLine,
-      startColumn: 1,
-      endLine,
-      endColumn: lines[endLine - 1]?.length || 1,
-      jsonPath,
-    };
-
-    result.nodePositions.set(node.id, position);
-    
-    // 行とノードIDのマッピング
-    for (let line = startLine; line <= endLine; line++) {
-      result.lineToNodeId.set(line, node.id);
-    }
-  }
-
-  // 子ノードを再帰的に処理
-  if (node.children) {
-    node.children.forEach((child, index) => {
-      const childPath = `${jsonPath}.children[${index}]`;
-      mapJsonNode(child, lines, childPath, result, level + 1);
-    });
-  }
+  return mapNode(
+    node,
+    lines,
+    jsonPath,
+    result,
+    findJsonNodeLines,
+    (parent, index) => `${parent}.children[${index}]`,
+    level,
+  );
 }
 
 /**
@@ -201,39 +216,15 @@ function mapYamlNode(
   result: NodeMappingResult,
   level: number = 0
 ): void {
-  if (!node.id) return;
-
-  // ノードIDに関連する行を検索（YAML形式）
-  const nodeLines = findYamlNodeLines(node, lines);
-  
-  if (nodeLines.length > 0) {
-    const startLine = Math.min(...nodeLines) + 1; // 1-based
-    const endLine = Math.max(...nodeLines) + 1; // 1-based
-    
-    const position: NodePosition = {
-      nodeId: node.id,
-      startLine,
-      startColumn: 1,
-      endLine,
-      endColumn: lines[endLine - 1]?.length || 1,
-      jsonPath: yamlPath,
-    };
-
-    result.nodePositions.set(node.id, position);
-    
-    // 行とノードIDのマッピング
-    for (let line = startLine; line <= endLine; line++) {
-      result.lineToNodeId.set(line, node.id);
-    }
-  }
-
-  // 子ノードを再帰的に処理
-  if (node.children) {
-    node.children.forEach((child, index) => {
-      const childPath = `${yamlPath}.children[${index}]`;
-      mapYamlNode(child, lines, childPath, result, level + 1);
-    });
-  }
+  return mapNode(
+    node,
+    lines,
+    yamlPath,
+    result,
+    findYamlNodeLines,
+    (parent, index) => `${parent}.children[${index}]`,
+    level,
+  );
 }
 
 /**
