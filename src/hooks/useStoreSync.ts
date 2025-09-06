@@ -8,6 +8,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '../stores';
 import { DEBOUNCE_DELAY } from '../utils/constants';
+import { useTimeoutManager, useWatchedValue } from './useSyncUtils';
 
 /**
  * エディタ内容の同期を管理するフック
@@ -156,26 +157,20 @@ export function useUISync() {
   const clearNotifications = useAppStore(state => state.clearNotifications);
   const showModal = useAppStore(state => state.showModal);
   const closeModal = useAppStore(state => state.closeModal);
+  const { schedule, clearAll } = useTimeoutManager();
 
   /**
    * 通知の自動削除を管理
    */
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
+    // 古いタイマーをクリアしてから再スケジュール
+    clearAll();
     notifications.forEach(notification => {
       if (notification.autoHide && notification.duration) {
-        const timer = setTimeout(() => {
-          removeNotification(notification.id);
-        }, notification.duration);
-        timers.push(timer);
+        schedule(() => removeNotification(notification.id), notification.duration);
       }
     });
-
-    return () => {
-      timers.forEach(timer => clearTimeout(timer));
-    };
-  }, [notifications, removeNotification]);
+  }, [notifications, removeNotification, schedule, clearAll]);
 
   return {
     notifications,
@@ -200,18 +195,11 @@ export function useSettingsSync() {
   const exportSettings = useAppStore(state => state.exportSettings);
   const importSettings = useAppStore(state => state.importSettings);
 
-  /**
-   * 設定変更の監視とローカルストレージへの保存
-   */
-  const settingsRef = useRef(settings);
-  
-  useEffect(() => {
-    if (settingsRef.current !== settings) {
-      // 設定が変更された場合の処理
-      console.log('Settings changed:', settings);
-      settingsRef.current = settings;
-    }
-  }, [settings]);
+  // 設定変更の監視
+  useWatchedValue(settings, (curr) => {
+    // 設定が変更された場合の処理（現状はログのみ）
+    console.log('Settings changed:', curr);
+  });
 
   return {
     settings,
