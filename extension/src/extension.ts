@@ -53,7 +53,6 @@ async function validateDocumentToDiagnostics(document: vscode.TextDocument): Pro
         try {
             // テスト環境では Diagnostic が未定義の可能性がある
             // 実行時に利用可能な場合のみ生成
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (typeof (vscode as unknown as { Diagnostic?: unknown }).Diagnostic !== 'undefined') {
                 diags.push(new vscode.Diagnostic(makeRange(document, line), msg, severity as vscode.DiagnosticSeverity));
             }
@@ -191,11 +190,11 @@ export function activate(context: vscode.ExtensionContext) {
                                 if (follow && autoOpen && !hasVisiblePreview) {
                                     await openDocumentPreview(editor.document.uri, vscode.ViewColumn.Beside, context);
                                 }
-                            } catch (e) {
+                            } catch {
                                 // 失敗しても致命的ではないためスキップ
                             }
                         }
-                    } catch (error) {
+                    } catch {
                         // 入力途中などは無視
                     }
                 }
@@ -701,7 +700,7 @@ root:
 async function updatePreviewForActiveEditor(document: vscode.TextDocument): Promise<void> {
     try {
         // 開いているすべてのプレビューパネルに新しいコンテンツを送信
-        let updated = false;
+        // let updated = false;
         const currentKey = document.uri.toString();
         for (const [panelKey, panel] of previewPanels) {
             if (panel) {
@@ -713,7 +712,7 @@ async function updatePreviewForActiveEditor(document: vscode.TextDocument): Prom
                             panel.title = `Mindmap Preview: ${path.basename(document.fileName)}`;
                             previewPanels.delete(panelKey);
                             previewPanels.set(currentKey, panel);
-                            updated = true;
+                            // updated = true;
                             // このループではメッセージ送信をスキップ（初期データで最新化される）
                             continue;
                         }
@@ -722,8 +721,8 @@ async function updatePreviewForActiveEditor(document: vscode.TextDocument): Prom
                     }
                 }
                 const content = document.getText();
-                const ext = path.extname(document.fileName).toLowerCase();
-                const language = (ext === '.yaml' || ext === '.yml') ? 'yaml' : 'json';
+                // const ext = path.extname(document.fileName).toLowerCase();
+                // const language = (ext === '.yaml' || ext === '.yml') ? 'yaml' : 'json';
                 const updateDocMessage = {
                     command: 'updateDocument',
                     content: content,
@@ -743,7 +742,7 @@ async function updatePreviewForActiveEditor(document: vscode.TextDocument): Prom
                 } catch (error) {
                     console.error('Failed to post message to panel:', panelKey, error);
                 }
-                updated = true;
+                // updated = true;
             }
         }
     } catch (error) {

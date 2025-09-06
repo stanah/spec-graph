@@ -249,8 +249,8 @@ function findJsonNodeLines(node: MindmapNode, lines: string[]): number[] {
 function findYamlNodeLines(node: MindmapNode, lines: string[]): number[] {
   const foundLines: number[] = [];
   const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const idRe = new RegExp(`\\bid\\s*:\\s*['\"]?${esc(node.id)}['\"]?`);
-  const titleRe = new RegExp(`\\btitle\\s*:\\s*['\"]?${esc(node.title)}['\"]?`);
+  const idRe = new RegExp(`\\bid\\s*:\\s*['"]?${esc(node.id)}['"]?`);
+  const titleRe = new RegExp(`\\btitle\\s*:\\s*['"]?${esc(node.title)}['"]?`);
   lines.forEach((line, index) => {
     if (idRe.test(line) || titleRe.test(line)) {
       foundLines.push(index);

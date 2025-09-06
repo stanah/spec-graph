@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { MockVSCodeApi } from '../shared/types';
 
 import VSCodeApp from '../../vscode/VSCodeApp';

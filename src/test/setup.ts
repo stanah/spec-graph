@@ -55,7 +55,6 @@ if (typeof window === 'undefined') {
   }
 }
 import { vi } from 'vitest';
-import React from 'react';
 
 // D3の個別モジュールモック
 vi.mock('d3-selection', () => {

@@ -46,7 +46,9 @@ export async function exportOutlineToPDF(outline: DocumentOutline, opts?: { file
       doc.text(ln, 10, y);
       y += 8;
       if (y > 280) {
-        doc.addPage && doc.addPage();
+        if (doc.addPage) {
+          doc.addPage();
+        }
         y = 10;
       }
     }

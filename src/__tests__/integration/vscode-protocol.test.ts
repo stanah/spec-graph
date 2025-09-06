@@ -4,7 +4,6 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Mock } from 'vitest';
 import type { VSCodeMessage, VSCodeWebViewMessage } from '../../types/vscode';
 import type { MockVSCodeApi } from '../shared/types';
 import VSCodeApiSingleton from '../../platform/vscode/VSCodeApiSingleton';

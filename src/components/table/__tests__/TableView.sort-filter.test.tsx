@@ -1,6 +1,6 @@
 import { render, screen, cleanup } from '@testing-library/react';
 import React, { useState } from 'react';
-import type { ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/react-table';
+import type { ColumnDef, ColumnFiltersState } from '@tanstack/react-table';
 import type { Row } from '../../../__tests__/shared/types';
 import { TableView } from '../TableView';
 

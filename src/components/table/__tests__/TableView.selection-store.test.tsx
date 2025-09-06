@@ -28,7 +28,6 @@ describe('TableViewConnected selection sync with store', () => {
     // Set selection in store and expect B to be marked
     useAppStore.getState().selectNode('B');
     // Wait microtask for React to re-render
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     return Promise.resolve().then(() => {
       const rowBAfter = document.querySelector('[data-rowid="B"]') as HTMLTableRowElement;
       expect(rowBAfter.getAttribute('data-selected')).toBe('true');
