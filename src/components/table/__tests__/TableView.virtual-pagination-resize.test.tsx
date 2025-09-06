@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { RowMinimal as Row } from '../../../__tests__/shared/types';
 import { TableView } from '../TableView';
-
-type Row = { id: string; name: string };
 
 const makeData = (n: number): Row[] => Array.from({ length: n }, (_, i) => ({ id: String(i + 1), name: `Item-${i + 1}` }));
 
@@ -62,4 +61,3 @@ describe('TableView pagination / virtualization / resize', () => {
     expect(width).toBe('180px');
   });
 });
-

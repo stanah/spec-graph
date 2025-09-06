@@ -1,10 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { Row } from '../../../__tests__/shared/types';
 // Intentionally import from the component path for 25.1; index export can come later
 import { TableView } from '../TableView';
-
-type Row = { id: string; name: string; status: string };
 
 const data: Row[] = [
   { id: '1', name: 'Alpha', status: 'open' },
@@ -36,4 +35,3 @@ describe('TableView basic rendering', () => {
     expect(within(bodyRows[1]).getByText('Beta')).toBeInTheDocument();
   });
 });
-

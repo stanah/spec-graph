@@ -6,17 +6,11 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
+import type { MockVSCodeApi } from '../shared/types';
 
 import VSCodeApp from '../../vscode/VSCodeApp';
 import VSCodeApiSingleton from '../../platform/vscode/VSCodeApiSingleton';
 import { useAppStore } from '../../stores/appStore';
-
-// VSCode API のモック
-interface MockVSCodeApi {
-  postMessage: Mock;
-  setState: Mock;
-  getState: Mock;
-}
 
 const mockVSCodeApi: MockVSCodeApi = {
   postMessage: vi.fn(),

@@ -5,18 +5,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Mock } from 'vitest';
+import type { VSCodeMessage, VSCodeWebViewMessage } from '../../types/vscode';
+import type { MockVSCodeApi } from '../shared/types';
 import VSCodeApiSingleton from '../../platform/vscode/VSCodeApiSingleton';
 
-// 通信メッセージの型定義
-interface VSCodeMessage {
-  command: string;
-  [key: string]: any;
-}
-
-interface WebviewMessage {
-  command: string;
-  [key: string]: any;
-}
+// 通信メッセージの型定義は共通型を使用
 
 // プロトコル定義
 const VSCODE_TO_WEBVIEW_COMMANDS = [
@@ -35,12 +28,7 @@ const WEBVIEW_TO_VSCODE_COMMANDS = [
   'initializationError'
 ] as const;
 
-// モックAPIの型定義
-interface MockVSCodeApi {
-  postMessage: Mock;
-  setState: Mock;
-  getState: Mock;
-}
+// モックAPIの型定義は共通型を使用
 
 describe('VSCode Communication Protocol', () => {
   let mockVSCodeApi: MockVSCodeApi;
@@ -107,7 +95,7 @@ describe('VSCode Communication Protocol', () => {
     });
 
     it('webviewReady メッセージが送信される', () => {
-      const message: WebviewMessage = {
+      const message: VSCodeWebViewMessage = {
         command: 'webviewReady'
       };
 
@@ -117,7 +105,7 @@ describe('VSCode Communication Protocol', () => {
     });
 
     it('contentChanged メッセージが送信される', () => {
-      const message: WebviewMessage = {
+      const message: VSCodeWebViewMessage = {
         command: 'contentChanged',
         content: 'test content',
         timestamp: new Date().toISOString()
@@ -130,7 +118,7 @@ describe('VSCode Communication Protocol', () => {
 
     it('エラーメッセージが送信される', () => {
       const error = new Error('Test error');
-      const message: WebviewMessage = {
+      const message: VSCodeWebViewMessage = {
         command: 'error',
         error: {
           message: error.message,
@@ -144,7 +132,7 @@ describe('VSCode Communication Protocol', () => {
     });
 
     it('アプリケーションエラーメッセージが送信される', () => {
-      const message: WebviewMessage = {
+      const message: VSCodeWebViewMessage = {
         command: 'applicationError',
         error: {
           message: 'Application crashed',
