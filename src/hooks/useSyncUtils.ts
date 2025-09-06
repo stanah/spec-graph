@@ -43,12 +43,14 @@ export function useWatchedValue<T>(
 
   useEffect(() => {
     const prev = prevRef.current;
-    if (prev === undefined && immediate) {
-      onChange?.(value, prev);
+    if (prev === undefined) {
+      // 初回レンダー
+      if (immediate) {
+        onChange?.(value, prev);
+      }
     } else if (!compare(value, prev)) {
       onChange?.(value, prev);
     }
     prevRef.current = value;
   }, [value, immediate, compare, onChange]);
 }
-
