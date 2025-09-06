@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
-import { MindmapWebviewProvider } from './MindmapWebviewProvider';
+import { DocumentWebviewProvider } from './DocumentWebviewProvider';
 
 /**
- * マインドマップカスタムエディタープロバイダー
+ * 構造化ドキュメントカスタムエディタープロバイダー
  */
-export class MindmapEditorProvider implements vscode.CustomTextEditorProvider {
-    private webviewProvider: MindmapWebviewProvider;
+export class DocumentEditorProvider implements vscode.CustomTextEditorProvider {
+    private webviewProvider: DocumentWebviewProvider;
     private activeDocuments = new Map<string, vscode.TextDocument>();
     private webviewPanels = new Map<string, vscode.WebviewPanel>();
 
     constructor(private readonly context: vscode.ExtensionContext) {
-        this.webviewProvider = new MindmapWebviewProvider(context.extensionUri);
+        this.webviewProvider = new DocumentWebviewProvider(context.extensionUri);
     }
 
     /**

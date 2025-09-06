@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockVSCode } from './setup';
-import { MindmapEditorProvider } from '../MindmapEditorProvider';
+import { DocumentEditorProvider } from '../DocumentEditorProvider';
 import type { MockExtensionContext, MockTextDocument, MockWebviewPanel } from './types';
 import * as vscode from 'vscode';
 
-describe('MindmapEditorProvider', () => {
-  let provider: MindmapEditorProvider;
+describe('DocumentEditorProvider', () => {
+  let provider: DocumentEditorProvider;
   let mockContext: MockExtensionContext;
   let mockDocument: MockTextDocument;
   let mockWebviewPanel: MockWebviewPanel;
@@ -46,7 +46,7 @@ describe('MindmapEditorProvider', () => {
       onDidDispose: vi.fn()
     };
 
-    provider = new MindmapEditorProvider(mockContext);
+    provider = new DocumentEditorProvider(mockContext);
   });
 
   describe('resolveCustomTextEditor', () => {
@@ -796,7 +796,7 @@ describe('MindmapEditorProvider', () => {
       // 複数のエディターインスタンスを作成
       const panels = Array.from({ length: 5 }, (_, i) => ({
         ...mockWebviewPanel,
-        viewType: `mindmapTool.mindmapEditor.${i}`,
+        viewType: `documentViewer.mindmapEditor.${i}`,
         webview: {
           ...mockWebviewPanel.webview,
           html: '',

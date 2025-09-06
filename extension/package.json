@@ -1,9 +1,9 @@
 {
-  "name": "mindmap-tool",
-  "displayName": "Mindmap Tool",
-  "description": "JSON/YAMLファイルからマインドマップを生成・編集するVSCode拡張",
+  "name": "document-viewer",
+  "displayName": "Document Viewer",
+  "description": "JSON/YAMLファイルの構造化ドキュメントを表示・編集するVSCode拡張",
   "version": "0.6.0",
-  "publisher": "mindmap-tool",
+  "publisher": "document-viewer",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -12,6 +12,7 @@
     "Other"
   ],
   "keywords": [
+    "document",
     "mindmap",
     "json",
     "yaml",
@@ -21,9 +22,9 @@
   "activationEvents": [
     "onLanguage:json",
     "onLanguage:yaml",
-    "onCommand:mindmapTool.openMindmap",
-    "onCommand:mindmapTool.createNewMindmap",
-    "onView:mindmapTree",
+    "onCommand:documentViewer.openDocument",
+    "onCommand:documentViewer.createNewDocument",
+    "onView:documentTree",
     "workspaceContains:**/*.mindmap.{json,yaml,yml}",
     "workspaceContains:**/*.{json,yaml,yml}"
   ],
@@ -31,196 +32,196 @@
   "contributes": {
     "commands": [
       {
-        "command": "mindmapTool.openMindmap",
-        "title": "マインドマップを開く",
-        "category": "Mindmap Tool"
+        "command": "documentViewer.openMindmap",
+        "title": "ドキュメントを開く",
+        "category": "Document Viewer"
       },
       {
-        "command": "mindmapTool.openPreview",
-        "title": "マインドマッププレビューを開く",
-        "category": "Mindmap Tool",
+        "command": "documentViewer.openPreview",
+        "title": "ドキュメントプレビューを開く",
+        "category": "Document Viewer",
         "icon": "$(open-preview)"
       },
       {
-        "command": "mindmapTool.openPreviewToSide",
-        "title": "マインドマッププレビューを横に開く",
-        "category": "Mindmap Tool",
+        "command": "documentViewer.openPreviewToSide",
+        "title": "ドキュメントプレビューを横に開く",
+        "category": "Document Viewer",
         "icon": "$(open-preview)"
       },
       {
-        "command": "mindmapTool.createNewMindmap",
-        "title": "新しいマインドマップを作成",
-        "category": "Mindmap Tool"
+        "command": "documentViewer.createNewMindmap",
+        "title": "新しいドキュメントを作成",
+        "category": "Document Viewer"
       },
       {
-        "command": "mindmapTool.exportMindmap",
-        "title": "マインドマップをエクスポート",
-        "category": "Mindmap Tool"
+        "command": "documentViewer.exportMindmap",
+        "title": "ドキュメントをエクスポート",
+        "category": "Document Viewer"
       },
       {
-        "command": "mindmapTool.validateSchema",
+        "command": "documentViewer.validateSchema",
         "title": "スキーマを検証",
-        "category": "Mindmap Tool"
+        "category": "Document Viewer"
       },
       {
-        "command": "mindmapTool.refreshMindmapTree",
-        "title": "マインドマップツリーを更新",
-        "category": "Mindmap Tool",
+        "command": "documentViewer.refreshMindmapTree",
+        "title": "ドキュメントツリーを更新",
+        "category": "Document Viewer",
         "icon": "$(refresh)"
       },
       {
-        "command": "mindmapTool.selectNode",
+        "command": "documentViewer.selectNode",
         "title": "ノードを選択",
-        "category": "Mindmap Tool"
+        "category": "Document Viewer"
       },
       {
-        "command": "mindmapTool.addChildNode",
+        "command": "documentViewer.addChildNode",
         "title": "子ノードを追加",
-        "category": "Mindmap Tool",
+        "category": "Document Viewer",
         "icon": "$(add)"
       },
       {
-        "command": "mindmapTool.addSiblingNode",
+        "command": "documentViewer.addSiblingNode",
         "title": "兄弟ノードを追加",
-        "category": "Mindmap Tool",
+        "category": "Document Viewer",
         "icon": "$(add)"
       },
       {
-        "command": "mindmapTool.deleteNode",
+        "command": "documentViewer.deleteNode",
         "title": "ノードを削除",
-        "category": "Mindmap Tool",
+        "category": "Document Viewer",
         "icon": "$(trash)"
       },
       {
-        "command": "mindmapTool.editNode",
+        "command": "documentViewer.editNode",
         "title": "ノードを編集",
-        "category": "Mindmap Tool",
+        "category": "Document Viewer",
         "icon": "$(edit)"
       },
       {
-        "command": "mindmapTool.collapseAll",
+        "command": "documentViewer.collapseAll",
         "title": "すべて折りたたみ",
-        "category": "Mindmap Tool",
+        "category": "Document Viewer",
         "icon": "$(collapse-all)"
       },
       {
-        "command": "mindmapTool.expandAll",
+        "command": "documentViewer.expandAll",
         "title": "すべて展開",
-        "category": "Mindmap Tool",
+        "category": "Document Viewer",
         "icon": "$(expand-all)"
       }
     ],
     "menus": {
       "editor/title": [
         {
-          "command": "mindmapTool.openPreviewToSide",
+          "command": "documentViewer.openPreviewToSide",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml",
           "group": "navigation",
-          "alt": "mindmapTool.openPreview"
+          "alt": "documentViewer.openPreview"
         }
       ],
       "explorer/context": [
         {
-          "command": "mindmapTool.openMindmap",
+          "command": "documentViewer.openMindmap",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml",
           "group": "navigation"
         }
       ],
       "editor/context": [
         {
-          "command": "mindmapTool.openMindmap",
+          "command": "documentViewer.openMindmap",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
-          "command": "mindmapTool.openMindmap",
+          "command": "documentViewer.openMindmap",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml"
         },
         {
-          "command": "mindmapTool.openPreview",
+          "command": "documentViewer.openPreview",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml"
         },
         {
-          "command": "mindmapTool.openPreviewToSide",
+          "command": "documentViewer.openPreviewToSide",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml"
         }
       ],
       "view/title": [
         {
-          "command": "mindmapTool.refreshMindmapTree",
-          "when": "view == mindmapTree",
+          "command": "documentViewer.refreshMindmapTree",
+          "when": "view == documentTree",
           "group": "navigation"
         },
         {
-          "command": "mindmapTool.collapseAll",
-          "when": "view == mindmapTree",
+          "command": "documentViewer.collapseAll",
+          "when": "view == documentTree",
           "group": "navigation"
         },
         {
-          "command": "mindmapTool.expandAll",
-          "when": "view == mindmapTree",
+          "command": "documentViewer.expandAll",
+          "when": "view == documentTree",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "mindmapTool.addChildNode",
-          "when": "view == mindmapTree && viewItem == mindmapRoot",
+          "command": "documentViewer.addChildNode",
+          "when": "view == documentTree && viewItem == documentRoot",
           "group": "inline"
         },
         {
-          "command": "mindmapTool.addChildNode",
-          "when": "view == mindmapTree && viewItem == mindmapNode",
+          "command": "documentViewer.addChildNode",
+          "when": "view == documentTree && viewItem == documentNode",
           "group": "inline"
         },
         {
-          "command": "mindmapTool.addSiblingNode",
-          "when": "view == mindmapTree && viewItem == mindmapNode",
+          "command": "documentViewer.addSiblingNode",
+          "when": "view == documentTree && viewItem == documentNode",
           "group": "inline"
         },
         {
-          "command": "mindmapTool.editNode",
-          "when": "view == mindmapTree && (viewItem == mindmapRoot || viewItem == mindmapNode)",
+          "command": "documentViewer.editNode",
+          "when": "view == documentTree && (viewItem == documentRoot || viewItem == documentNode)",
           "group": "inline"
         },
         {
-          "command": "mindmapTool.deleteNode",
-          "when": "view == mindmapTree && viewItem == mindmapNode",
+          "command": "documentViewer.deleteNode",
+          "when": "view == documentTree && viewItem == documentNode",
           "group": "inline"
         },
         {
-          "command": "mindmapTool.addChildNode",
-          "when": "view == mindmapTree && viewItem == mindmapRoot",
+          "command": "documentViewer.addChildNode",
+          "when": "view == documentTree && viewItem == documentRoot",
           "group": "1_add"
         },
         {
-          "command": "mindmapTool.addChildNode",
-          "when": "view == mindmapTree && viewItem == mindmapNode",
+          "command": "documentViewer.addChildNode",
+          "when": "view == documentTree && viewItem == documentNode",
           "group": "1_add"
         },
         {
-          "command": "mindmapTool.addSiblingNode",
-          "when": "view == mindmapTree && viewItem == mindmapNode",
+          "command": "documentViewer.addSiblingNode",
+          "when": "view == documentTree && viewItem == documentNode",
           "group": "1_add"
         },
         {
-          "command": "mindmapTool.editNode",
-          "when": "view == mindmapTree && (viewItem == mindmapRoot || viewItem == mindmapNode)",
+          "command": "documentViewer.editNode",
+          "when": "view == documentTree && (viewItem == documentRoot || viewItem == documentNode)",
           "group": "2_edit"
         },
         {
-          "command": "mindmapTool.deleteNode",
-          "when": "view == mindmapTree && viewItem == mindmapNode",
+          "command": "documentViewer.deleteNode",
+          "when": "view == documentTree && viewItem == documentNode",
           "group": "3_delete"
         }
       ]
     },
     "configuration": {
-      "title": "Mindmap Tool",
+      "title": "Document Viewer",
       "properties": {
-        "mindmapTool.editor.theme": {
+        "documentViewer.editor.theme": {
           "type": "string",
           "enum": [
             "vs",
@@ -230,14 +231,14 @@
           "default": "vs-dark",
           "description": "エディタのテーマ"
         },
-        "mindmapTool.editor.fontSize": {
+        "documentViewer.editor.fontSize": {
           "type": "number",
           "default": 14,
           "minimum": 8,
           "maximum": 40,
           "description": "エディタのフォントサイズ"
         },
-        "mindmapTool.mindmap.layout": {
+        "documentViewer.mindmap.layout": {
           "type": "string",
           "enum": [
             "tree",
@@ -246,7 +247,7 @@
           "default": "tree",
           "description": "マインドマップのレイアウト"
         },
-        "mindmapTool.mindmap.theme": {
+        "documentViewer.mindmap.theme": {
           "type": "string",
           "enum": [
             "light",
@@ -256,34 +257,34 @@
           "default": "auto",
           "description": "マインドマップのテーマ（autoはVSCodeテーマに従う）"
         },
-        "mindmapTool.validation.enabled": {
+        "documentViewer.validation.enabled": {
           "type": "boolean",
           "default": true,
           "description": "スキーマ検証を有効にする"
         },
-        "mindmapTool.validation.showWarnings": {
+        "documentViewer.validation.showWarnings": {
           "type": "boolean",
           "default": true,
           "description": "警告を表示する"
         },
-        "mindmapTool.autoSave.enabled": {
+        "documentViewer.autoSave.enabled": {
           "type": "boolean",
           "default": true,
           "description": "自動保存を有効にする"
         },
-        "mindmapTool.autoSave.delay": {
+        "documentViewer.autoSave.delay": {
           "type": "number",
           "default": 1000,
           "minimum": 100,
           "maximum": 10000,
           "description": "自動保存の遅延時間（ミリ秒）"
         },
-        "mindmapTool.preview.followActiveEditor": {
+        "documentViewer.preview.followActiveEditor": {
           "type": "boolean",
           "default": true,
           "description": "アクティブなエディタにプレビューを自動追従させる"
         },
-        "mindmapTool.preview.autoOpenOnFileOpen": {
+        "documentViewer.preview.autoOpenOnFileOpen": {
           "type": "boolean",
           "default": true,
           "description": "対応ファイルを開いたとき、プレビューが開いていなければ自動で表示する"
@@ -332,9 +333,9 @@
     "views": {
       "mindmapExplorer": [
         {
-          "id": "mindmapTree",
+          "id": "documentTree",
           "name": "マインドマップツリー",
-          "when": "workspaceHasMinMindmapFiles || mindmapTool.isActive",
+          "when": "workspaceHasMinMindmapFiles || documentViewer.isActive",
           "contextualTitle": "マインドマップツリー"
         }
       ]
@@ -343,15 +344,15 @@
       "activitybar": [
         {
           "id": "mindmapExplorer",
-          "title": "Mindmap Tool",
+          "title": "Document Viewer",
           "icon": "$(graph)"
         }
       ]
     },
     "customEditors": [
       {
-        "viewType": "mindmapTool.mindmapEditor",
-        "displayName": "Mindmap Tool",
+        "viewType": "documentViewer.documentEditor",
+        "displayName": "Document Viewer",
         "selector": [
           {
             "filenamePattern": "*.json"

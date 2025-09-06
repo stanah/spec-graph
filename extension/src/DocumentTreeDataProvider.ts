@@ -3,9 +3,9 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 
 /**
- * マインドマップツリーアイテム
+ * ドキュメントツリーアイテム
  */
-export class MindmapTreeItem extends vscode.TreeItem {
+export class DocumentTreeItem extends vscode.TreeItem {
     constructor(
         public readonly nodeId: string,
         public readonly label: string,
@@ -25,7 +25,7 @@ export class MindmapTreeItem extends vscode.TreeItem {
         
         // ノードを選択するコマンドを設定
         this.command = {
-            command: 'mindmapTool.selectNode',
+            command: 'documentViewer.selectNode',
             title: 'Select Node',
             arguments: [nodeId, nodeData]
         };
@@ -33,13 +33,13 @@ export class MindmapTreeItem extends vscode.TreeItem {
 }
 
 /**
- * マインドマップツリーデータプロバイダー
+ * ドキュメントツリーデータプロバイダー
  */
-export class MindmapTreeDataProvider implements vscode.TreeDataProvider<MindmapTreeItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<MindmapTreeItem | undefined | null | void> = new vscode.EventEmitter<MindmapTreeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<MindmapTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class DocumentTreeDataProvider implements vscode.TreeDataProvider<DocumentTreeItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<DocumentTreeItem | undefined | null | void> = new vscode.EventEmitter<DocumentTreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<DocumentTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    private treeData: MindmapTreeItem[] = [];
+    private treeData: DocumentTreeItem[] = [];
     private currentDocument: vscode.TextDocument | undefined;
 
     constructor() {}
@@ -95,8 +95,8 @@ export class MindmapTreeDataProvider implements vscode.TreeDataProvider<MindmapT
     /**
      * ノードデータを解析してツリーアイテムを生成
      */
-    private parseNodeData(data: Record<string, unknown>): MindmapTreeItem[] {
-        const items: MindmapTreeItem[] = [];
+    private parseNodeData(data: Record<string, unknown>): DocumentTreeItem[] {
+        const items: DocumentTreeItem[] = [];
 
         if (data.root && typeof data.root === 'object') {
             const rootNode = data.root as {
@@ -106,7 +106,7 @@ export class MindmapTreeDataProvider implements vscode.TreeDataProvider<MindmapT
                 children?: Array<{ id: string; title: string; children?: unknown[] }>;
             };
 
-            const rootItem = new MindmapTreeItem(
+            const rootItem = new DocumentTreeItem(
                 rootNode.id,
                 rootNode.title,
                 rootNode.children && rootNode.children.length > 0 
@@ -125,14 +125,14 @@ export class MindmapTreeDataProvider implements vscode.TreeDataProvider<MindmapT
     /**
      * ツリーアイテムを取得
      */
-    getTreeItem(element: MindmapTreeItem): vscode.TreeItem {
+    getTreeItem(element: DocumentTreeItem): vscode.TreeItem {
         return element;
     }
 
     /**
      * 子要素を取得
      */
-    getChildren(element?: MindmapTreeItem): MindmapTreeItem[] {
+    getChildren(element?: DocumentTreeItem): DocumentTreeItem[] {
         if (!element) {
             // ルート要素を返す
             return this.treeData;
@@ -142,7 +142,7 @@ export class MindmapTreeDataProvider implements vscode.TreeDataProvider<MindmapT
         if (element.nodeData?.children) {
             return element.nodeData.children.map(child => {
                 const hasChildren = Array.isArray(child.children) && child.children.length > 0;
-                return new MindmapTreeItem(
+                return new DocumentTreeItem(
                     child.id,
                     child.title,
                     hasChildren 
@@ -164,8 +164,8 @@ export class MindmapTreeDataProvider implements vscode.TreeDataProvider<MindmapT
     /**
      * 指定されたノードIDのツリーアイテムを検索
      */
-    findTreeItem(nodeId: string): MindmapTreeItem | undefined {
-        const findInItems = (items: MindmapTreeItem[]): MindmapTreeItem | undefined => {
+    findTreeItem(nodeId: string): DocumentTreeItem | undefined {
+        const findInItems = (items: DocumentTreeItem[]): DocumentTreeItem | undefined => {
             for (const item of items) {
                 if (item.nodeId === nodeId) {
                     return item;

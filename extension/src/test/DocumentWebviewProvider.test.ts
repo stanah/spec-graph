@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as vscode from 'vscode';
-import { MindmapWebviewProvider } from '../MindmapWebviewProvider';
+import { DocumentWebviewProvider } from '../DocumentWebviewProvider';
 
 // VSCode APIのモック
 vi.mock('vscode', () => ({
@@ -62,8 +62,8 @@ vi.mock('js-yaml', () => ({
   })
 }));
 
-describe('MindmapWebviewProvider', () => {
-  let provider: MindmapWebviewProvider;
+describe('DocumentWebviewProvider', () => {
+  let provider: DocumentWebviewProvider;
   let mockExtensionUri: vscode.Uri;
   let mockPanel: any;
   let mockWebview: any;
@@ -110,7 +110,7 @@ describe('MindmapWebviewProvider', () => {
       save: vi.fn()
     };
 
-    provider = new MindmapWebviewProvider(mockExtensionUri);
+    provider = new DocumentWebviewProvider(mockExtensionUri);
 
     // モックのリセット
     vi.clearAllMocks();
@@ -133,7 +133,7 @@ describe('MindmapWebviewProvider', () => {
       provider.createWebview(mockPanel, mockDocument);
 
       expect(mockWebview.html).toContain('<!DOCTYPE html>');
-      expect(mockWebview.html).toContain('Mindmap Tool');
+      expect(mockWebview.html).toContain('Document Viewer');
       expect(mockWebview.html).toContain('mindmap.json');
     });
 
@@ -683,7 +683,7 @@ describe('MindmapWebviewProvider', () => {
 
   describe('Concurrency Tests', () => {
     it('should handle concurrent message processing', async () => {
-      // MindmapWebviewProviderのcreateWebviewはメッセージハンドラーを設定しないため、
+      // DocumentWebviewProviderのcreateWebviewはメッセージハンドラーを設定しないため、
       // 直接privateメソッドのsetupMessageHandlersを呼び出してテスト
       const privateProvider = provider as any;
       let messageHandler: any;
@@ -727,13 +727,13 @@ describe('MindmapWebviewProvider', () => {
 
   describe('Memory Management', () => {
     it('should clean up resources when webview is disposed', () => {
-      // MindmapWebviewProviderのcreateWebviewはdisposeハンドラーを設定しないが、
+      // DocumentWebviewProviderのcreateWebviewはdisposeハンドラーを設定しないが、
       // パネルそのものにonDidDisposeが実装されていることを確認
       provider.createWebview(mockPanel, mockDocument);
       
       // createWebviewメソッド自体はdisposeハンドラーを設定しないため、
       // パネルの基本的な設定がされていることを確認
-      expect(mockPanel.webview.html).toContain('Mindmap Tool');
+      expect(mockPanel.webview.html).toContain('Document Viewer');
       expect(mockPanel.webview.options.enableScripts).toBe(true);
       
       // onDidDisposeが呼び出し可能な関数であることを確認
@@ -832,7 +832,7 @@ describe('MindmapWebviewProvider', () => {
 
       expect(() => provider.createWebview(mockPanel, emptyDocument)).not.toThrow();
       // 空のドキュメントの場合、HTMLが適切に生成されることを確認
-      expect(mockPanel.webview.html).toContain('Mindmap Tool');
+      expect(mockPanel.webview.html).toContain('Document Viewer');
     });
 
     it('should handle invalid JSON structure', async () => {
@@ -861,7 +861,7 @@ describe('MindmapWebviewProvider', () => {
       // undefined URIでプロバイダーを作成することはエラーが発生する可能性があるため、
       // その場合の処理を適切にテスト
       expect(() => {
-        const providerWithUndefinedUri = new MindmapWebviewProvider(undefined as any);
+        const providerWithUndefinedUri = new DocumentWebviewProvider(undefined as any);
         providerWithUndefinedUri.createWebview(mockPanel, mockDocument);
       }).toThrow();
     });
@@ -917,10 +917,10 @@ describe('MindmapWebviewProvider', () => {
 
     it('should handle panel title setting with various content types', () => {
       const testCases = [
-        { fileName: '/test/simple.json', expectedTitle: 'Mindmap Tool - simple.json' },
-        { fileName: '/very/long/path/to/file.yaml', expectedTitle: 'Mindmap Tool - file.yaml' },
-        { fileName: 'file-without-extension', expectedTitle: 'Mindmap Tool - file-without-extension' },
-        { fileName: '', expectedTitle: 'Mindmap Tool - ' }
+        { fileName: '/test/simple.json', expectedTitle: 'Document Viewer - simple.json' },
+        { fileName: '/very/long/path/to/file.yaml', expectedTitle: 'Document Viewer - file.yaml' },
+        { fileName: 'file-without-extension', expectedTitle: 'Document Viewer - file-without-extension' },
+        { fileName: '', expectedTitle: 'Document Viewer - ' }
       ];
 
       testCases.forEach((testCase, index) => {
@@ -973,7 +973,7 @@ describe('MindmapWebviewProvider', () => {
         toJSON: () => ({})
       } as any;
 
-      const providerWithInvalidUri = new MindmapWebviewProvider(mockExtensionUri);
+      const providerWithInvalidUri = new DocumentWebviewProvider(mockExtensionUri);
       expect(() => providerWithInvalidUri.createWebview(mockPanel, mockDocument)).not.toThrow();
     });
 

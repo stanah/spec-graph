@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockVSCode } from './setup';
-import { MindmapTreeDataProvider, MindmapTreeItem } from '../MindmapTreeDataProvider';
+import { DocumentTreeDataProvider, DocumentTreeItem } from '../DocumentTreeDataProvider';
 import type { MockTextDocument } from './types';
 
-describe('MindmapTreeDataProvider', () => {
-  let provider: MindmapTreeDataProvider;
+describe('DocumentTreeDataProvider', () => {
+  let provider: DocumentTreeDataProvider;
   let mockDocument: MockTextDocument;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    provider = new MindmapTreeDataProvider();
+    provider = new DocumentTreeDataProvider();
 
     mockDocument = {
       uri: { toString: () => '/test/mindmap.json' },
@@ -101,7 +101,7 @@ root:
     });
 
     it('should handle undefined document', async () => {
-      const provider = new MindmapTreeDataProvider();
+      const provider = new DocumentTreeDataProvider();
 
       // ドキュメントを設定せずにgetChildrenを呼ぶ
       const treeData = provider.getChildren();
@@ -173,7 +173,7 @@ root:
     });
 
     it('should return empty array for item with no nodeData', () => {
-      const itemWithoutData = new MindmapTreeItem('test', 'Test', 0, 'node');
+      const itemWithoutData = new DocumentTreeItem('test', 'Test', 0, 'node');
       const children = provider.getChildren(itemWithoutData);
       
       expect(children).toHaveLength(0);
@@ -182,7 +182,7 @@ root:
 
   describe('getTreeItem', () => {
     it('should return the tree item as-is', () => {
-      const treeItem = new MindmapTreeItem(
+      const treeItem = new DocumentTreeItem(
         'test-id',
         'Test Label',
         0, // TreeItemCollapsibleState.None
@@ -265,7 +265,7 @@ root:
     });
 
     it('should handle add node when no document is set', async () => {
-      const provider = new MindmapTreeDataProvider();
+      const provider = new DocumentTreeDataProvider();
       const newNodeData = {
         id: 'new-node',
         title: 'New Node'
@@ -278,7 +278,7 @@ root:
     });
 
     it('should handle YAML files when adding nodes', async () => {
-      const yamlProvider = new MindmapTreeDataProvider();
+      const yamlProvider = new DocumentTreeDataProvider();
       const yamlContent = `
 root:
   id: root
@@ -357,7 +357,7 @@ root:
     });
 
     it('should handle delete node when no document is set', async () => {
-      const provider = new MindmapTreeDataProvider();
+      const provider = new DocumentTreeDataProvider();
 
       await provider.deleteNode('some-node');
 
@@ -365,7 +365,7 @@ root:
     });
 
     it('should handle YAML files when deleting nodes', async () => {
-      const yamlProvider = new MindmapTreeDataProvider();
+      const yamlProvider = new DocumentTreeDataProvider();
       const yamlContent = `
 root:
   id: root

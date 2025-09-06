@@ -10,9 +10,9 @@ function escapeRegExp(string: string): string {
 }
 
 /**
- * マインドマップWebviewプロバイダー
+ * 構造化ドキュメントWebviewプロバイダー
  */
-export class MindmapWebviewProvider {
+export class DocumentWebviewProvider {
     constructor(private readonly extensionUri: vscode.Uri) {}
 
     /**
@@ -70,7 +70,7 @@ export class MindmapWebviewProvider {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="${csp}">
-    <title>Mindmap Tool - ${path.basename(document.fileName)}</title>
+    <title>Document Viewer - ${path.basename(document.fileName)}</title>
     
     <style>
         body {

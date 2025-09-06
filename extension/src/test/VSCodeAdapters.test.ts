@@ -113,7 +113,7 @@ describe('VSCode Platform Adapters', () => {
       it('should communicate configuration updates', async () => {
         const configMessage = {
           command: 'updateConfiguration',
-          key: 'mindmapTool.editor.theme',
+          key: 'documentViewer.editor.theme',
           value: 'dark',
           requestId: 'config-123'
         };

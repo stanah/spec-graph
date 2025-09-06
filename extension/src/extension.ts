@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { MindmapEditorProvider } from './MindmapEditorProvider';
-import { MindmapWebviewProvider } from './MindmapWebviewProvider';
-import { MindmapTreeDataProvider, MindmapTreeItem } from './MindmapTreeDataProvider';
+import { DocumentEditorProvider } from './DocumentEditorProvider';
+import { DocumentWebviewProvider } from './DocumentWebviewProvider';
+import { DocumentTreeDataProvider, DocumentTreeItem } from './DocumentTreeDataProvider';
 
 // アクティブなプレビューパネルを管理
 const previewPanels = new Map<string, vscode.WebviewPanel>();
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 // Webviewプロバイダーの参照（パネル再初期化用）
-let webviewProviderSingleton: MindmapWebviewProvider | null = null;
+let webviewProviderSingleton: DocumentWebviewProvider | null = null;
 
 function ensureDiagnosticCollection(context: vscode.ExtensionContext): vscode.DiagnosticCollection | null {
     try {
         if (!diagnosticCollection) {
             // モック環境では languages 自体が未定義の場合があるため try/catch で保護
-            diagnosticCollection = vscode.languages.createDiagnosticCollection('mindmap');
+            diagnosticCollection = vscode.languages.createDiagnosticCollection('document');
             context.subscriptions.push(diagnosticCollection);
         }
     } catch {
@@ -110,17 +110,17 @@ async function validateDocumentToDiagnostics(document: vscode.TextDocument): Pro
  * VSCode拡張のメインエントリーポイント
  */
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Mindmap Tool拡張が有効化されました');
+    console.log('Document Viewer拡張が有効化されました');
 
     // Webviewプロバイダーの登録
-    const _webviewProvider = new MindmapWebviewProvider(context.extensionUri);
+    const _webviewProvider = new DocumentWebviewProvider(context.extensionUri);
     webviewProviderSingleton = _webviewProvider;
     
     // カスタムエディタープロバイダーの登録
-    const editorProvider = new MindmapEditorProvider(context);
+    const editorProvider = new DocumentEditorProvider(context);
     context.subscriptions.push(
         vscode.window.registerCustomEditorProvider(
-            'mindmapTool.mindmapEditor',
+            'documentViewer.documentEditor',
             editorProvider,
             {
                 webviewOptions: {
@@ -132,8 +132,8 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // ツリーデータプロバイダーの登録
-    const treeDataProvider = new MindmapTreeDataProvider();
-    const treeView = vscode.window.createTreeView('mindmapTree', {
+    const treeDataProvider = new DocumentTreeDataProvider();
+    const treeView = vscode.window.createTreeView('documentTree', {
         treeDataProvider,
         showCollapseAll: true
     });
@@ -146,7 +146,7 @@ export function activate(context: vscode.ExtensionContext) {
                 const fileName = editor.document.fileName;
                 const ext = path.extname(fileName).toLowerCase();
                 
-                // マインドマップファイルの場合のみツリーとプレビューを更新
+                // 構造化ドキュメントファイルの場合のみツリーとプレビューを更新
                 if (ext === '.json' || ext === '.yaml' || ext === '.yml') {
                     try {
                         const content = editor.document.getText();
@@ -160,8 +160,8 @@ export function activate(context: vscode.ExtensionContext) {
                             data = JSON.parse(content);
                         }
                         
-                        // マインドマップファイルかどうかを柔軟にチェック
-                        const isLikelyMindmapFile = data && typeof data === 'object' && (
+                        // 構造化ドキュメントファイルかどうかを柔軟にチェック
+                        const isLikelyStructuredFile = data && typeof data === 'object' && (
                             // 標準的なマインドマップファイル
                             'root' in data ||
                             // その他の構造化データファイルも対象とする
@@ -173,7 +173,7 @@ export function activate(context: vscode.ExtensionContext) {
                             Array.isArray(data) // 配列形式のデータも対象
                         );
                         
-                        if (isLikelyMindmapFile) {
+                        if (isLikelyStructuredFile) {
                             // ツリーを更新（rootプロパティがある場合のみ）
                             if ('root' in (data as object)) {
                                 await treeDataProvider.setCurrentDocument(editor.document);
@@ -189,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
                                 const autoOpen = cfg.get<boolean>('preview.autoOpenOnFileOpen', true);
                                 const hasVisiblePreview = Array.from(previewPanels.values()).some(p => p.visible);
                                 if (follow && autoOpen && !hasVisiblePreview) {
-                                    await openMindmapPreview(editor.document.uri, vscode.ViewColumn.Beside, context);
+                                    await openDocumentPreview(editor.document.uri, vscode.ViewColumn.Beside, context);
                                 }
                             } catch (e) {
                                 // 失敗しても致命的ではないためスキップ
@@ -206,17 +206,17 @@ export function activate(context: vscode.ExtensionContext) {
     // コマンドの登録
     const commands = [
         // マインドマッププレビューを開くコマンド
-        vscode.commands.registerCommand('mindmapTool.openPreview', async (uri?: vscode.Uri) => {
-            await openMindmapPreview(uri, vscode.ViewColumn.Active, context);
+        vscode.commands.registerCommand('documentViewer.openPreview', async (uri?: vscode.Uri) => {
+            await openDocumentPreview(uri, vscode.ViewColumn.Active, context);
         }),
 
         // マインドマッププレビューを横に開くコマンド  
-        vscode.commands.registerCommand('mindmapTool.openPreviewToSide', async (uri?: vscode.Uri) => {
-            await openMindmapPreview(uri, vscode.ViewColumn.Beside, context);
+        vscode.commands.registerCommand('documentViewer.openPreviewToSide', async (uri?: vscode.Uri) => {
+            await openDocumentPreview(uri, vscode.ViewColumn.Beside, context);
         }),
 
         // マインドマップを開くコマンド
-        vscode.commands.registerCommand('mindmapTool.openMindmap', async (uri?: vscode.Uri) => {
+        vscode.commands.registerCommand('documentViewer.openDocument', async (uri?: vscode.Uri) => {
             try {
                 let targetUri = uri;
                 
@@ -241,7 +241,7 @@ export function activate(context: vscode.ExtensionContext) {
                 }
 
                 // カスタムエディターで開く
-                await vscode.commands.executeCommand('vscode.openWith', targetUri, 'mindmapTool.mindmapEditor');
+                await vscode.commands.executeCommand('vscode.openWith', targetUri, 'documentViewer.documentEditor');
                 
             } catch (error) {
                 vscode.window.showErrorMessage(`マインドマップを開けませんでした: ${error}`);
@@ -249,7 +249,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // 新しいマインドマップを作成するコマンド
-        vscode.commands.registerCommand('mindmapTool.createNewMindmap', async () => {
+        vscode.commands.registerCommand('documentViewer.createNewMindmap', async () => {
             try {
                 // 新規ファイルの保存場所を選択
                 const saveUri = await vscode.window.showSaveDialog({
@@ -286,7 +286,7 @@ export function activate(context: vscode.ExtensionContext) {
                 await vscode.workspace.fs.writeFile(saveUri, Buffer.from(template, 'utf8'));
                 
                 // 作成したファイルを開く
-                await vscode.commands.executeCommand('vscode.openWith', saveUri, 'mindmapTool.mindmapEditor');
+                await vscode.commands.executeCommand('vscode.openWith', saveUri, 'documentViewer.documentEditor');
                 
                 vscode.window.showInformationMessage(`新しいマインドマップを作成しました: ${saveUri.fsPath}`);
                 
@@ -296,7 +296,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // マインドマップをエクスポートするコマンド
-        vscode.commands.registerCommand('mindmapTool.exportMindmap', async () => {
+        vscode.commands.registerCommand('documentViewer.exportDocument', async () => {
             try {
                 const activeEditor = vscode.window.activeTextEditor;
                 if (!activeEditor) {
@@ -340,7 +340,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // スキーマ検証コマンド（VSCode Diagnostics へ反映）
-        vscode.commands.registerCommand('mindmapTool.validateSchema', async () => {
+        vscode.commands.registerCommand('documentViewer.validateSchema', async () => {
             try {
                 const activeEditor = vscode.window.activeTextEditor;
                 if (!activeEditor) {
@@ -359,12 +359,12 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // ツリービュー関連コマンド
-        vscode.commands.registerCommand('mindmapTool.refreshMindmapTree', () => {
+        vscode.commands.registerCommand('documentViewer.refreshDocumentTree', () => {
             treeDataProvider.refresh();
             vscode.window.showInformationMessage('マインドマップツリーを更新しました');
         }),
 
-        vscode.commands.registerCommand('mindmapTool.selectNode', async (nodeId: string, nodeData?: unknown) => {
+        vscode.commands.registerCommand('documentViewer.selectNode', async (nodeId: string, nodeData?: unknown) => {
             console.log('ノード選択:', nodeId, nodeData);
             
             // ノード選択時にエディタで該当箇所にジャンプ（将来実装）
@@ -374,7 +374,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
 
-        vscode.commands.registerCommand('mindmapTool.addChildNode', async (treeItem: MindmapTreeItem) => {
+        vscode.commands.registerCommand('documentViewer.addChildNode', async (treeItem: DocumentTreeItem) => {
             const nodeTitle = await vscode.window.showInputBox({
                 prompt: 'ノードのタイトルを入力してください',
                 placeHolder: '新しいノード'
@@ -404,7 +404,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
 
-        vscode.commands.registerCommand('mindmapTool.addSiblingNode', async (treeItem: MindmapTreeItem) => {
+        vscode.commands.registerCommand('documentViewer.addSiblingNode', async (treeItem: DocumentTreeItem) => {
             const nodeTitle = await vscode.window.showInputBox({
                 prompt: 'ノードのタイトルを入力してください',
                 placeHolder: '新しいノード'
@@ -426,7 +426,7 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage('兄弟ノード追加機能は開発中です');
         }),
 
-        vscode.commands.registerCommand('mindmapTool.editNode', async (treeItem: MindmapTreeItem) => {
+        vscode.commands.registerCommand('documentViewer.editNode', async (treeItem: DocumentTreeItem) => {
             if (!treeItem.nodeData) {
                 return;
             }
@@ -445,7 +445,7 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage('ノード編集機能は開発中です');
         }),
 
-        vscode.commands.registerCommand('mindmapTool.deleteNode', async (treeItem: MindmapTreeItem) => {
+        vscode.commands.registerCommand('documentViewer.deleteNode', async (treeItem: DocumentTreeItem) => {
             const nodeTitle = treeItem.nodeData?.title || treeItem.label;
             const confirmed = await vscode.window.showWarningMessage(
                 `ノード "${nodeTitle}" を削除しますか？`,
@@ -463,7 +463,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
 
-        vscode.commands.registerCommand('mindmapTool.collapseAll', () => {
+        vscode.commands.registerCommand('documentViewer.collapseAll', () => {
             treeDataProvider.collapseAll();
             if (treeView.visible) {
                 // VSCode の TreeView の collapseAll は直接呼び出せない
@@ -471,7 +471,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
 
-        vscode.commands.registerCommand('mindmapTool.expandAll', () => {
+        vscode.commands.registerCommand('documentViewer.expandAll', () => {
             treeDataProvider.expandAll();
             if (treeView.visible) {
                 vscode.window.showInformationMessage('すべてのノードを展開しました');
@@ -754,7 +754,7 @@ async function updatePreviewForActiveEditor(document: vscode.TextDocument): Prom
 /**
  * マインドマッププレビューを開く関数
  */
-async function openMindmapPreview(uri: vscode.Uri | undefined, viewColumn: vscode.ViewColumn, context: vscode.ExtensionContext): Promise<void> {
+async function openDocumentPreview(uri: vscode.Uri | undefined, viewColumn: vscode.ViewColumn, context: vscode.ExtensionContext): Promise<void> {
     try {
         let targetUri = uri;
         if (!targetUri && vscode.window.activeTextEditor) {
