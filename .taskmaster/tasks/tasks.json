@@ -418,7 +418,7 @@
         "id": 7,
         "title": "UIテーマとカスタマイズ機能の実装",
         "description": "シンプルなダークモード対応を実装し、システム設定に連動したテーマ切り替え機能を提供する",
-        "status": "done",
+        "status": "pending",
         "dependencies": [
           5
         ],
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-06T18:17:53.291Z",
+      "updated": "2025-09-06T18:18:55.114Z",
       "description": "Tasks for master context"
     }
   }
