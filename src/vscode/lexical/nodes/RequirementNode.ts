@@ -1,4 +1,5 @@
 import { ElementNode, DOMExportOutput, EditorConfig, LexicalNode, NodeKey } from 'lexical';
+import type { DOMConversionMap, LexicalEditor } from 'lexical';
 
 export class RequirementNode extends ElementNode {
   static getType(): string {
@@ -19,17 +20,17 @@ export class RequirementNode extends ElementNode {
     return el;
   }
 
-  updateDOM(): boolean {
+  updateDOM(_prevNode: RequirementNode, _dom: HTMLElement, _config: EditorConfig): boolean {
     // No dynamic updates for now
     return false;
   }
 
-  exportDOM(): DOMExportOutput {
+  exportDOM(_editor: LexicalEditor): DOMExportOutput {
     const element = this.createDOM({} as EditorConfig);
     return { element };
   }
 
-  static importDOM(): Record<string, never> {
+  static importDOM(): DOMConversionMap {
     // No DOM import yet
     return {};
   }
@@ -57,4 +58,3 @@ export function $createRequirementNode(): RequirementNode {
 export function $isRequirementNode(node: LexicalNode | null | undefined): node is RequirementNode {
   return node instanceof RequirementNode;
 }
-

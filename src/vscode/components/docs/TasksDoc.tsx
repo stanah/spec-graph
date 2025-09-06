@@ -20,7 +20,7 @@ function TaskTree({ item }: { item: any }) {
         <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>見積: {item.estimate}</span>
       )}
       {item.dueDate && (
-        <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>期限: {new Date(item.dueDate).toISOString()}</span>
+        <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>期限: {String(item.dueDate)}</span>
       )}
       {item.relatesTo && item.relatesTo.length > 0 && (
         <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8 }}>関連: {item.relatesTo.map((r: any)=>`${r.type}:${r.id}`).join(', ')}</div>

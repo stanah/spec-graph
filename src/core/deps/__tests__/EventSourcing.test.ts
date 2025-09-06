@@ -44,5 +44,13 @@ describe('Event Sourcing for DependencyGraph', () => {
     store.clear();
     expect(store.getEvents()).toEqual([]);
   });
-});
 
+  it('does not override provided timestamp (including 0)', () => {
+    const customTs = 1234567890;
+    store.append({ type: 'AddNode', id: 'N1', timestamp: customTs });
+    store.append({ type: 'AddNode', id: 'N0', timestamp: 0 });
+    const events = store.getEvents();
+    expect(events[0].timestamp).toBe(customTs);
+    expect(events[1].timestamp).toBe(0);
+  });
+});

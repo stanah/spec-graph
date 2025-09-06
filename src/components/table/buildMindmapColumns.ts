@@ -103,9 +103,10 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function formatValue(v: unknown): string | number | boolean | null {
+function formatValue(v: unknown): string | number | null {
   if (v == null) return '';
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'object') return JSON.stringify(v);
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
   return v as any;
 }

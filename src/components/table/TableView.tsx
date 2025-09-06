@@ -55,7 +55,6 @@ export function TableView<T extends object>({ data, columns, className, sorting,
     state: {
       sorting,
       columnFilters,
-      globalFilter,
       pagination,
       columnSizing,
     },

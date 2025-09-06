@@ -11,22 +11,23 @@ export const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({ type
   const sorted = React.useMemo(() => [...types].sort((a, b) => a.key.localeCompare(b.key)), [types]);
 
   return (
-    <div role="tablist" aria-label="Document Types" style={{ display: 'flex', gap: 8, padding: '8px 12px', borderBottom: '1px solid var(--vscode-panel-border)' }}>
+    <div role="tablist" aria-label="Document Types" aria-orientation="horizontal" style={{ display: 'flex', gap: 8, padding: '8px 12px', borderBottom: '1px solid var(--vscode-panel-border)' }}>
       {sorted.map((t) => {
-        const pressed = selectedKey === t.key;
+        const selected = selectedKey === t.key;
         return (
           <button
             key={t.key}
-            role="button"
-            aria-pressed={pressed}
+            role="tab"
+            aria-selected={selected}
+            tabIndex={selected ? 0 : -1}
             onClick={() => onSelect?.(t.key)}
             title={t.label}
             style={{
               padding: '6px 10px',
               borderRadius: 6,
               border: '1px solid var(--vscode-button-border, transparent)',
-              background: pressed ? 'var(--vscode-button-background)' : 'transparent',
-              color: pressed ? 'var(--vscode-button-foreground)' : 'var(--vscode-foreground)',
+              background: selected ? 'var(--vscode-button-background)' : 'transparent',
+              color: selected ? 'var(--vscode-button-foreground)' : 'var(--vscode-foreground)',
               cursor: 'pointer',
             }}
           >
@@ -37,4 +38,3 @@ export const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({ type
     </div>
   );
 };
-

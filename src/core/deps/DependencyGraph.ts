@@ -176,7 +176,7 @@ export class DependencyGraph {
     // Compute indegree in reversed graph
     const indeg: Map<string, number> = new Map();
     for (const n of nodes) indeg.set(n, 0);
-    for (const [u, neigh] of out.entries()) {
+    for (const [, neigh] of out.entries()) {
       for (const v of neigh) indeg.set(v, (indeg.get(v) || 0) + 1);
     }
 

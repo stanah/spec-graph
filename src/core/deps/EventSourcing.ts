@@ -10,7 +10,7 @@ export class DependencyEventStore {
   private events: DependencyEvent[] = [];
 
   append(event: DependencyEvent): void {
-    if (!event.timestamp) event.timestamp = Date.now();
+    if (event.timestamp === undefined) event.timestamp = Date.now();
     this.events.push(event);
   }
 
@@ -84,4 +84,3 @@ export class EventSourcedDependencyGraph {
   findCycles(): string[][] { return this.graph.findCycles(); }
   hasCycle(): boolean { return this.graph.hasCycle(); }
 }
-
