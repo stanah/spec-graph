@@ -1,7 +1,7 @@
 // アプリケーション定数
 
 export const APP_CONFIG = {
-  name: 'Requirements Mindmap Tool',
+  name: 'spec-graph',
   version: '1.0.0',
   supportedFormats: ['json', 'yaml'] as const,
   defaultSettings: {

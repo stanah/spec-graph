@@ -1,6 +1,6 @@
-# Requirements Mindmap Tool
+# spec-graph
 
-A React-based web application for creating and visualizing mindmaps from JSON/YAML requirements documents.
+A React/TypeScript toolkit for representing requirements specifications as a graph with multiple views. Mindmap is provided as one view alongside table and document views.
 
 ## Core Features
 
