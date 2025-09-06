@@ -1,4 +1,4 @@
-title: req-mindmap 設計
+title: spec-graph 設計
 version: "1.0.0"
 components:
   - id: DSG-CORE-001

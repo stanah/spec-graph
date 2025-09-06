@@ -1,16 +1,16 @@
-# Requirements Mindmap
+# spec-graph
 
-> Interactive mindmap visualization tool for requirements analysis and project planning
+> Requirements specification graph toolkit with multi-view UI (mindmap is one feature)
 
-[![Progress](https://img.shields.io/badge/Progress-14%25-red)](https://github.com/stanah/req-mindmap)
-[![Tasks](https://img.shields.io/badge/Tasks-22-blue)](https://github.com/stanah/req-mindmap)
-[![Subtasks](https://img.shields.io/badge/Subtasks-115-lightgray)](https://github.com/stanah/req-mindmap)
+[![Progress](https://img.shields.io/badge/Progress-14%25-red)](https://github.com/stanah/spec-graph)
+[![Tasks](https://img.shields.io/badge/Tasks-22-blue)](https://github.com/stanah/spec-graph)
+[![Subtasks](https://img.shields.io/badge/Subtasks-115-lightgray)](https://github.com/stanah/spec-graph)
 
 📋 **Last Updated**: 2025-08-14
 
 ## 🎯 Project Overview
 
-A powerful web-based application that transforms JSON/YAML requirement specifications into interactive mindmaps. Features real-time editing, visual representation, and VSCode extension support for seamless development workflow integration.
+spec-graph は、JSON/YAML で記述された要件仕様をグラフ構造として扱い、複数のビューで可視化・編集するツールキットです。マインドマップはそのうちの1機能（ビュー）であり、他に表形式（Table）やリッチドキュメント（Document）などのビューを提供します。VSCode拡張と連携し、開発ワークフローに自然に統合されます。
 
 ## 📊 Task Progress
 

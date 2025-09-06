@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:req-mindmap:schemas:tasks.v1",
+  "$id": "urn:spec-graph:schemas:tasks.v1",
   "title": "Tasks Document",
   "type": "object",
   "required": ["title", "version", "epics"],

@@ -228,21 +228,21 @@ export class ContentLoaderService {
         id: 'starter-template',
         name: 'スターター版',
         description: '基本的な要件定義（ビジネス目標 + ユーザー要件）',
-        schemaPath: '/req-mindmap/schemas/simplified-requirements-schema.json',
+        schemaPath: '/spec-graph/schemas/simplified-requirements-schema.json',
         templateType: 'starter'
       },
       {
         id: 'standard-template',
         name: 'スタンダード版',
         description: '標準的な要件定義（システム要件・ステークホルダー含む）',
-        schemaPath: '/req-mindmap/schemas/unified-requirements-schema.json',
+        schemaPath: '/spec-graph/schemas/unified-requirements-schema.json',
         templateType: 'standard'
       },
       {
         id: 'enterprise-template',
         name: 'エンタープライズ版',
         description: '包括的な要件定義（トレーサビリティ・コンプライアンス含む）',
-        schemaPath: '/req-mindmap/schemas/unified-requirements-schema.json',
+        schemaPath: '/spec-graph/schemas/unified-requirements-schema.json',
         templateType: 'enterprise'
       }
     ];

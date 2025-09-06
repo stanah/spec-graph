@@ -1,11 +1,11 @@
 {
-  "name": "req-mindmap-mcp-server",
+  "name": "spec-graph-mcp-server",
   "version": "1.0.0",
-  "description": "MCP Server for req-mindmap: Provides mindmap file operations via Model Context Protocol",
+  "description": "MCP Server for spec-graph: Provides mindmap file operations via Model Context Protocol",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "req-mindmap-mcp": "dist/server.js"
+    "spec-graph-mcp": "dist/server.js"
   },
   "scripts": {
     "build": "tsc",

@@ -1,5 +1,5 @@
 version: "1.0"
-title: req-mindmap プロジェクト要件定義
+title: spec-graph プロジェクト要件定義
 metadata:
   createdAt: "2025-01-03T00:00:00Z"
   updatedAt: "2025-01-03T00:00:00Z"
@@ -28,8 +28,8 @@ tags:
     description: 使いやすさ関連
 root:
   id: root
-  title: req-mindmap プロジェクト要件定義
-  description: マインドマップベースの要件定義ツールとMCPエージェント統合システム
+  title: spec-graph プロジェクト要件定義
+  description: 仕様グラフ（spec-graph）を中心とした要件定義ツールとMCPエージェント統合システム。マインドマップはspecの1ビュー/機能として提供。
   tags: []
   customFields:
     category: functional

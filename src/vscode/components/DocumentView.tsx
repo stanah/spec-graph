@@ -64,7 +64,7 @@ export const DocumentView: React.FC = () => {
 
         const Cmp: React.FC = () => {
           const initialConfig = React.useMemo(() => ({
-            namespace: 'req-mindmap-document',
+            namespace: 'spec-graph-document',
             editable: false,
             theme,
             onError,

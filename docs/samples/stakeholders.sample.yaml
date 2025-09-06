@@ -1,4 +1,4 @@
-title: req-mindmap ステークホルダー
+title: spec-graph ステークホルダー
 version: "1.0.0"
 stakeholders:
   - id: STK-001

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:req-mindmap:schemas:design.v1",
+  "$id": "urn:spec-graph:schemas:design.v1",
   "title": "Design Document",
   "type": "object",
   "required": ["title", "version", "components"],

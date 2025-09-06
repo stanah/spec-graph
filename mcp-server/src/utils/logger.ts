@@ -28,7 +28,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { 
-    service: 'req-mindmap-mcp-server',
+    service: 'spec-graph-mcp-server',
     version: '1.0.0'
   },
   transports: [
