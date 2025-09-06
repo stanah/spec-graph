@@ -87,6 +87,44 @@ describe('utils/nodeMapping', () => {
     expect(nodeIdAtCursor).toBe('child2');
   });
 
+  it('JSON: コロン前後の空白があっても検出できる', async () => {
+    const json = [
+      '{',
+      '  "root": {',
+      '    "id" : "root",',
+      '    "title" : "Root",',
+      '    "children": [',
+      '      {',
+      '        "id" : "child3",',
+      '        "title" : "Child Three"',
+      '      }',
+      '    ]',
+      '  }',
+      '}',
+    ].join('\n');
+
+    const mapping = await createNodeMapping(json, 'json');
+    const pos = getEditorPositionForNode('child3', mapping);
+    expect(pos).not.toBeNull();
+    expect(pos!.jsonPath).toBe('root.children[0]');
+  });
+
+  it('YAML: 単一引用符の値でも検出できる', async () => {
+    const yaml = [
+      'root:',
+      '  id: root',
+      '  title: Root',
+      '  children:',
+      "    - id: 'child3'",
+      "      title: 'Child Three'",
+    ].join('\n');
+
+    const mapping = await createNodeMapping(yaml, 'yaml');
+    const pos = getEditorPositionForNode('child3', mapping);
+    expect(pos).not.toBeNull();
+    expect(pos!.jsonPath).toBe('root.children[0]');
+  });
+
   it('getNodeLevel: ルート=0, 子=1, 孫=2 を返す', async () => {
     const json = [
       '{',
@@ -112,4 +150,3 @@ describe('utils/nodeMapping', () => {
     expect(getNodeLevel('grand1', mapping.mindmapData)).toBe(2);
   });
 });
-
