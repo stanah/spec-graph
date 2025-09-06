@@ -801,7 +801,7 @@ async function openDocumentPreview(uri: vscode.Uri | undefined, viewColumn: vsco
         });
 
         // Webviewプロバイダーを使ってコンテンツを設定
-        const webviewProvider = new MindmapWebviewProvider(context.extensionUri);
+        const webviewProvider = new DocumentWebviewProvider(context.extensionUri);
         webviewProvider.createWebview(panel, document);
         
         // Webviewからのメッセージハンドリングを設定
@@ -811,7 +811,7 @@ async function openDocumentPreview(uri: vscode.Uri | undefined, viewColumn: vsco
                 try {
                     switch (message.command) {
                         case 'saveFile':
-                            // ファイル保存 - MindmapWebviewProviderの処理を使用
+                            // ファイル保存 - DocumentWebviewProviderの処理を使用
                             console.log('saveFile要求を受信 (WebviewPreview):', message);
                             await webviewProvider.handleSaveFile(panel!.webview, document, message);
                             break;
