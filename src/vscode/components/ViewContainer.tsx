@@ -15,6 +15,7 @@ const Placeholder: React.FC<{ title: string }> = ({ title }) => (
 export const ViewContainer: React.FC = () => {
   const { viewMode } = useViewMode();
   const parsedData = useAppStore(s => s.parse.parsedData);
+  const parseErrors = useAppStore(s => s.parse.parseErrors);
 
   switch (viewMode) {
     case 'mindmap':
@@ -22,9 +23,12 @@ export const ViewContainer: React.FC = () => {
     case 'table':
       return <Placeholder title="テーブルビュー" />;
     case 'document':
-      // Mindmap がパースできている場合は従来の DocumentView を優先。
-      // パースできていない場合は、任意スキーマの汎用レンダラーで表示する。
-      return parsedData ? <DocumentView /> : <AnyDocumentView />;
+      // Mindmapパースにエラーがある場合は、任意スキーマの汎用レンダラーを使用
+      if (parseErrors && parseErrors.length > 0) return <AnyDocumentView />;
+      // パース済みデータがある場合はアウトラインドキュメントビュー
+      if (parsedData) return <DocumentView />;
+      // それ以外は汎用レンダラー
+      return <AnyDocumentView />;
     default:
       return null;
   }
