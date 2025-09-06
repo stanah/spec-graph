@@ -2,7 +2,7 @@
   "name": "mindmap-tool",
   "displayName": "Mindmap Tool",
   "description": "JSON/YAMLファイルからマインドマップを生成・編集するVSCode拡張",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "mindmap-tool",
   "engines": {
     "vscode": "^1.74.0"

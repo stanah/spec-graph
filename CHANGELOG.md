@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/stanah/spec-graph/compare/req-mindmap-v0.6.0...req-mindmap-v0.7.0) (2025-09-06)
+
+
+### Features
+
+* add task management agents and configuration files for enhanced workflow integration ([ba3aa21](https://github.com/stanah/spec-graph/commit/ba3aa21c4bd9f284adaabbb68ae80b302e071dee))
+* **i18n:** localize validation messages for Zod/Ajv (task 28.4)\n\n- Add simple i18n catalog (ja/en)\n- SchemaManager supports setLocale/getLocale and translates messages\n- Tests for i18n on custom keywords and Zod codes ([125839f](https://github.com/stanah/spec-graph/commit/125839fb424244cf3e4b2afee3ed42adb0a6012f))
+* **schema:** add Ajv custom keywords (nonEmptyString, uniqueNodeIds) and schema hooks (task 28.2)\n\n- register default keywords on Ajv init\n- expose registerKeyword/setJsonSchema/validateCurrentSchema\n- tests for keywords and Ajv validation ([e816c75](https://github.com/stanah/spec-graph/commit/e816c75043bda349ccad47d280261f2211b0ad96))
+* **schema:** add SchemaManager core (task 28.1)\n\n- Zod validation wrapper\n- Optional Zod-&gt;JSON Schema conversion (dynamic)\n- Ajv instance + JSON Schema validation\n- Export via services/index\n\nTests: basic SchemaManager tests ([9e7694f](https://github.com/stanah/spec-graph/commit/9e7694fad260a8c24aeb0ad6a3e8d42bfdef49f2))
+* **schema:** add versioning and template library (task 28.5)\n\n- SchemaManager: registry, active schema, migrate() diff log\n- Templates: basic/extended/project schemas with custom keywords\n- Tests: versioning + templates ([ae22a48](https://github.com/stanah/spec-graph/commit/ae22a48c42491a5b209ef8963dbf5c9e2c398b7b))
+* **view:** implement view switching foundation (task 24) ([3ef492c](https://github.com/stanah/spec-graph/commit/3ef492cd2625397f41470113e286cda9aa6ac2ed))
+* **vscode:** add schema validation to VSCode diagnostics; replace Monaco integration with diagnostics pipeline (task 28.3) ([e55ae8c](https://github.com/stanah/spec-graph/commit/e55ae8c974859e846e51d4f83bc094bdfe829b13))
+
+
+### Bug Fixes
+
+* **extension:** make validateSchema diagnostics robust in test env and always show info message; remove any casts and unused catch var to satisfy ESLint ([ec123a3](https://github.com/stanah/spec-graph/commit/ec123a36cc18cb74a5a3e7912634b17b551097b6))
+
+
+### Documentation
+
+* add multi-view enhancement PRD outlining new features and technical requirements ([377f154](https://github.com/stanah/spec-graph/commit/377f154eb4ca37ead88c3b5b86b0564cd4fcc517))
+* add repository guidelines for project structure, coding style, and testing ([c16d26d](https://github.com/stanah/spec-graph/commit/c16d26d6655c507df9573fa5ebeeb5e969032408))
+
+
+### Tests
+
+* **ci:** avoid vite import-analysis by dynamic import shim for optional zod-to-json-schema ([0d93a1a](https://github.com/stanah/spec-graph/commit/0d93a1a3747457ce769a1ed366b71eb77a4ecb6c))
+* **view:** add ViewMode store and UI tests (task 24) ([e005d77](https://github.com/stanah/spec-graph/commit/e005d777b805e125e905dc1a9763df4c2c0fd8fe))
+* **vscode:** make diagnostics optional-safe in tests; always show validation summary ([920ff1e](https://github.com/stanah/spec-graph/commit/920ff1e4b4b2b18892a58b7b17409d6c93b4aeb1))
+
+
+### Continuous Integration
+
+* disable Claude Code automated PR review workflow (prevent running review) ([93d6832](https://github.com/stanah/spec-graph/commit/93d6832e6b17a12ce5f627f587bbeb7379b85413))
+
 ## [0.6.0](https://github.com/stanah/req-mindmap/compare/req-mindmap-v0.5.0...req-mindmap-v0.6.0) (2025-08-19)
 
 
