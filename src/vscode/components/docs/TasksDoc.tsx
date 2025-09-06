@@ -1,4 +1,5 @@
 import React from 'react';
+import { StatusBadge, PriorityBadge } from '../../../components/table/Badges';
 import type { TasksDoc } from '../../../services/docTypes';
 
 const chipStyle: React.CSSProperties = { display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 };
@@ -8,8 +9,12 @@ function TaskTree({ item }: { item: any }) {
     <li>
       <strong>{item.id || '(no id)'}: {item.title || '(no title)'}</strong>
       {item.type && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>{item.type}</span>}
-      {item.status && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>{item.status}</span>}
-      {item.priority && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>[{item.priority}]</span>}
+      <span style={{ marginLeft: 6 }}>
+        {item.status ? <StatusBadge status={item.status} /> : null}
+      </span>
+      <span style={{ marginLeft: 6 }}>
+        {item.priority ? <PriorityBadge priority={item.priority} /> : null}
+      </span>
       {item.assignee && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>@{item.assignee}</span>}
       {typeof item.estimate === 'number' && (
         <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>見積: {item.estimate}</span>

@@ -5,6 +5,7 @@ import { buildTOC } from '../document/buildTOC';
 import { findNodeById } from '../../utils/helpers';
 import type { MindmapNode } from '../../types';
 import './DocumentView.print.css';
+import { StatusBadge, PriorityBadge } from '../../components/table/Badges';
 
 const theme = {
   paragraph: 'lexical-paragraph',
@@ -52,14 +53,13 @@ export const DocumentView: React.FC = () => {
     const importModule = (p: string) => import(/* @vite-ignore */ p);
     (async () => {
       try {
-        const [{ LexicalComposer }, { RichTextPlugin }, { ContentEditable }, { HistoryPlugin }, { OnChangePlugin }, lexical, reqNodeMod] = await Promise.all([
+        const [{ LexicalComposer }, { RichTextPlugin }, { ContentEditable }, { HistoryPlugin }, { OnChangePlugin }, lexical] = await Promise.all([
           importModule('@lexical/react/LexicalComposer'),
           importModule('@lexical/react/LexicalRichTextPlugin'),
           importModule('@lexical/react/LexicalContentEditable'),
           importModule('@lexical/react/LexicalHistoryPlugin'),
           importModule('@lexical/react/LexicalOnChangePlugin'),
           importModule('lexical'),
-          importModule('../lexical/nodes/RequirementNode'),
         ]);
 
         const Cmp: React.FC = () => {
@@ -68,7 +68,7 @@ export const DocumentView: React.FC = () => {
             editable: false,
             theme,
             onError,
-            nodes: [reqNodeMod.RequirementNode],
+            nodes: [],
             editorState: () => {
               const root = lexical.$getRoot();
               void root; // empty state for now
@@ -109,7 +109,7 @@ export const DocumentView: React.FC = () => {
       const metaRow: React.CSSProperties = { marginTop: 4, fontSize: 12, opacity: 0.8 };
       return (
         <section key={sec.heading.nodeId} data-nodeid={sec.heading.nodeId} data-collapsed={isCollapsed ? 'true' : 'false'}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <button
               data-print-hide="true"
               aria-label={isCollapsed ? 'expand' : 'collapse'}
@@ -119,7 +119,10 @@ export const DocumentView: React.FC = () => {
             >
               {isCollapsed ? '+' : '−'}
             </button>
-            <Tag>{sec.heading.text}</Tag>
+            <Tag style={{ marginRight: 8 }}>{sec.heading.text}</Tag>
+            {/* 見出し行にバッジを配置 */}
+            {node?.status ? <StatusBadge status={node.status} /> : null}
+            {node?.priority ? <PriorityBadge priority={node.priority} /> : null}
           </div>
           {!isCollapsed && (
             <div style={{ paddingLeft: 24 }}>

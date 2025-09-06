@@ -1,4 +1,5 @@
 import React from 'react';
+import { StatusBadge, PriorityBadge } from '../../../components/table/Badges';
 import type { RequirementsDoc } from '../../../services/docTypes';
 
 export const RequirementsDocView: React.FC<{ doc: RequirementsDoc }> = ({ doc }) => {
@@ -28,8 +29,13 @@ export const RequirementsDocView: React.FC<{ doc: RequirementsDoc }> = ({ doc })
         {items.map((r, idx) => (
           <li key={r.id || idx} style={{ marginBottom: 6 }}>
             <strong>{r.id ? `${r.id}: ` : ''}{r.title || '(無題)'}</strong>
-            {r.priority && <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.8 }}>[{r.priority}]</span>}
-            {r.status && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>{r.status}</span>}
+            {/* バッジ表示 */}
+            <span style={{ marginLeft: 8 }}>
+              {r.status ? <StatusBadge status={r.status} /> : null}
+            </span>
+            <span style={{ marginLeft: 6 }}>
+              {r.priority ? <PriorityBadge priority={r.priority} /> : null}
+            </span>
             {r.description && <div style={{ marginTop: 4, opacity: 0.9 }}>{r.description}</div>}
             {/* メタ情報 */}
             <div style={metaRow}>
