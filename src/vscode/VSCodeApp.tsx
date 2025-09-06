@@ -46,7 +46,17 @@ function VSCodeApp() {
         }
         break;
       }
+      case 'configurationChanged': {
+        const config = (message as any).configuration;
+        console.log('VSCode設定が変更されました:', config);
+        break;
+      }
+      case 'themeChanged': {
+        console.log('VSCodeテーマが変更されました');
+        break;
+      }
       default:
+        console.log('未知のVSCodeメッセージ:', message);
         break;
     }
   }, [updateContent]);
@@ -151,7 +161,7 @@ function VSCodeApp() {
   }
 
   return (
-    <div className="vscode-app">
+    <div className="vscode-app" data-testid="vscode-app">
       {/* アラート表示 */}
       <AlertComponent />
       
