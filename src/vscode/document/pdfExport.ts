@@ -15,7 +15,15 @@ export function outlineToLines(outline: DocumentOutline): string[] {
   return lines;
 }
 
-function getJSPDFGlobal(): { jsPDF: any } | null {
+type JsPDFLike = {
+  text: (content: string, x: number, y: number) => any;
+  addPage?: () => any;
+  save?: (filename: string) => any;
+};
+
+type JsPDFCtor = new (...args: any[]) => JsPDFLike;
+
+function getJSPDFGlobal(): { jsPDF: unknown } | null {
   const g: any = globalThis as any;
   if (g?.__mockJSPDF) return { jsPDF: g.__mockJSPDF };
   if (g?.jsPDF) return { jsPDF: g.jsPDF };
@@ -30,16 +38,14 @@ export async function exportOutlineToPDF(outline: DocumentOutline, opts?: { file
       return { success: false, error: 'jsPDF not available' };
     }
     const { jsPDF } = mod;
-    // @ts-expect-error jsPDF type is provided at runtime or mocked in tests
-    const doc = new jsPDF();
+    const Ctor = jsPDF as JsPDFCtor;
+    const doc: JsPDFLike = new Ctor();
     const lines = outlineToLines(outline);
     let y = 10;
     for (const ln of lines) {
-      // @ts-expect-error jsPDF instance in runtime or mock in tests
       doc.text(ln, 10, y);
       y += 8;
       if (y > 280) {
-        // @ts-expect-error jsPDF instance method
         doc.addPage && doc.addPage();
         y = 10;
       }
