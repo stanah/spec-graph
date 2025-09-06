@@ -283,7 +283,7 @@
           3,
           4
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
@@ -520,7 +520,7 @@
           7,
           8
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
@@ -1348,7 +1348,7 @@
         "id": 22,
         "title": "ノード状態インジケーター表示機能の実装",
         "description": "マインドマップのノードにpriority、status等の状態情報を視覚的にインジケーターとして表示する機能を実装する。色分け、アイコン、コンパクトなビジュアル要素を使用してノードの状態を直感的に把握できるようにする。",
-        "status": "done",
+        "status": "pending",
         "dependencies": [
           15,
           16
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-05T20:21:24.579Z",
+      "updated": "2025-09-06T18:17:53.291Z",
       "description": "Tasks for master context"
     }
   }
