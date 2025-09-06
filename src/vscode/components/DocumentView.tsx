@@ -130,6 +130,11 @@ export const DocumentView: React.FC = () => {
                     {node.priority && (<><span style={{ fontWeight: 600 }}>priority:</span> <span>{node.priority}</span>{' '}</>)}
                     {node.status && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>status:</span> <span>{node.status}</span>{' '}</>)}
                     {node.deadline && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>期限:</span> <span>{new Date(node.deadline).toLocaleString()}</span>{' '}</>)}
+                    {/* カスタムフィールドに良くあるメタ項目の取り出し */}
+                    {node.customFields && (node.customFields as any).owner && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>owner:</span> <span>{(node.customFields as any).owner as string}</span>{' '}</>)}
+                    {node.customFields && (node.customFields as any).component && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>component:</span> <span>{(node.customFields as any).component as string}</span>{' '}</>)}
+                    {node.customFields && typeof (node.customFields as any).effort !== 'undefined' && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>effort:</span> <span>{String((node.customFields as any).effort)}</span>{' '}</>)}
+                    {node.customFields && (node.customFields as any).risk && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>risk:</span> <span>{(node.customFields as any).risk as string}</span>{' '}</>)}
                   </div>
                   {Array.isArray(node.tags) && node.tags.length > 0 && (
                     <div style={{ marginTop: 6 }}>
@@ -143,6 +148,30 @@ export const DocumentView: React.FC = () => {
                       {node.updatedAt && (<><span style={{ fontWeight: 600, marginLeft: 8 }}>更新:</span> <span>{new Date(node.updatedAt).toLocaleString()}</span></>)}
                     </div>
                   )}
+                  {/* よく使う構造化フィールドの特別扱い */}
+                  {(() => {
+                    const cf = (node.customFields || {}) as any;
+                    const blocks: JSX.Element[] = [];
+                    if (Array.isArray(cf.acceptanceCriteria) && cf.acceptanceCriteria.length > 0) {
+                      blocks.push(
+                        <div key="ac" style={{ marginTop: 6 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>受け入れ条件</div>
+                          <ul style={{ margin: '2px 0 0 18px', padding: 0 }}>
+                            {cf.acceptanceCriteria.map((c: string, i: number) => <li key={i}>{c}</li>)}
+                          </ul>
+                        </div>
+                      );
+                    }
+                    if (Array.isArray(cf.dependsOn) && cf.dependsOn.length > 0) {
+                      blocks.push(<div key="dep" style={metaRow}>依存: {cf.dependsOn.join(', ')}</div>);
+                    }
+                    if (Array.isArray(cf.relatesTo) && cf.relatesTo.length > 0) {
+                      const text = cf.relatesTo.map((rel: any) => rel && typeof rel === 'object' && rel.type && rel.id ? `${rel.type}:${rel.id}` : String(rel)).join(', ');
+                      blocks.push(<div key="rel" style={metaRow}>関連: {text}</div>);
+                    }
+                    return blocks.length > 0 ? <>{blocks}</> : null;
+                  })()}
+
                   {node.customFields && Object.keys(node.customFields).length > 0 && (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>カスタムフィールド</div>
