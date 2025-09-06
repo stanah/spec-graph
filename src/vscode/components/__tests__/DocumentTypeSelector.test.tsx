@@ -17,20 +17,20 @@ describe('DocumentTypeSelector', () => {
 
   it('renders built-in types', () => {
     setup('requirements');
-    expect(screen.getByRole('button', { name: 'Requirements' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Stakeholders' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Design' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tasks' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Requirements' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Stakeholders' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Design' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Tasks' })).toBeInTheDocument();
   });
 
-  it('indicates selected type with aria-pressed', () => {
+  it('indicates selected type with aria-selected', () => {
     setup('requirements');
-    expect(screen.getByRole('button', { name: 'Requirements' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('tab', { name: 'Requirements' })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('calls onSelect when a type is clicked', () => {
     const { onSelect } = setup('requirements');
-    fireEvent.click(screen.getByRole('button', { name: 'Design' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Design' }));
     expect(onSelect).toHaveBeenCalledWith('design');
   });
 });

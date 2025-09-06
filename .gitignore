@@ -44,3 +44,5 @@ extension/package-lock.json
 
 .serena/cache
 coverage/
+
+.tmp/

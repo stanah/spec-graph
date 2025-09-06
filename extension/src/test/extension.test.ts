@@ -1005,6 +1005,11 @@ describe('VSCode Extension', () => {
           setTimeout(() => reject(new Error('Network timeout')), 100);
         });
 
+        // Add catch handler to prevent unhandled rejection
+        slowOperation.catch(() => {
+          // Expected rejection, handled silently
+        });
+
         mockVSCode.workspace.fs.readFile.mockReturnValue(slowOperation);
         
         await activate(testContext);
