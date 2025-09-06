@@ -26,9 +26,9 @@ describe('DocumentView', () => {
 
   it('アウトライン（見出し・段落）を描画する', async () => {
     render(<DocumentView />);
-    expect(await screen.findByText('Root')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Root' })).toBeInTheDocument();
     expect(screen.getByText('Intro')).toBeInTheDocument();
-    expect(screen.getByText('Child')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Child' })).toBeInTheDocument();
     expect(screen.getByText('Body')).toBeInTheDocument();
   });
 

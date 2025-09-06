@@ -44,19 +44,20 @@ describe('DocumentView (rich fields)', () => {
     expect(screen.getByText('イントロ')).toBeInTheDocument();
 
     // メタ情報（root）
-    expect(screen.getByText(/priority/i)).toBeInTheDocument();
-    expect(screen.getByText(/high/i)).toBeInTheDocument();
-    expect(screen.getByText(/status/i)).toBeInTheDocument();
-    expect(screen.getByText(/in-progress/i)).toBeInTheDocument();
-    expect(screen.getByText('タグ')).toBeInTheDocument();
+    const priorityBadges = screen.getAllByTestId('priority-badge');
+    expect(priorityBadges[0]).toHaveTextContent('high');
+    const statusBadges = screen.getAllByTestId('status-badge');
+    expect(statusBadges[0]).toHaveTextContent('in-progress');
+    const tagLabels = screen.getAllByText('タグ');
+    expect(tagLabels[0]).toBeInTheDocument();
     expect(screen.getByText('req')).toBeInTheDocument();
     expect(screen.getByText('v1')).toBeInTheDocument();
     expect(screen.getByText(/期限/)).toBeInTheDocument();
 
     // 子要素のメタ情報
-    expect(screen.getByText('機能要件')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '機能要件' })).toBeInTheDocument();
     expect(screen.getByText('検索できること')).toBeInTheDocument();
-    expect(screen.getByText(/pending/i)).toBeInTheDocument();
+    expect(statusBadges[1]).toHaveTextContent('pending');
     expect(screen.getByText('search')).toBeInTheDocument();
   });
 });

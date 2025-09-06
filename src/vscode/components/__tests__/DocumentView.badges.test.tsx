@@ -26,14 +26,14 @@ describe('DocumentView badges', () => {
 
   it('見出し行にステータス・優先度バッジを表示する', async () => {
     render(<DocumentView />);
-    // ルート
-    expect(await screen.findByTestId('status-badge')).toBeInTheDocument();
-    expect(await screen.findByTestId('priority-badge')).toBeInTheDocument();
+    // ルートと子要素のバッジ
+    const statusBadges = await screen.findAllByTestId('status-badge');
+    const priorityBadges = await screen.findAllByTestId('priority-badge');
+    expect(statusBadges[0]).toBeInTheDocument();
+    expect(priorityBadges[0]).toBeInTheDocument();
     // 子要素（2個目のバッジ群も描画されているはず）
-    const allStatus = await screen.findAllByTestId('status-badge');
-    const allPriority = await screen.findAllByTestId('priority-badge');
-    expect(allStatus.length).toBeGreaterThan(1);
-    expect(allPriority.length).toBeGreaterThan(1);
+    expect(statusBadges.length).toBeGreaterThan(1);
+    expect(priorityBadges.length).toBeGreaterThan(1);
   });
 });
 

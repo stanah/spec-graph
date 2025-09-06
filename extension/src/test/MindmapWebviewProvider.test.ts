@@ -46,6 +46,11 @@ vi.mock('vscode', () => ({
   }
 }));
 
+// pathモジュールのモック
+vi.mock('path', () => ({
+  basename: vi.fn((path) => path.split('/').pop() || path)
+}));
+
 // js-yamlのモック
 vi.mock('js-yaml', () => ({
   dump: vi.fn((data) => `yaml: ${JSON.stringify(data)}`),
@@ -240,6 +245,7 @@ describe('MindmapWebviewProvider', () => {
         success: true
       });
     });
+    });
 
     it('should handle exportRequest message', async () => {
       const mockShowSaveDialog = vscode.window.showSaveDialog as unknown as ReturnType<typeof vi.fn>;
@@ -382,11 +388,10 @@ describe('MindmapWebviewProvider', () => {
 
       messageHandler(message);
 
-      expect(consoleSpy).toHaveBeenCalledWith('未知のメッセージ:', message);
+      expect(consoleSpy).toHaveBeenCalledWith('未処理のメッセージ:', 'unknownCommand');
       
       consoleSpy.mockRestore();
     });
-  });
 
   describe('error handling', () => {
     it('should handle YAML conversion errors', () => {
@@ -618,7 +623,6 @@ describe('MindmapWebviewProvider', () => {
         false
       );
     });
-  });
 
   describe('Performance Tests', () => {
     it('should handle large document efficiently', async () => {
@@ -1006,5 +1010,6 @@ describe('MindmapWebviewProvider', () => {
         await expect(Promise.all(promises)).resolves.not.toThrow();
       }
     });
+  });
   });
 });

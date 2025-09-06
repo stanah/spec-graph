@@ -58,12 +58,12 @@ describe('RequirementsDocView (rich)', () => {
     expect(screen.getByText('パフォーマンス向上')).toBeInTheDocument();
 
     // ユーザー要求のリッチ情報
-    const req = screen.getByText(/FR-ABC-001/).closest('li')!;
+    const req = screen.getAllByText(/FR-ABC-001/)[0].closest('li')!;
     const withinReq = within(req);
     expect(withinReq.getByText(/検索機能/)).toBeInTheDocument();
     expect(withinReq.getByText(/全文検索を提供する/)).toBeInTheDocument();
-    expect(withinReq.getByText(/high/i)).toBeInTheDocument(); // priority
-    expect(withinReq.getByText(/in-progress/i)).toBeInTheDocument(); // status
+    expect(withinReq.getByTestId('priority-badge')).toHaveTextContent('high');
+    expect(withinReq.getByTestId('status-badge')).toHaveTextContent('in-progress');
     expect(withinReq.getByText(/owner/i)).toBeInTheDocument();
     expect(withinReq.getByText(/STK-001/)).toBeInTheDocument();
     expect(withinReq.getByText(/component/i)).toBeInTheDocument();
@@ -71,7 +71,8 @@ describe('RequirementsDocView (rich)', () => {
     expect(withinReq.getByText(/effort/i)).toBeInTheDocument();
     expect(withinReq.getByText(/3/)).toBeInTheDocument();
     expect(withinReq.getByText(/risk/i)).toBeInTheDocument();
-    expect(withinReq.getByText(/high/)).toBeInTheDocument();
+    const riskTextElement = withinReq.getByText(/risk:/i).parentElement;
+    expect(riskTextElement).toHaveTextContent('high');
     expect(withinReq.getByText(/受け入れ条件/)).toBeInTheDocument();
     expect(withinReq.getByText('キーワード一致')).toBeInTheDocument();
     expect(withinReq.getByText('日本語形態素')).toBeInTheDocument();
@@ -87,7 +88,8 @@ describe('RequirementsDocView (rich)', () => {
     // 用語集
     expect(screen.getByText(/用語集/)).toBeInTheDocument();
     expect(screen.getByText('NFR')).toBeInTheDocument();
-    expect(screen.getByText('非機能要件')).toBeInTheDocument();
+    const glossaryTable = screen.getByRole('table');
+    expect(glossaryTable).toHaveTextContent('非機能要件');
   });
 });
 

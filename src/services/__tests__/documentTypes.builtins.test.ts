@@ -21,7 +21,7 @@ describe('Built-in Document Types', () => {
   it('registerDefaultDocumentTypes registers both without duplication', () => {
     registerDefaultDocumentTypes(registry);
     const keys = registry.list().map(t => t.key).sort();
-    expect(keys).toEqual(['requirements', 'stakeholders']);
+    expect(keys).toEqual(['design', 'requirements', 'stakeholders', 'tasks']);
   });
 
   it('provides minimal schemas for each type', () => {
