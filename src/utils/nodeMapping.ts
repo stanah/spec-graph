@@ -232,19 +232,14 @@ function mapYamlNode(
  */
 function findJsonNodeLines(node: MindmapNode, lines: string[]): number[] {
   const foundLines: number[] = [];
-  
-  // ノードIDを含む行を検索
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const idRe = new RegExp(`"id"\\s*:\\s*"${esc(node.id)}"`);
+  const titleRe = new RegExp(`"title"\\s*:\\s*"${esc(node.title)}"`);
   lines.forEach((line, index) => {
-    // idフィールドを含む行
-    if (line.includes(`"id": "${node.id}"`) || line.includes(`"id":"${node.id}"`)) {
-      foundLines.push(index);
-    }
-    // titleフィールドを含む行（同じオブジェクト内）
-    if (line.includes(`"title": "${node.title}"`) || line.includes(`"title":"${node.title}"`)) {
+    if (idRe.test(line) || titleRe.test(line)) {
       foundLines.push(index);
     }
   });
-
   return foundLines;
 }
 
@@ -253,19 +248,14 @@ function findJsonNodeLines(node: MindmapNode, lines: string[]): number[] {
  */
 function findYamlNodeLines(node: MindmapNode, lines: string[]): number[] {
   const foundLines: number[] = [];
-  
-  // ノードIDを含む行を検索
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const idRe = new RegExp(`\\bid\\s*:\\s*['\"]?${esc(node.id)}['\"]?`);
+  const titleRe = new RegExp(`\\btitle\\s*:\\s*['\"]?${esc(node.title)}['\"]?`);
   lines.forEach((line, index) => {
-    // idフィールドを含む行
-    if (line.includes(`id: ${node.id}`) || line.includes(`id: "${node.id}"`)) {
-      foundLines.push(index);
-    }
-    // titleフィールドを含む行（同じオブジェクト内）
-    if (line.includes(`title: ${node.title}`) || line.includes(`title: "${node.title}"`)) {
+    if (idRe.test(line) || titleRe.test(line)) {
       foundLines.push(index);
     }
   });
-
   return foundLines;
 }
 
