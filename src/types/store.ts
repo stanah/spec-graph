@@ -17,6 +17,11 @@ import type {
 } from './index';
 
 /**
+ * ビューモードの型
+ */
+export type ViewMode = 'mindmap' | 'table' | 'document';
+
+/**
  * ファイル状態
  */
 export interface FileState {
@@ -90,6 +95,8 @@ export interface UIState {
   editorSettings: EditorSettings;
   /** マインドマップ設定 */
   mindmapSettings: MindmapSettings;
+  /** 現在のビューモード */
+  viewMode: ViewMode;
   /** 選択されたノードID */
   selectedNodeId: string | null;
   /** ノード選択情報 */
@@ -253,6 +260,8 @@ export interface AppActions {
   toggleFullscreen: () => void;
   /** ダークモードを切り替え */
   toggleDarkMode: () => void;
+  /** ビューモードを設定 */
+  setViewMode: (mode: ViewMode) => void;
 
   // 通知操作
   /** 通知を追加 */

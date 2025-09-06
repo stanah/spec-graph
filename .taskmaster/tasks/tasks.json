@@ -1521,11 +1521,757 @@
             "parentTaskId": 23
           }
         ]
+      },
+      {
+        "id": 24,
+        "title": "ビュー切り替えシステムの基盤実装",
+        "description": "既存のマインドマップ表示を基盤として、複数のビュー形式を切り替え可能にするアーキテクチャを実装する",
+        "details": "React Router v6.29を使用した SPA 内部でのビュー切り替えシステムを実装。ViewContext を作成し、現在のビューモード（mindmap/table/document）を管理。zustand ストアに viewMode ステートを追加し、ビューコンポーネント間での状態共有を実現。\n\n実装内容：\n1. ViewMode 型定義（'mindmap' | 'table' | 'document'）\n2. ViewContext とカスタムフック useViewMode の作成\n3. ViewSwitcher コンポーネント（タブ形式の UI）\n4. appStore への viewMode ステート追加\n5. 既存の MindmapViewer コンポーネントをラップする ViewContainer コンポーネント",
+        "testStrategy": "ViewSwitcher コンポーネントのレンダリングテスト、ビュー切り替え時の状態遷移テスト、useViewMode フックの単体テスト、既存機能との互換性確認テスト",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ViewMode型定義とストア統合",
+            "description": "ビューモードの型定義を作成し、zustandストアに統合する",
+            "dependencies": [],
+            "details": "src/types/view.tsにViewMode型（'mindmap' | 'table' | 'document'）を定義。src/store/appStore.tsにviewModeステートとsetViewModeアクションを追加。初期値は'mindmap'に設定。ストアの永続化設定も更新して、リロード時もビューモードを保持",
+            "status": "done",
+            "testStrategy": "zustandストアのviewMode更新テスト、永続化の動作確認テスト、TypeScript型チェックの通過確認"
+          },
+          {
+            "id": 2,
+            "title": "ViewContextとuseViewModeフック実装",
+            "description": "ビューモード管理用のReact Contextとカスタムフックを実装する",
+            "dependencies": [
+              "24.1"
+            ],
+            "details": "src/contexts/ViewContext.tsxを作成し、ViewContextProviderコンポーネントを実装。useViewModeカスタムフックでストアのviewModeとsetViewModeを提供。src/hooks/useViewMode.tsでフックをエクスポート。Context.Providerをsrc/App.tsxのルートに配置",
+            "status": "done",
+            "testStrategy": "useViewModeフックの単体テスト、Context値の更新伝播テスト、複数コンポーネント間での状態共有テスト"
+          },
+          {
+            "id": 3,
+            "title": "ViewSwitcherコンポーネントの実装",
+            "description": "タブ形式のビュー切り替えUIコンポーネントを実装する",
+            "dependencies": [
+              "24.2"
+            ],
+            "details": "src/components/ViewSwitcher/ViewSwitcher.tsxを作成。VSCode風のタブUIデザインを採用。各ビューモード（マインドマップ、テーブル、ドキュメント）用のアイコンとラベルを表示。アクティブタブのハイライト、キーボードショートカット対応（Ctrl+1,2,3）。src/components/ViewSwitcher/ViewSwitcher.module.cssでスタイル定義",
+            "status": "done",
+            "testStrategy": "ViewSwitcherのレンダリングテスト、タブクリック時のviewMode更新テスト、キーボードショートカットの動作テスト、アクセシビリティテスト"
+          },
+          {
+            "id": 4,
+            "title": "ViewContainerコンポーネントの実装",
+            "description": "ビューモードに応じて適切なコンポーネントを表示するコンテナを実装する",
+            "dependencies": [
+              "24.2",
+              "24.3"
+            ],
+            "details": "src/components/ViewContainer/ViewContainer.tsxを作成。useViewModeフックでcurrentViewModeを取得。switch文で条件分岐し、mindmapの場合は既存のMindmapViewerをレンダリング。table/documentモードは一時的にプレースホルダー表示。React.Suspenseでラップして遅延読み込みに対応。エラーバウンダリーも実装",
+            "status": "done",
+            "testStrategy": "各ビューモードでの正しいコンポーネント表示テスト、ビュー切り替え時の再レンダリングテスト、プレースホルダー表示の確認"
+          },
+          {
+            "id": 5,
+            "title": "既存コンポーネントとの統合と動作確認",
+            "description": "既存のMindmapViewerとの統合を完了し、全体の動作を確認する",
+            "dependencies": [
+              "24.4"
+            ],
+            "details": "src/extension.tsまたはsrc/webview/index.tsxでViewContainerを既存のMindmapViewerの代わりに配置。ViewSwitcherをヘッダー領域に配置。既存のデータフローとの互換性確認。VSCode拡張機能としての動作テスト実行。開発者ツールでのパフォーマンスプロファイリング",
+            "status": "done",
+            "testStrategy": "E2Eテストによる統合動作確認、既存機能の回帰テスト、メモリリークチェック、VSCode拡張機能としての動作テスト"
+          }
+        ]
+      },
+      {
+        "id": 25,
+        "title": "テーブルビューコンポーネントの実装",
+        "description": "yamlファイルの内容を表形式で表示する高機能テーブルコンポーネントを開発する",
+        "details": "@tanstack/react-table v8.20 を使用した高性能テーブルコンポーネントの実装。仮想スクロール対応で大量データの表示にも対応。\n\n実装内容：\n1. TableView コンポーネントの作成\n2. カラム定義の自動生成（MindmapNode 構造から）\n3. ソート機能（multi-column sorting）\n4. フィルタリング機能（global filter + column filters）\n5. カスタムセルレンダラー（status, priority のバッジ表示など）\n6. 行選択機能と selectedNodeId との同期\n7. カラムのリサイズ・並び替え機能\n8. ページネーション（オプション）",
+        "testStrategy": "大量データ（1000ノード以上）でのパフォーマンステスト、ソート・フィルタリングの動作確認、カスタムセルレンダラーのスナップショットテスト、キーボードナビゲーションテスト",
+        "priority": "high",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "@tanstack/react-tableの導入と基本セットアップ",
+            "description": "@tanstack/react-table v8.20のインストールと基本的なテーブルコンポーネントの枠組みを作成する",
+            "dependencies": [],
+            "details": "packages/vscode-extension/webview-ui/src/componentsディレクトリにTableViewコンポーネントを作成。@tanstack/react-tableとその型定義をインストール。基本的なuseReactTableフックの設定とflexRenderを使用したテーブル構造の実装。TanStackテーブルのコアインスタンス作成とMindmapNode型に基づくデータ構造の定義",
+            "status": "pending",
+            "testStrategy": "テーブルコンポーネントの正常なレンダリング確認、useReactTableフックの初期化テスト、空データでのエラーハンドリング確認"
+          },
+          {
+            "id": 2,
+            "title": "MindmapNode構造からのカラム定義自動生成",
+            "description": "MindmapNodeインターフェースから動的にテーブルカラムを生成するロジックを実装する",
+            "dependencies": [
+              "25.1"
+            ],
+            "details": "createColumnsFromNode関数の実装でMindmapNodeのプロパティを解析。ColumnDefオブジェクトの自動生成（id、title、description、metadata内の各フィールド）。ネストされたchildrenの展開とフラット化処理。アクセサー関数の定義とヘッダーラベルの自動生成。型安全性を保証するためのTypeScriptジェネリクスの活用",
+            "status": "pending",
+            "testStrategy": "様々なMindmapNode構造でのカラム生成テスト、ネストデータの正しい展開確認、メタデータフィールドの適切な処理検証"
+          },
+          {
+            "id": 3,
+            "title": "ソート・フィルタリング機能の実装",
+            "description": "マルチカラムソートとグローバル/カラムレベルフィルタリング機能を実装する",
+            "dependencies": [
+              "25.2"
+            ],
+            "details": "getSortedRowModelとgetFilteredRowModelの設定。グローバル検索用のDebouncedInputコンポーネント作成。カラムヘッダーへのソートアイコンとクリックハンドラー追加。カラムごとのフィルターUIコンポーネント（テキスト、セレクト、日付範囲）。フィルタリングロジックのカスタマイズとファジー検索の実装。ソート状態とフィルター状態のローカルストレージ永続化",
+            "status": "pending",
+            "testStrategy": "複数カラムでの同時ソートテスト、フィルタリングのパフォーマンス測定（1000件以上）、検索結果の正確性検証、状態永続化の動作確認"
+          },
+          {
+            "id": 4,
+            "title": "カスタムセルレンダラーとステータスバッジの実装",
+            "description": "priority、statusなどの特殊フィールド用のカスタムセルレンダラーを作成する",
+            "dependencies": [
+              "25.2"
+            ],
+            "details": "StatusBadgeコンポーネント（done、in-progress、pending等の状態表示）。PriorityIndicatorコンポーネント（high/medium/lowの色分け表示）。ProgressBarコンポーネント（進捗率の視覚化）。DateCellコンポーネント（日付のフォーマット表示）。TagsCellコンポーネント（複数タグのチップ表示）。セルレンダラーのメモ化によるパフォーマンス最適化",
+            "status": "pending",
+            "testStrategy": "各カスタムレンダラーのスナップショットテスト、異なるデータ型での表示確認、レンダリングパフォーマンスの計測"
+          },
+          {
+            "id": 5,
+            "title": "行選択機能とselectedNodeId同期の実装",
+            "description": "テーブルの行選択機能を実装し、既存のselectedNodeId状態と同期させる",
+            "dependencies": [
+              "25.1",
+              "25.2"
+            ],
+            "details": "getRowSelectionRowModelの設定と選択状態管理。チェックボックスカラムの追加（全選択/個別選択）。selectedNodeIdとの双方向バインディング実装。選択行のハイライト表示（CSSクラス適用）。キーボードショートカット（Shift+クリックで範囲選択）。選択状態変更時のコールバック処理とイベント発火",
+            "status": "pending",
+            "testStrategy": "行選択の動作確認、selectedNodeIdとの同期テスト、複数選択時のパフォーマンス測定、キーボード操作のE2Eテスト"
+          },
+          {
+            "id": 6,
+            "title": "カラムリサイズ・仮想スクロール・ページネーション実装",
+            "description": "カラムのリサイズ機能、大量データ対応の仮想スクロール、オプションのページネーション機能を実装する",
+            "dependencies": [
+              "25.1",
+              "25.3",
+              "25.4",
+              "25.5"
+            ],
+            "details": "columnResizeModeの設定とリサイズハンドルの実装。@tanstack/react-virtualとの統合による仮想スクロール。VirtualizedTableコンポーネントの作成（windowサイズ計算）。getPaginationRowModelによるページネーション。ページサイズ選択とナビゲーションUI。表示モード切り替え（仮想スクロール/ページネーション）。ResizeObserverによる動的サイズ調整",
+            "status": "pending",
+            "testStrategy": "1000件以上のデータでの仮想スクロールパフォーマンステスト、カラムリサイズの動作確認、ページネーション切り替えテスト、メモリ使用量の計測"
+          }
+        ]
+      },
+      {
+        "id": 26,
+        "title": "テーブルエクスポート機能の実装",
+        "description": "テーブルビューのデータをCSV、Excel形式でエクスポートする機能を追加する",
+        "details": "SheetJS (xlsx v0.20.3) と Papa Parse v5.4 を使用したエクスポート機能の実装。Web Worker での処理により UI のブロッキングを防ぐ。\n\n実装内容：\n1. ExportService クラスの作成\n2. CSV エクスポート（Papa Parse 使用）\n3. Excel エクスポート（SheetJS 使用、書式設定含む）\n4. エクスポート設定ダイアログ（カラム選択、フィルタ適用有無）\n5. Web Worker での非同期処理\n6. プログレスバー表示\n7. VSCode 環境での File System API 活用",
+        "testStrategy": "エクスポートデータの正確性検証、大量データエクスポートのパフォーマンステスト、各種フォーマットの互換性テスト、エンコーディング（UTF-8 BOM付き）のテスト",
+        "priority": "medium",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ExportServiceクラスとWorker環境の実装",
+            "description": "データエクスポートを管理するExportServiceクラスとWeb Worker環境を構築する",
+            "dependencies": [],
+            "details": "src/services/ExportService.tsを作成し、エクスポート処理の基盤となるクラスを実装。Web Workerファイル（export.worker.ts）を作成し、メインスレッドとのメッセージ通信インターフェースを定義。VSCode環境でのFile System API統合、プログレスイベントの発火機構、エラーハンドリングとリトライロジックを含む。Worker内でSheetJSとPapa Parseライブラリを動的インポート可能にする。",
+            "status": "pending",
+            "testStrategy": "ExportServiceの初期化テスト、Workerメッセージ通信のユニットテスト、エラーハンドリングの検証、メモリリークチェック"
+          },
+          {
+            "id": 2,
+            "title": "CSV形式エクスポート機能の実装",
+            "description": "Papa Parseを使用したCSVエクスポート機能を実装する",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "Papa Parse v5.4を使用してテーブルデータをCSV形式に変換する機能を実装。UTF-8 BOM付きエンコーディングの対応、カスタム区切り文字（カンマ、タブ、セミコロン）のサポート、ヘッダー行の有無選択、日付・数値フォーマットの適切な処理、大量データ（10万行以上）のストリーミング処理対応。ExportService内にexportToCSVメソッドを追加し、Web Worker内で実際の変換処理を実行。",
+            "status": "pending",
+            "testStrategy": "各種データ型の変換テスト、エンコーディング検証、大量データのパフォーマンステスト、特殊文字エスケープのテスト"
+          },
+          {
+            "id": 3,
+            "title": "Excel形式エクスポート機能の実装",
+            "description": "SheetJSを使用したExcel（xlsx）形式エクスポート機能を実装する",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "SheetJS (xlsx v0.20.3)を使用してテーブルデータをExcel形式に変換。セルの書式設定（数値、日付、通貨、パーセンテージ）、列幅の自動調整、ヘッダー行のスタイリング（背景色、太字）、複数シートのサポート、セル結合機能、条件付き書式の基本サポート。ExportService内にexportToExcelメソッドを追加。ワークブック作成、シート追加、スタイル適用のロジックをWeb Worker内で実装。",
+            "status": "pending",
+            "testStrategy": "Excel形式の互換性テスト、書式設定の検証、複数シートエクスポートのテスト、大量データ処理のメモリ使用量測定"
+          },
+          {
+            "id": 4,
+            "title": "エクスポート設定ダイアログUIの実装",
+            "description": "カラム選択とフィルタ設定が可能なエクスポート設定ダイアログを実装する",
+            "dependencies": [
+              "26.2",
+              "26.3"
+            ],
+            "details": "React ComponentとしてExportDialogを実装。エクスポート形式の選択（CSV/Excel）、カラムの選択UI（チェックボックスリスト、全選択/全解除ボタン）、フィルタ適用オプション（現在の表示データのみ/全データ）、Excel専用オプション（シート名設定、書式設定の有無）、CSV専用オプション（区切り文字選択、引用符設定）。VSCode WebviewAPIを使用したダイアログ表示とメッセージパッシング。設定の保存と読み込み機能。",
+            "status": "pending",
+            "testStrategy": "UIコンポーネントの単体テスト、設定の永続化テスト、VSCode統合テスト、アクセシビリティテスト"
+          },
+          {
+            "id": 5,
+            "title": "プログレスバー表示とVSCodeファイル保存統合",
+            "description": "エクスポート処理のプログレスバー表示とVSCodeのファイル保存ダイアログ統合を実装する",
+            "dependencies": [
+              "26.1",
+              "26.4"
+            ],
+            "details": "Web WorkerからのプログレスイベントをリアルタイムでUIに反映するプログレスバーコンポーネントの実装。処理中のキャンセル機能、推定残り時間の表示、エラー時のリトライオプション。VSCode File System APIを使用したファイル保存（vscode.workspace.fs.writeFile）、保存先ダイアログの表示（vscode.window.showSaveDialog）、保存完了通知（vscode.window.showInformationMessage）。大容量ファイルのチャンク分割保存対応。",
+            "status": "pending",
+            "testStrategy": "プログレス更新の正確性テスト、キャンセル処理のテスト、VSCodeファイルAPI統合テスト、エラーリカバリーテスト"
+          }
+        ]
+      },
+      {
+        "id": 27,
+        "title": "リッチドキュメントビューの実装",
+        "description": "構造化されたドキュメント形式で要件を表示するリッチドキュメントビューを開発する",
+        "details": "Lexical (Meta製のリッチテキストフレームワーク v0.22) を使用したドキュメント表示コンポーネントの実装。プリント対応の CSS 設計。\n\n実装内容：\n1. DocumentView コンポーネントの作成\n2. MindmapNode から Lexical EditorState への変換処理\n3. 階層構造の維持（見出しレベルの自動調整）\n4. カスタムノードタイプ（RequirementNode、TaskNode など）\n5. 折りたたみ可能なセクション\n6. 目次（TOC）の自動生成\n7. プリント用 CSS（@media print）\n8. PDF エクスポート機能（jsPDF v2.5）",
+        "testStrategy": "ドキュメント構造の整合性テスト、プリントプレビューの視覚的回帰テスト、Lexical EditorState の変換テスト、アクセシビリティテスト（WCAG 2.1 AA準拠）",
+        "priority": "high",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Lexicalフレームワークのセットアップとカスタムノードタイプの定義",
+            "description": "Lexical v0.22をVSCode拡張に統合し、RequirementNode、TaskNodeなどのカスタムノードタイプを実装する",
+            "dependencies": [],
+            "details": "1. Lexicalフレームワークの依存関係追加とTypeScript設定\n2. カスタムノードタイプの基底クラス作成（BaseRequirementNode extends ElementNode）\n3. RequirementNode、TaskNode、MetadataNode、PriorityNodeの実装\n4. ノードレンダラーとシリアライザーの定義\n5. EditorConfigとテーマの設定（VSCodeテーマとの統合）\n6. カスタムプラグインアーキテクチャの基盤構築",
+            "status": "pending",
+            "testStrategy": "カスタムノードの作成・レンダリング・シリアライゼーションテスト、EditorStateの整合性テスト、VSCodeテーマ適用の視覚的回帰テスト"
+          },
+          {
+            "id": 2,
+            "title": "MindmapNodeからLexical EditorStateへの変換処理実装",
+            "description": "既存のMindmapNodeデータ構造をLexicalのEditorStateに変換し、階層構造と見出しレベルを自動調整する",
+            "dependencies": [
+              "27.1"
+            ],
+            "details": "1. MindmapNodeToLexicalConverter クラスの実装\n2. 階層深度に応じたHeadingNodeレベル（H1-H6）の自動計算\n3. メタデータの保持とカスタムノードへのマッピング\n4. 子ノードの再帰的変換処理\n5. 循環参照検出とエラーハンドリング\n6. 変換パフォーマンスの最適化（大規模データ対応）",
+            "status": "pending",
+            "testStrategy": "様々な階層構造での変換テスト、メタデータ保持の検証、大規模データでのパフォーマンステスト、エッジケースのテスト"
+          },
+          {
+            "id": 3,
+            "title": "DocumentViewコンポーネントと折りたたみ可能セクションの実装",
+            "description": "Lexicalエディタを含むDocumentViewコンポーネントを作成し、セクションの折りたたみ機能を実装する",
+            "dependencies": [
+              "27.1",
+              "27.2"
+            ],
+            "details": "1. DocumentView React コンポーネントの作成\n2. CollapsibleSectionPlugin の実装（Lexicalプラグイン）\n3. 折りたたみ状態の管理（localStorage連携）\n4. スムーズなアニメーション実装（CSS Transitions）\n5. キーボードショートカット（Ctrl+Shift+[/]）\n6. アクセシビリティ対応（ARIA属性、フォーカス管理）",
+            "status": "pending",
+            "testStrategy": "コンポーネントの単体テスト、折りたたみ動作のE2Eテスト、キーボード操作テスト、アクセシビリティテスト（WCAG 2.1 AA準拠）"
+          },
+          {
+            "id": 4,
+            "title": "目次（TOC）自動生成とナビゲーション機能の実装",
+            "description": "ドキュメント構造から目次を自動生成し、クリックによるセクションジャンプ機能を実装する",
+            "dependencies": [
+              "27.3"
+            ],
+            "details": "1. TableOfContentsPlugin の実装\n2. HeadingNodeの自動検出と階層構造の構築\n3. TOCコンポーネントの作成（固定サイドバー/フローティング切り替え）\n4. スムーズスクロールナビゲーション\n5. 現在位置のハイライト（IntersectionObserver使用）\n6. TOCの展開・折りたたみ機能\n7. 検索機能の統合（セクション内検索）",
+            "status": "pending",
+            "testStrategy": "TOC生成の正確性テスト、ナビゲーション動作のテスト、IntersectionObserverの動作検証、レスポンシブデザインテスト"
+          },
+          {
+            "id": 5,
+            "title": "プリント用CSSとPDFエクスポート機能の実装",
+            "description": "印刷用のCSS設計を行い、jsPDFを使用したPDFエクスポート機能を実装する",
+            "dependencies": [
+              "27.3",
+              "27.4"
+            ],
+            "details": "1. プリント用CSS（@media print）の実装\n2. ページ区切り制御（page-break-before/after/inside）\n3. ヘッダー・フッター・ページ番号の追加\n4. jsPDF v2.5の統合とカスタマイズ\n5. 日本語フォント対応（IPAフォント埋め込み）\n6. PDFエクスポートダイアログの実装\n7. プリントプレビュー機能\n8. エクスポート設定（用紙サイズ、余白、向き）",
+            "status": "pending",
+            "testStrategy": "プリントレイアウトの視覚的回帰テスト、PDF生成の整合性テスト、日本語表示テスト、各種用紙サイズでの出力テスト"
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "title": "JSON Schema ベースのバリデーションシステム",
+        "description": "yamlファイルのスキーマ定義とリアルタイムバリデーション機能を強化する",
+        "details": "既存の Zod スキーマを拡張し、Ajv v8.17 との併用でより柔軟なバリデーションを実現。Monaco Editor との統合でリアルタイムエラー表示。\n\n実装内容：\n1. SchemaManager クラスの作成\n2. Zod スキーマから JSON Schema への自動変換（zod-to-json-schema v3.23）\n3. カスタムバリデーションルールの定義 UI\n4. Ajv でのカスタムキーワード実装\n5. Monaco Editor へのバリデーション結果反映\n6. エラーメッセージの i18n 対応\n7. スキーマバージョニング機能\n8. スキーマテンプレートライブラリ",
+        "testStrategy": "各種バリデーションルールの動作確認、エラーメッセージの正確性テスト、パフォーマンステスト（1000個のバリデーションルール）、スキーママイグレーションテスト",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "SchemaManager クラスの実装とコアバリデーション基盤の構築",
+            "description": "JSON Schema と Zod スキーマを統合管理する SchemaManager クラスを実装し、バリデーションの基盤を構築する",
+            "dependencies": [],
+            "details": "SchemaManager クラスを src/core/validation/SchemaManager.ts に実装。Zod スキーマと JSON Schema の両方を扱える統一インターフェースを提供。スキーマの登録、取得、更新、削除の基本操作を実装。バリデーション結果を統一フォーマットで返すメソッドを追加。既存の src/types/mindmap.ts の Zod スキーマを活用し、zod-to-json-schema パッケージを使用して JSON Schema への変換機能を実装",
+            "status": "done",
+            "testStrategy": "SchemaManager の基本操作（CRUD）のユニットテスト、Zod から JSON Schema への変換精度テスト、バリデーション結果の整合性テスト"
+          },
+          {
+            "id": 2,
+            "title": "Ajv カスタムキーワードとバリデーションルールの実装",
+            "description": "Ajv v8.17 を使用してカスタムバリデーションキーワードを定義し、拡張可能なバリデーションルールシステムを構築する",
+            "dependencies": [
+              "28.1"
+            ],
+            "details": "src/core/validation/CustomValidators.ts にカスタムキーワード定義を実装。マインドマップ固有のバリデーション（ノードID一意性、循環参照チェック、最大深度制限など）を Ajv カスタムキーワードとして実装。バリデーションルールをプラグイン形式で追加可能な仕組みを構築。既存の validateNodeStructure 関数を拡張して Ajv バリデーションと統合",
+            "status": "done",
+            "testStrategy": "各カスタムキーワードの動作テスト、エッジケース（循環参照、深度超過）のテスト、1000個のバリデーションルールでのパフォーマンステスト"
+          },
+          {
+            "id": 3,
+            "title": "Monaco Editor 統合とリアルタイムエラー表示の実装",
+            "description": "Monaco Editor にバリデーション結果をリアルタイムで反映し、エラー箇所をビジュアルに表示する機能を実装する",
+            "dependencies": [
+              "28.1",
+              "28.2"
+            ],
+            "details": "src/components/editor/ValidationProvider.tsx を作成し、バリデーション結果を Monaco Editor のマーカー API に変換。エラー位置の特定と行番号マッピング機能を実装。既存の EditorComponent.tsx を拡張してバリデーションフィードバックを統合。エラーホバーでの詳細メッセージ表示、クイックフィックス提案機能を追加",
+            "status": "done",
+            "testStrategy": "エラー位置マッピングの精度テスト、リアルタイム更新のパフォーマンステスト、エラー表示の UI/UX テスト"
+          },
+          {
+            "id": 4,
+            "title": "エラーメッセージの i18n 対応とローカライゼーション",
+            "description": "バリデーションエラーメッセージを多言語対応し、日本語と英語でのエラー表示を実装する",
+            "dependencies": [
+              "28.2",
+              "28.3"
+            ],
+            "details": "src/i18n/validation/ ディレクトリに言語リソースファイルを作成（ja.json, en.json）。Ajv と Zod のエラーメッセージをローカライズ可能な形式に変換するアダプターを実装。既存のエラー表示コンポーネントを拡張して言語切り替えに対応。カスタムエラーメッセージテンプレート機能を追加",
+            "status": "done",
+            "testStrategy": "各言語でのエラーメッセージ表示テスト、言語切り替え時の動作テスト、メッセージテンプレートの置換テスト"
+          },
+          {
+            "id": 5,
+            "title": "スキーマバージョニングとテンプレートライブラリの実装",
+            "description": "スキーマのバージョン管理機能と再利用可能なスキーマテンプレートライブラリを構築する",
+            "dependencies": [
+              "28.1",
+              "28.2",
+              "28.4"
+            ],
+            "details": "src/core/validation/SchemaVersionManager.ts でバージョン管理機能を実装。スキーママイグレーション機能（古いバージョンから新しいバージョンへの自動変換）を追加。src/templates/schemas/ にデフォルトスキーマテンプレートを配置。UI コンポーネントでテンプレート選択とカスタマイズ機能を提供。localStorage を使用したユーザー定義テンプレートの保存機能を実装",
+            "status": "done",
+            "testStrategy": "スキーママイグレーションの正確性テスト、テンプレート適用テスト、バージョン互換性テスト、ユーザー定義テンプレートの保存・読み込みテスト"
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "title": "ドキュメントタイプ管理システムの構築",
+        "description": "要件、ステークホルダー、設計、タスクなど複数のドキュメントタイプを管理するシステムを実装する",
+        "details": "プラグイン可能なドキュメントタイプシステムの実装。各タイプごとにカスタムスキーマ、表示ルール、アイコンを定義可能。\n\n実装内容：\n1. DocumentTypeRegistry クラスの作成\n2. BaseDocumentType 抽象クラスの定義\n3. 組み込みタイプの実装（Requirements、Stakeholders、Design、Tasks）\n4. カスタムタイプの登録 API\n5. タイプごとのアイコン・カラーテーマ設定\n6. タイプ固有のバリデーションルール\n7. タイプ間の関連性定義（dependency graph）\n8. DocumentTypeSelector UI コンポーネント",
+        "testStrategy": "ドキュメントタイプ登録・削除のテスト、タイプ固有バリデーションテスト、タイプ切り替え時の状態管理テスト、カスタムタイプのプラグインテスト",
+        "priority": "medium",
+        "dependencies": [
+          28
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "DocumentTypeRegistry クラスとBaseDocumentType抽象クラスの実装",
+            "description": "ドキュメントタイプを管理するレジストリクラスと、全タイプの基底となる抽象クラスを実装する",
+            "dependencies": [],
+            "details": "src/core/document-types/DocumentTypeRegistry.ts にシングルトンパターンでレジストリクラスを実装。BaseDocumentType.ts に抽象クラスを定義し、getSchema()、validate()、getIcon()、getColor()、getRelations()などの抽象メソッドを定義。タイプの登録・削除・取得のAPIを提供",
+            "status": "pending",
+            "testStrategy": "レジストリへのタイプ登録・削除・重複登録のテスト、BaseDocumentTypeの継承と必須メソッド実装の確認、シングルトンインスタンスの動作確認"
+          },
+          {
+            "id": 2,
+            "title": "組み込みドキュメントタイプ（Requirements、Stakeholders）の実装",
+            "description": "要件とステークホルダー管理用の組み込みドキュメントタイプを実装する",
+            "dependencies": [
+              "29.1"
+            ],
+            "details": "src/core/document-types/built-in/RequirementsType.ts と StakeholdersType.ts を作成。各タイプ固有のスキーマ定義（優先度、ステータス、担当者などのフィールド）、バリデーションルール、デフォルトアイコン（lucide-react使用）とカラーテーマを実装",
+            "status": "pending",
+            "testStrategy": "各タイプのスキーマバリデーション（正常系・異常系）、必須フィールドの存在確認、データ型の妥当性チェック"
+          },
+          {
+            "id": 3,
+            "title": "組み込みドキュメントタイプ（Design、Tasks）の実装",
+            "description": "設計とタスク管理用の組み込みドキュメントタイプを実装する",
+            "dependencies": [
+              "29.1"
+            ],
+            "details": "src/core/document-types/built-in/DesignType.ts と TasksType.ts を作成。設計タイプには図表リンク、承認状態フィールド、タスクタイプには進捗率、期限、依存関係フィールドを含むスキーマを定義。各タイプ特有のバリデーションロジックを実装",
+            "status": "pending",
+            "testStrategy": "タスクの依存関係循環参照チェック、進捗率の範囲バリデーション、日付フォーマットの検証"
+          },
+          {
+            "id": 4,
+            "title": "タイプ間関連性グラフとカスタムタイプ登録APIの実装",
+            "description": "ドキュメントタイプ間の依存関係を管理するグラフ構造と、外部からのカスタムタイプ登録機能を実装する",
+            "dependencies": [
+              "29.1",
+              "29.2",
+              "29.3"
+            ],
+            "details": "src/core/document-types/TypeRelationGraph.ts に有向グラフ構造を実装し、タイプ間の依存関係と参照関係を管理。registerCustomType() APIでプラグイン形式のカスタムタイプ登録を可能にし、スキーマ競合チェックと互換性検証を実装",
+            "status": "pending",
+            "testStrategy": "依存関係グラフの循環検出テスト、カスタムタイプのスキーマ競合検出、プラグインAPIの動作確認"
+          },
+          {
+            "id": 5,
+            "title": "DocumentTypeSelector UIコンポーネントの実装",
+            "description": "ドキュメントタイプを選択・切り替えるためのReactコンポーネントを実装する",
+            "dependencies": [
+              "29.1",
+              "29.2",
+              "29.3",
+              "29.4"
+            ],
+            "details": "packages/vscode/src/components/DocumentTypeSelector.tsx にセレクタコンポーネントを実装。各タイプのアイコンとカラーを表示し、選択時にコンテキストを切り替え。タイプ固有のツールバーアクションを動的に表示。Radix UIのSelectコンポーネントを活用",
+            "status": "pending",
+            "testStrategy": "タイプ切り替え時の状態保持テスト、UIの表示崩れテスト、アクセシビリティテスト（キーボード操作、スクリーンリーダー対応）"
+          }
+        ]
+      },
+      {
+        "id": 30,
+        "title": "ID ベースの依存関係管理システム",
+        "description": "ドキュメント内アイテムのユニークID管理と依存関係の追跡システムを実装する",
+        "details": "nanoid v5.0 を使用したID生成、依存関係グラフの構築と可視化。循環参照検出アルゴリズムの実装。\n\n実装内容：\n1. IDManager クラスの作成（nanoid 使用）\n2. DependencyGraph クラス（隣接リスト実装）\n3. ID の自動生成・手動設定切り替え\n4. 依存関係の追加・削除 API\n5. トポロジカルソート実装\n6. 循環参照検出（Tarjan のアルゴリズム）\n7. 依存関係の変更追跡（Event Sourcing パターン）\n8. ID の名前空間管理（プレフィックス対応）",
+        "testStrategy": "ID の一意性保証テスト、循環参照検出のアルゴリズムテスト、大規模グラフ（10000ノード）でのパフォーマンステスト、依存関係変更時の整合性テスト",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "IDManager クラスの実装と nanoid 統合",
+            "description": "ユニークID生成のための IDManager クラスを実装し、nanoid v5.0 を使用した ID 生成機能を構築する",
+            "dependencies": [],
+            "details": "src/core/dependencies/IDManager.ts を作成し、nanoid を使用したユニークID生成機能を実装。名前空間管理のためのプレフィックス機能、自動生成と手動設定の切り替え機能、ID の一意性検証機能を含む。シングルトンパターンで実装し、全体で一貫したID管理を保証する",
+            "status": "pending",
+            "testStrategy": "ID の一意性テスト（10000回生成）、プレフィックス付きID生成テスト、手動ID設定時の重複検出テスト、並行生成時のスレッドセーフティテスト"
+          },
+          {
+            "id": 2,
+            "title": "DependencyGraph クラスの基本実装",
+            "description": "隣接リスト方式を用いた依存関係グラフのデータ構造と基本操作APIを実装する",
+            "dependencies": [
+              "30.1"
+            ],
+            "details": "src/core/dependencies/DependencyGraph.ts を作成し、Map<string, Set<string>> 形式の隣接リストでグラフ構造を管理。addNode、removeNode、addEdge、removeEdge、getNeighbors、hasPath などの基本メソッドを実装。ノードとエッジのメタデータ管理機能も含める",
+            "status": "pending",
+            "testStrategy": "グラフの基本操作テスト（追加・削除・検索）、大規模グラフ（10000ノード）でのパフォーマンステスト、エッジケースのテスト（存在しないノードへの操作など）"
+          },
+          {
+            "id": 3,
+            "title": "循環参照検出アルゴリズムの実装",
+            "description": "Tarjan のアルゴリズムを使用して依存関係グラフ内の循環参照を検出する機能を実装する",
+            "dependencies": [
+              "30.2"
+            ],
+            "details": "src/core/dependencies/CycleDetector.ts を作成し、強連結成分（SCC）を検出するTarjanのアルゴリズムを実装。detectCycles メソッドで循環参照のあるノード群を特定し、詳細な循環パスを返す。計算量 O(V+E) を保証し、大規模グラフでも高速動作を実現",
+            "status": "pending",
+            "testStrategy": "単純な循環（A→B→A）検出テスト、複雑な循環（複数の循環が絡み合うケース）テスト、循環なしグラフでの false negative テスト、1000ノード規模での性能テスト"
+          },
+          {
+            "id": 4,
+            "title": "トポロジカルソートと依存順序解決",
+            "description": "依存関係を考慮した実行順序を決定するトポロジカルソート機能を実装する",
+            "dependencies": [
+              "30.2",
+              "30.3"
+            ],
+            "details": "src/core/dependencies/TopologicalSort.ts を作成し、Kahn のアルゴリズムによるトポロジカルソートを実装。循環参照が検出された場合は適切なエラーを返す。部分的なソート（特定ノードからの依存チェーン）も可能にし、getExecutionOrder メソッドで依存関係を満たす実行順序を返す",
+            "status": "pending",
+            "testStrategy": "DAG（有向非循環グラフ）でのソート正確性テスト、循環グラフでのエラー処理テスト、部分グラフのソートテスト、複雑な依存関係での順序保証テスト"
+          },
+          {
+            "id": 5,
+            "title": "依存関係変更追跡とEvent Sourcingパターンの実装",
+            "description": "依存関係の変更履歴を Event Sourcing パターンで管理し、変更の追跡と復元機能を実装する",
+            "dependencies": [
+              "30.2",
+              "30.3",
+              "30.4"
+            ],
+            "details": "src/core/dependencies/DependencyEventStore.ts を作成し、AddDependency、RemoveDependency、UpdateNode などのイベントを記録。タイムスタンプ付きイベントログ、スナップショット機能、任意時点への復元機能を実装。EventEmitter を使用してリアルタイム変更通知も提供",
+            "status": "pending",
+            "testStrategy": "イベント記録と再生テスト、スナップショット作成・復元テスト、並行変更時の整合性テスト、大量イベント（10000件）でのパフォーマンステスト"
+          }
+        ]
+      },
+      {
+        "id": 31,
+        "title": "依存関係ビジュアライザーの実装",
+        "description": "ID間の依存関係を視覚的に表現するグラフビューを開発する",
+        "details": "Cytoscape.js v3.30 を使用した依存関係グラフの可視化。力学シミュレーションレイアウトで自動配置。\n\n実装内容：\n1. DependencyGraphView コンポーネントの作成\n2. Cytoscape.js の統合とカスタムスタイル定義\n3. 複数レイアウトアルゴリズムのサポート（dagre、cola、fcose）\n4. ノードのグルーピング表示（compound nodes）\n5. エッジのアニメーション（データフロー表現）\n6. ズーム・パン機能とミニマップ\n7. ノードのフィルタリング・ハイライト機能\n8. グラフのエクスポート（SVG、PNG）",
+        "testStrategy": "グラフレンダリングのパフォーマンステスト、レイアウトアルゴリズムの比較テスト、インタラクション（クリック、ドラッグ）のE2Eテスト、大規模グラフの描画テスト",
+        "priority": "medium",
+        "dependencies": [
+          30
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Cytoscape.jsの統合とDependencyGraphViewコンポーネントの基盤実装",
+            "description": "Cytoscape.js v3.30をプロジェクトに統合し、依存関係グラフを表示するための基本的なReactコンポーネントを作成する",
+            "dependencies": [],
+            "details": "1. Cytoscape.jsとreact-cytoscapejsのインストール\n2. DependencyGraphView.tsxコンポーネントの作成\n3. GraphContextとuseGraphフックの実装\n4. 基本的なグラフ初期化とレンダリング処理\n5. ノードとエッジのデータ構造定義（GraphNode、GraphEdge型）\n6. VSCode拡張のWebviewへの組み込み準備",
+            "status": "pending",
+            "testStrategy": "Cytoscape.jsの正常な初期化確認、コンポーネントのマウント・アンマウントテスト、メモリリークの検証"
+          },
+          {
+            "id": 2,
+            "title": "グラフスタイルとレイアウトアルゴリズムの実装",
+            "description": "ノード・エッジのカスタムスタイルを定義し、複数のレイアウトアルゴリズム（dagre、cola、fcose）をサポートする",
+            "dependencies": [
+              "31.1"
+            ],
+            "details": "1. グラフスタイルシートの定義（styles/graphStyles.ts）\n2. ノードの状態別スタイル（pending、in-progress、done）\n3. エッジのアニメーション定義（データフロー表現）\n4. dagre、cola、fcoseレイアウトの統合\n5. レイアウト切り替えUIコントロールの実装\n6. compound nodesによるグルーピング表示機能",
+            "status": "pending",
+            "testStrategy": "各レイアウトアルゴリズムの動作確認、スタイル適用の正確性テスト、レイアウト切り替えのパフォーマンス測定"
+          },
+          {
+            "id": 3,
+            "title": "インタラクティブ機能とナビゲーション実装",
+            "description": "ズーム・パン機能、ミニマップ、ノードのフィルタリング・ハイライト機能を実装する",
+            "dependencies": [
+              "31.2"
+            ],
+            "details": "1. ズーム・パンコントロールの実装（マウスホイール、タッチ対応）\n2. cytoscape-navigatorを使用したミニマップ実装\n3. ノードフィルタリングロジック（優先度、ステータス、タグ別）\n4. ホバー・クリックイベントでのノードハイライト\n5. 接続ノードの強調表示（依存関係の可視化）\n6. フォーカスモード（特定ノードとその関連のみ表示）",
+            "status": "pending",
+            "testStrategy": "ズーム・パン操作のスムーズさ検証、フィルタリング精度テスト、大規模グラフでのインタラクション性能測定"
+          },
+          {
+            "id": 4,
+            "title": "グラフデータ連携とリアルタイム更新機能",
+            "description": "タスクデータとグラフの双方向連携を実装し、データ変更時のリアルタイム更新を可能にする",
+            "dependencies": [
+              "31.3"
+            ],
+            "details": "1. TaskからGraphNodeへの変換ロジック実装\n2. 依存関係からGraphEdgeへのマッピング\n3. Redux/Zustandストアとの連携（状態管理）\n4. データ変更時の差分更新アルゴリズム\n5. WebSocketまたはEventEmitterによるリアルタイム同期\n6. 循環依存検出とエラー表示",
+            "status": "pending",
+            "testStrategy": "データ変換の正確性テスト、リアルタイム更新の遅延測定、循環依存検出アルゴリズムの検証"
+          },
+          {
+            "id": 5,
+            "title": "エクスポート機能とパフォーマンス最適化",
+            "description": "グラフのSVG・PNGエクスポート機能を実装し、大規模グラフでのパフォーマンスを最適化する",
+            "dependencies": [
+              "31.4"
+            ],
+            "details": "1. cytoscape-svg、cytoscape-pngエクスポータの統合\n2. エクスポート設定UI（解像度、背景色、範囲選択）\n3. Web Workerを使用した非同期エクスポート処理\n4. 仮想化レンダリング（表示範囲外ノードの非表示化）\n5. デバウンス・スロットリングの適用\n6. 1000ノード以上の大規模グラフ最適化",
+            "status": "pending",
+            "testStrategy": "エクスポート品質の検証、大規模グラフ（1000+ノード）のレンダリング性能測定、メモリ使用量のプロファイリング"
+          }
+        ]
+      },
+      {
+        "id": 32,
+        "title": "リンク・ジャンプ機能の実装",
+        "description": "ID参照によるドキュメント間のリンクとナビゲーション機能を開発する",
+        "details": "ID ベースのディープリンク機能、ブレッドクラムナビゲーション、履歴管理の実装。\n\n実装内容：\n1. LinkResolver クラスの作成\n2. マークダウン風リンク構文のパーサー（[[ID]] 形式）\n3. リンクのリアルタイムバリデーション\n4. クリックハンドラーとスムーズスクロール\n5. BreadcrumbNavigation コンポーネント\n6. NavigationHistory クラス（ブラウザの History API 活用）\n7. ショートカットキー（Ctrl+クリックで新規タブ）\n8. リンクプレビュー（ホバー時のツールチップ）",
+        "testStrategy": "リンク解決の正確性テスト、ナビゲーション履歴の整合性テスト、ブレッドクラムの表示テスト、ディープリンクのE2Eテスト",
+        "priority": "medium",
+        "dependencies": [
+          30
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "LinkResolverクラスとマークダウンパーサーの実装",
+            "description": "[[ID]]形式のリンク構文を解析し、実際のノードへの参照を解決するLinkResolverクラスを作成する",
+            "dependencies": [],
+            "details": "src/core/navigation/LinkResolver.tsを作成し、以下を実装：\n1. LinkResolverクラス - リンク解析と解決の中心的な役割\n2. parseLinkSyntax()メソッド - [[ID]]形式の正規表現マッチング\n3. resolveLink()メソッド - IDから実際のノードオブジェクトへの変換\n4. validateLink()メソッド - リンクの有効性チェック（存在確認、循環参照チェック）\n5. LinkCacheクラス - 解決済みリンクのキャッシュ管理\n6. リアルタイムバリデーション用のwatchLinks()メソッド",
+            "status": "pending",
+            "testStrategy": "正規表現パターンマッチングテスト、存在しないIDへのリンク検証、循環参照検出テスト、キャッシュ動作の確認"
+          },
+          {
+            "id": 2,
+            "title": "NavigationHistoryクラスとブラウザHistory API統合",
+            "description": "ナビゲーション履歴を管理し、ブラウザの戻る・進む機能と連携するNavigationHistoryクラスを実装する",
+            "dependencies": [
+              "32.1"
+            ],
+            "details": "src/core/navigation/NavigationHistory.tsを作成し、以下を実装：\n1. NavigationHistoryクラス - 履歴スタック管理\n2. push()メソッド - 新しい履歴エントリの追加（History.pushState()連携）\n3. back()/forward()メソッド - 履歴の移動\n4. popstateイベントリスナー - ブラウザボタンとの同期\n5. HistoryEntry型定義 - nodeId、scrollPosition、timestamp等を含む\n6. 履歴の永続化（sessionStorage活用）\n7. 最大履歴数の制限と古いエントリの削除",
+            "status": "pending",
+            "testStrategy": "履歴スタック操作の単体テスト、popstateイベントの統合テスト、sessionStorageとの同期テスト"
+          },
+          {
+            "id": 3,
+            "title": "BreadcrumbNavigationコンポーネントの実装",
+            "description": "現在のノードまでの階層パスを表示し、各階層へのクイックジャンプを提供するパンくずリストコンポーネントを作成する",
+            "dependencies": [
+              "32.1",
+              "32.2"
+            ],
+            "details": "src/components/navigation/BreadcrumbNavigation.tsxを作成し、以下を実装：\n1. BreadcrumbNavigationコンポーネント - React FCとして実装\n2. buildBreadcrumbPath()関数 - 現在のノードから親を辿る\n3. BreadcrumbItem - 各階層のクリッカブルな要素\n4. 区切り文字（/や>）のカスタマイズ機能\n5. 長いパスの省略表示（中間部分を...で省略）\n6. ホバー時の完全パス表示\n7. アクティブな階層のハイライト\n8. VSCodeのテーマと統一されたスタイリング",
+            "status": "pending",
+            "testStrategy": "階層パス構築の正確性テスト、クリックイベントのテスト、省略表示ロジックのテスト、レンダリングテスト"
+          },
+          {
+            "id": 4,
+            "title": "リンククリックハンドラーとスムーズスクロール機能",
+            "description": "リンクのクリックイベントを処理し、対象ノードへのスムーズなスクロールとフォーカス移動を実装する",
+            "dependencies": [
+              "32.1",
+              "32.2"
+            ],
+            "details": "src/core/navigation/LinkHandler.tsを作成し、以下を実装：\n1. LinkClickHandler - イベント処理の統合管理\n2. handleLinkClick()メソッド - クリック時の処理フロー\n3. scrollToNode()メソッド - smoothScrollIntoView実装\n4. focusNode()メソッド - ノードのハイライトとフォーカス\n5. Ctrl+クリックの検出と新規タブでの開き方\n6. Alt+クリックでリンクプレビュー表示\n7. アニメーション設定（duration、easing）\n8. スクロール完了コールバック",
+            "status": "pending",
+            "testStrategy": "イベントハンドリングのE2Eテスト、修飾キーの組み合わせテスト、スクロールアニメーションテスト"
+          },
+          {
+            "id": 5,
+            "title": "リンクプレビュー機能とツールチップ実装",
+            "description": "リンクホバー時にターゲットノードの内容をプレビュー表示するツールチップ機能を実装する",
+            "dependencies": [
+              "32.1",
+              "32.4"
+            ],
+            "details": "src/components/navigation/LinkPreview.tsxを作成し、以下を実装：\n1. LinkPreviewTooltipコンポーネント - ホバー時のプレビュー表示\n2. useHoverDelay()フック - 表示遅延とデバウンス処理\n3. PreviewContentRenderer - ノードコンテンツの簡略表示\n4. ポジショニングロジック（画面端での自動調整）\n5. プレビュー内のメタデータ表示（優先度、ステータス等）\n6. プレビュー内からの直接ジャンプ機能\n7. プレビューのキャッシュ管理\n8. VSCodeテーマとの統合されたスタイリング",
+            "status": "pending",
+            "testStrategy": "ホバーイベントのテスト、ツールチップ位置計算テスト、プレビューコンテンツ生成テスト、パフォーマンステスト"
+          }
+        ]
+      },
+      {
+        "id": 33,
+        "title": "データ整合性チェックシステム",
+        "description": "ID間の整合性、孤立参照、循環参照を検出・修正するシステムを構築する",
+        "details": "バックグラウンドでの定期的な整合性チェック、自動修正提案、レポート生成機能の実装。\n\n実装内容：\n1. DataIntegrityChecker クラスの作成\n2. 孤立参照（dangling reference）の検出\n3. 循環参照の検出と可視化\n4. 未使用 ID の検出\n5. 自動修正アルゴリズム（安全な修正のみ）\n6. IntegrityReport の生成（HTML、JSON 形式）\n7. Web Worker での非同期チェック\n8. リアルタイム通知（問題検出時）",
+        "testStrategy": "各種不整合パターンの検出テスト、自動修正の安全性テスト、大規模データでのパフォーマンステスト、レポート生成の正確性テスト",
+        "priority": "medium",
+        "dependencies": [
+          30,
+          31
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "高度なテーブル編集機能",
+        "description": "テーブルビューでのインライン編集、バルク操作、取り消し・やり直し機能を実装する",
+        "details": "ag-Grid Community Edition v32 への移行も検討しながら、高度な編集機能を実装。Immer v10 を使用した状態管理。\n\n実装内容：\n1. インラインセルエディタの実装（各データ型対応）\n2. バルク編集機能（複数セル選択・一括変更）\n3. UndoManager クラスの実装（Command パターン）\n4. コピー・ペースト機能（Excel 互換）\n5. 行の追加・削除・並び替え（ドラッグ&ドロップ）\n6. バリデーションエラーの表示\n7. 変更差分のハイライト\n8. 自動保存とコンフリクト解決",
+        "testStrategy": "編集操作の E2E テスト、Undo/Redo の整合性テスト、バルク操作のパフォーマンステスト、Excel 互換性のテスト",
+        "priority": "low",
+        "dependencies": [
+          25
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "パフォーマンス最適化とコード分割",
+        "description": "ビューコンポーネントの遅延読み込み、仮想化、メモリ管理の最適化を行う",
+        "details": "React.lazy と Suspense を活用したコード分割、React Window による仮想化、メモリリークの防止策実装。\n\n実装内容：\n1. 各ビューコンポーネントの動的インポート\n2. React.lazy と Suspense での遅延読み込み\n3. @tanstack/react-virtual v3 での仮想スクロール強化\n4. useMemo、useCallback の適切な使用\n5. WeakMap を使用したキャッシュ戦略\n6. ResizeObserver、IntersectionObserver の最適化\n7. Web Worker でのデータ処理オフロード\n8. バンドルサイズ分析と最適化（webpack-bundle-analyzer）",
+        "testStrategy": "Lighthouse によるパフォーマンス測定、メモリプロファイリング、バンドルサイズの監視、First Contentful Paint (FCP) の測定",
+        "priority": "low",
+        "dependencies": [
+          24,
+          25,
+          27,
+          31
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 36,
+        "title": "VSCode統合ファイル管理とビュー自動切り替え機能",
+        "description": "VSCodeのファイルシステムAPIと統合し、ファイル形式に応じた適切なビュー（マインドマップ、テーブル、リッチドキュメント）への自動切り替えと、ファイル変更監視・自動保存・状態同期を実装する",
+        "details": "実装内容：\n\n1. VSCodeファイルシステムAPI統合\n```typescript\n// vscode/FileSystemIntegration.ts\nexport class VSCodeFileSystemAdapter implements FileSystemPort {\n  private fileWatcher: vscode.FileSystemWatcher;\n  private autoSaveTimer: NodeJS.Timeout | null = null;\n  \n  constructor(\n    private context: vscode.ExtensionContext,\n    private workspace: typeof vscode.workspace\n  ) {\n    this.initializeFileWatcher();\n  }\n  \n  private initializeFileWatcher(): void {\n    const pattern = new vscode.RelativePattern(\n      vscode.workspace.workspaceFolders![0],\n      '**/*.{json,md,mindmap}'\n    );\n    \n    this.fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);\n    this.fileWatcher.onDidChange(this.handleFileChange.bind(this));\n    this.fileWatcher.onDidCreate(this.handleFileCreate.bind(this));\n    this.fileWatcher.onDidDelete(this.handleFileDelete.bind(this));\n  }\n}\n```\n\n2. ファイル形式検出とビュー切り替えロジック\n```typescript\n// core/ViewSwitcher.ts\nexport class ViewSwitcher {\n  private static readonly FILE_TYPE_MAPPINGS = {\n    '.mindmap': 'mindmap',\n    '.mm': 'mindmap',\n    '.csv': 'table',\n    '.tsv': 'table',\n    '.md': 'document',\n    '.markdown': 'document',\n    '.json': 'auto' // JSON構造を解析して判定\n  };\n  \n  detectViewType(uri: vscode.Uri, content?: string): ViewType {\n    const extension = path.extname(uri.fsPath).toLowerCase();\n    const mappedType = ViewSwitcher.FILE_TYPE_MAPPINGS[extension];\n    \n    if (mappedType === 'auto' && content) {\n      return this.analyzeJsonStructure(content);\n    }\n    \n    return mappedType || 'mindmap';\n  }\n  \n  private analyzeJsonStructure(content: string): ViewType {\n    try {\n      const data = JSON.parse(content);\n      if (this.isMindmapStructure(data)) return 'mindmap';\n      if (this.isTableStructure(data)) return 'table';\n      if (this.isDocumentStructure(data)) return 'document';\n      return 'mindmap'; // デフォルト\n    } catch {\n      return 'mindmap';\n    }\n  }\n}\n```\n\n3. ファイル変更監視と自動保存\n```typescript\n// vscode/AutoSaveManager.ts\nexport class AutoSaveManager {\n  private pendingChanges = new Map<string, any>();\n  private saveDebounceTime = 2000; // 2秒\n  \n  constructor(\n    private fileSystem: VSCodeFileSystemAdapter,\n    private eventBus: EventEmitter\n  ) {\n    this.eventBus.on('document:change', this.scheduleAutoSave.bind(this));\n  }\n  \n  private scheduleAutoSave(uri: string, content: any): void {\n    this.pendingChanges.set(uri, content);\n    \n    if (this.autoSaveTimer) {\n      clearTimeout(this.autoSaveTimer);\n    }\n    \n    this.autoSaveTimer = setTimeout(() => {\n      this.executePendingSaves();\n    }, this.saveDebounceTime);\n  }\n  \n  private async executePendingSaves(): Promise<void> {\n    const saves = Array.from(this.pendingChanges.entries()).map(\n      ([uri, content]) => this.fileSystem.save(uri, content)\n    );\n    \n    await Promise.allSettled(saves);\n    this.pendingChanges.clear();\n  }\n}\n```\n\n4. ファイル状態同期メカニズム\n```typescript\n// core/FileSyncManager.ts\nexport class FileSyncManager {\n  private fileStates = new Map<string, FileState>();\n  private conflictResolver: ConflictResolver;\n  \n  async syncFileState(uri: string): Promise<SyncResult> {\n    const localState = this.fileStates.get(uri);\n    const remoteState = await this.fetchRemoteState(uri);\n    \n    if (this.hasConflict(localState, remoteState)) {\n      return this.conflictResolver.resolve(localState, remoteState);\n    }\n    \n    return this.mergeStates(localState, remoteState);\n  }\n  \n  private hasConflict(local: FileState, remote: FileState): boolean {\n    return local.version !== remote.version && \n           local.lastModified !== remote.lastModified;\n  }\n}\n```\n\n5. VSCode TextDocument APIとの統合\n```typescript\n// vscode/DocumentProvider.ts\nexport class MindmapDocumentProvider implements vscode.TextDocumentContentProvider {\n  private _onDidChange = new vscode.EventEmitter<vscode.Uri>();\n  readonly onDidChange = this._onDidChange.event;\n  \n  provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {\n    const viewType = this.viewSwitcher.detectViewType(uri);\n    const content = this.fileSystem.readFile(uri);\n    \n    return this.renderContent(content, viewType);\n  }\n}\n```\n\n6. ファイル操作コマンドの実装\n```typescript\n// vscode/commands/FileCommands.ts\nexport function registerFileCommands(context: vscode.ExtensionContext) {\n  context.subscriptions.push(\n    vscode.commands.registerCommand('mindmap.openWith', async (uri: vscode.Uri) => {\n      const viewType = await vscode.window.showQuickPick(\n        ['マインドマップ', 'テーブル', 'リッチドキュメント'],\n        { placeHolder: 'ビューを選択してください' }\n      );\n      \n      await openInView(uri, viewType);\n    })\n  );\n}\n```\n\n7. ファイルタイプ別のシリアライザー\n```typescript\n// core/serializers/FileSerializer.ts\nexport interface FileSerializer<T> {\n  serialize(data: T): string;\n  deserialize(content: string): T;\n  getFileExtension(): string;\n}\n\nexport class MindmapSerializer implements FileSerializer<MindmapData> {\n  serialize(data: MindmapData): string {\n    return JSON.stringify(data, null, 2);\n  }\n  \n  deserialize(content: string): MindmapData {\n    return JSON.parse(content);\n  }\n  \n  getFileExtension(): string {\n    return '.mindmap';\n  }\n}\n```\n\n8. ファイル変更の差分検出\n```typescript\n// core/DiffDetector.ts\nexport class FileDiffDetector {\n  detectChanges(original: any, modified: any): DiffResult {\n    const diff = deepDiff(original, modified);\n    return {\n      hasChanges: diff.length > 0,\n      changes: diff,\n      conflictingChanges: this.findConflicts(diff)\n    };\n  }\n}\n```",
+        "testStrategy": "1. VSCodeファイルシステム統合テスト\n   - FileSystemWatcherのイベント発火テスト\n   - ファイル作成・変更・削除の正確な検出\n   - 複数ファイル同時変更の処理\n   - エラーハンドリングとリトライロジック\n\n2. ビュー自動切り替えテスト\n   - 各ファイル拡張子での正しいビュー選択\n   - JSON構造解析による適切なビュー判定\n   - 不明なファイル形式でのフォールバック動作\n   - ビュー切り替え時の状態保持\n\n3. 自動保存機能テスト\n   - デバウンス動作の検証（2秒後の保存実行）\n   - 連続変更時の適切なバッチ処理\n   - 保存失敗時のリトライメカニズム\n   - 同時編集時のコンフリクト検出\n\n4. ファイル同期テスト\n   - ローカル・リモート状態の正確な比較\n   - コンフリクト検出と解決フローの検証\n   - 大容量ファイルの同期パフォーマンス\n   - ネットワーク断絶時の動作",
+        "status": "pending",
+        "dependencies": [
+          10,
+          23,
+          30,
+          31,
+          35
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "VSCodeファイルシステムAPIアダプターの実装",
+            "description": "VSCodeのworkspace APIとFileSystemWatcherを統合し、ファイル操作の基盤となるアダプタークラスを実装する",
+            "dependencies": [],
+            "details": "VSCodeFileSystemAdapterクラスを実装し、ファイルの読み取り、書き込み、削除、作成のメソッドを提供する。FileSystemWatcherを初期化してファイルシステムイベントを監視し、RelativePatternを使用して.mindmap, .mm, .json, .md, .csv, .tsvファイルの変更を検出する。エラーハンドリングとリトライロジックも実装する",
+            "status": "pending",
+            "testStrategy": "MockしたVSCode APIを使用してファイル操作の単体テスト、FileSystemWatcherのイベント発火テスト、エラー時のリトライ動作の検証"
+          },
+          {
+            "id": 2,
+            "title": "ファイル形式検出とビュー切り替えロジックの実装",
+            "description": "ファイル拡張子とコンテンツ構造を解析し、適切なビュータイプ（マインドマップ、テーブル、ドキュメント）を自動判定するViewSwitcherクラスを実装する",
+            "dependencies": [],
+            "details": "ViewSwitcherクラスにdetectViewTypeメソッドを実装し、ファイル拡張子マッピング（.mindmap→mindmap、.csv→table、.md→document）を定義する。JSONファイルの場合はanalyzeJsonStructureメソッドでコンテンツ構造を解析し、マインドマップ構造（階層的ノード）、テーブル構造（配列データ）、ドキュメント構造（セクション）を判定する",
+            "status": "pending",
+            "testStrategy": "各ファイル拡張子での正しいビュー判定テスト、JSON構造解析の精度テスト、不明な形式でのフォールバック動作検証"
+          },
+          {
+            "id": 3,
+            "title": "自動保存とデバウンス機構の実装",
+            "description": "ファイル変更を検出して2秒後に自動保存を実行するAutoSaveManagerクラスを実装し、連続変更時のパフォーマンスを最適化する",
+            "dependencies": [
+              "36.1"
+            ],
+            "details": "AutoSaveManagerクラスにscheduleAutoSaveメソッドを実装し、変更イベントを受信してpendingChangesマップに保存する。setTimeoutを使用した2秒のデバウンスタイマーを設定し、executePendingSavesメソッドでバッチ保存を実行する。Promise.allSettledを使用して複数ファイルの同時保存に対応する",
+            "status": "pending",
+            "testStrategy": "デバウンスタイマーの正確な動作検証、連続変更時のバッチ処理テスト、複数ファイル同時保存の成功確認、保存失敗時のリトライ動作テスト"
+          },
+          {
+            "id": 4,
+            "title": "ファイル状態同期とコンフリクト解決の実装",
+            "description": "ローカルとリモートのファイル状態を同期し、変更の競合を検出・解決するFileSyncManagerとConflictResolverを実装する",
+            "dependencies": [
+              "36.1",
+              "36.3"
+            ],
+            "details": "FileSyncManagerクラスにfileStatesマップを実装してファイルのバージョンと最終更新時刻を管理する。syncFileStateメソッドでローカルとリモートの状態を比較し、hasConflictメソッドでバージョンと更新時刻の不一致を検出する。ConflictResolverクラスで3-wayマージアルゴリズムまたはユーザー選択による解決を提供する",
+            "status": "pending",
+            "testStrategy": "状態同期の正確性テスト、コンフリクト検出の精度検証、マージアルゴリズムの動作確認、ユーザー選択UIの統合テスト"
+          },
+          {
+            "id": 5,
+            "title": "VSCode TextDocumentProviderとコマンドの統合",
+            "description": "MindmapDocumentProviderを実装してVSCodeのテキストドキュメントAPIと統合し、ファイル操作コマンドを登録する",
+            "dependencies": [
+              "36.1",
+              "36.2"
+            ],
+            "details": "MindmapDocumentProviderクラスでTextDocumentContentProviderインターフェースを実装し、provideTextDocumentContentメソッドでビュータイプに応じたコンテンツを提供する。registerFileCommandsでmindmap.openWithコマンドを登録し、QuickPickによるビュー選択UIを実装する。onDidChangeイベントでドキュメント更新を通知する",
+            "status": "pending",
+            "testStrategy": "TextDocumentProviderの動作検証、コマンド実行の統合テスト、ビュー切り替え時の状態保持確認、イベント通知の正確性テスト"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-17T11:01:35.018Z",
+      "updated": "2025-08-26T15:50:42.404Z",
       "description": "Tasks for master context"
     }
   }
