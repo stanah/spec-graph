@@ -57,34 +57,6 @@ if (typeof window === 'undefined') {
 import { vi } from 'vitest';
 import React from 'react';
 
-// monaco-editorのモック（最小限）
-vi.mock('monaco-editor', () => ({
-  default: {},
-  editor: {
-    create: vi.fn(() => ({
-      dispose: vi.fn(),
-      setValue: vi.fn(),
-      getValue: vi.fn(() => ''),
-      onDidChangeModelContent: vi.fn(() => ({ dispose: vi.fn() })),
-    })),
-  },
-}));
-
-// @monaco-editor/reactのモック（最小限）
-vi.mock('@monaco-editor/react', () => {
-  const MockEditor = vi.fn(({ value, onChange }: { value?: string; onChange?: (value: string, event: unknown) => void }) => 
-    React.createElement('div', {
-      'data-testid': 'monaco-editor',
-      onChange: onChange ? (e) => onChange(e.target.value || '', {}) : undefined,
-    }, value || '')
-  );
-
-  return {
-    default: MockEditor,
-    Editor: MockEditor,
-  };
-});
-
 // D3の個別モジュールモック
 vi.mock('d3-selection', () => {
   const mockSelection = {
