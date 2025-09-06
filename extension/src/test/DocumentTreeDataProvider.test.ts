@@ -12,12 +12,46 @@ describe('DocumentTreeDataProvider', () => {
     provider = new DocumentTreeDataProvider();
 
     mockDocument = {
-      uri: { toString: () => '/test/mindmap.json' },
+      uri: { 
+        toString: () => '/test/mindmap.json',
+        scheme: 'file',
+        authority: '',
+        path: '/test/mindmap.json',
+        query: '',
+        fragment: '',
+        fsPath: '/test/mindmap.json',
+        toJSON: () => ({ scheme: 'file', path: '/test/mindmap.json' }),
+        with: vi.fn()
+      } as any,
       fileName: '/test/mindmap.json',
-      getText: vi.fn(),
+      isUntitled: false,
+      languageId: 'json',
+      version: 1,
+      isDirty: false,
+      isClosed: false,
+      eol: 1,
+      lineCount: 1,
+      encoding: 'utf8',
+      getText: vi.fn().mockReturnValue(''),
       save: vi.fn(),
-      positionAt: vi.fn((pos) => ({ line: 0, character: pos }))
-    };
+      getWordRangeAtPosition: vi.fn(),
+      validateRange: vi.fn(),
+      validatePosition: vi.fn(),
+      lineAt: vi.fn(),
+      offsetAt: vi.fn(),
+      positionAt: vi.fn((pos) => ({ 
+        line: 0, 
+        character: pos,
+        isBefore: vi.fn(),
+        isBeforeOrEqual: vi.fn(),
+        isAfter: vi.fn(),
+        isAfterOrEqual: vi.fn(),
+        isEqual: vi.fn(),
+        compareTo: vi.fn(),
+        translate: vi.fn(),
+        with: vi.fn()
+      } as any))
+    } as any;
   });
 
   describe('setCurrentDocument', () => {
@@ -435,7 +469,8 @@ root:
     });
 
     it('should handle getChildren with invalid parent', () => {
-      const result = provider.getChildren('invalid-id');
+      const invalidItem = new DocumentTreeItem('invalid-id', 'Invalid Item', 0, 'node');
+      const result = provider.getChildren(invalidItem);
       expect(result).toEqual([]);
     });
 

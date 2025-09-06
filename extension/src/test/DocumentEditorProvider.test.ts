@@ -18,18 +18,76 @@ describe('DocumentEditorProvider', () => {
         fsPath: '/test/extension', 
         toString: () => '/test/extension',
         scheme: 'file',
-        path: '/test/extension'
-      },
-      subscriptions: []
-    };
+        authority: '',
+        path: '/test/extension',
+        query: '',
+        fragment: '',
+        toJSON: () => ({ scheme: 'file', path: '/test/extension' }),
+        with: vi.fn()
+      } as any,
+      subscriptions: [],
+      workspaceState: {} as any,
+      globalState: { 
+        get: vi.fn(),
+        update: vi.fn(),
+        keys: vi.fn(),
+        setKeysForSync: vi.fn()
+      } as any,
+      secrets: {} as any,
+      extensionPath: '/test/extension',
+      globalStorageUri: {} as any,
+      logUri: {} as any,
+      storagePath: '/test/storage',
+      globalStoragePath: '/test/global-storage',
+      logPath: '/test/log',
+      extensionMode: 1,
+      extension: {} as any,
+      storageUri: {} as any,
+      environmentVariableCollection: {} as any,
+      asAbsolutePath: (relativePath: string) => `/test/extension/${relativePath}`
+    } as any;
 
     mockDocument = {
-      uri: { toString: () => '/test/mindmap.json' },
+      uri: { 
+        toString: () => '/test/mindmap.json',
+        scheme: 'file',
+        authority: '',
+        path: '/test/mindmap.json',
+        query: '',
+        fragment: '',
+        fsPath: '/test/mindmap.json',
+        toJSON: () => ({ scheme: 'file', path: '/test/mindmap.json' }),
+        with: vi.fn()
+      } as any,
       fileName: '/test/mindmap.json',
-      getText: vi.fn(() => '{"root":{"id":"root","title":"Test"}}'),
+      isUntitled: false,
+      languageId: 'json',
+      version: 1,
+      isDirty: false,
+      isClosed: false,
+      eol: 1,
+      lineCount: 1,
+      encoding: 'utf8',
+      getText: vi.fn().mockReturnValue('{"root":{"id":"root","title":"Test"}}'),
       save: vi.fn(),
-      positionAt: vi.fn((pos) => ({ line: 0, character: pos }))
-    };
+      getWordRangeAtPosition: vi.fn(),
+      validateRange: vi.fn(),
+      validatePosition: vi.fn(),
+      lineAt: vi.fn(),
+      offsetAt: vi.fn(),
+      positionAt: vi.fn((pos) => ({ 
+        line: 0, 
+        character: pos,
+        isBefore: vi.fn(),
+        isBeforeOrEqual: vi.fn(),
+        isAfter: vi.fn(),
+        isAfterOrEqual: vi.fn(),
+        isEqual: vi.fn(),
+        compareTo: vi.fn(),
+        translate: vi.fn(),
+        with: vi.fn()
+      } as any))
+    } as any;
 
     mockWebviewPanel = {
       webview: {
@@ -39,12 +97,28 @@ describe('DocumentEditorProvider', () => {
         asWebviewUri: vi.fn((uri) => ({ 
           toString: () => `vscode-webview://webview/${uri?.toString?.() || uri}`,
           fsPath: `vscode-webview://webview/${uri?.toString?.() || uri}`,
-          scheme: 'vscode-webview'
-        })),
-        html: ''
-      },
-      onDidDispose: vi.fn()
-    };
+          scheme: 'vscode-webview',
+          authority: '',
+          path: `vscode-webview://webview/${uri?.toString?.() || uri}`,
+          query: '',
+          fragment: '',
+          toJSON: () => ({}),
+          with: vi.fn()
+        } as any)),
+        html: '',
+        cspSource: 'https://source.local'
+      } as any,
+      viewType: 'documentViewer',
+      title: 'Document Viewer',
+      viewColumn: 1,
+      active: true,
+      visible: true,
+      options: {},
+      onDidChangeViewState: vi.fn(),
+      onDidDispose: vi.fn(),
+      reveal: vi.fn(),
+      dispose: vi.fn()
+    } as any;
 
     provider = new DocumentEditorProvider(mockContext);
   });

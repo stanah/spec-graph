@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 // テスト用のMock型定義
-export interface MockExtensionContext {
+export interface MockExtensionContext extends vscode.ExtensionContext {
   extensionUri: vscode.Uri;
   subscriptions: { dispose(): any }[];
   workspaceState: vscode.Memento;
@@ -10,12 +10,17 @@ export interface MockExtensionContext {
   extensionPath: string;
   globalStorageUri: vscode.Uri;
   logUri: vscode.Uri;
+  storagePath?: string;
+  globalStoragePath: string;
+  logPath: string;
+  extensionMode: vscode.ExtensionMode;
+  extension: vscode.Extension<any>;
   storageUri?: vscode.Uri;
   environmentVariableCollection: vscode.EnvironmentVariableCollection;
   asAbsolutePath(relativePath: string): string;
 }
 
-export interface MockTextDocument {
+export interface MockTextDocument extends vscode.TextDocument {
   uri: vscode.Uri;
   fileName: string;
   isUntitled: boolean;
@@ -26,6 +31,7 @@ export interface MockTextDocument {
   save(): Thenable<boolean>;
   eol: vscode.EndOfLine;
   lineCount: number;
+  encoding: string;
   getText(range?: vscode.Range): string;
   getWordRangeAtPosition(position: vscode.Position, regex?: RegExp): vscode.Range | undefined;
   validateRange(range: vscode.Range): vscode.Range;
@@ -36,7 +42,7 @@ export interface MockTextDocument {
   positionAt(offset: number): vscode.Position;
 }
 
-export interface MockWebview {
+export interface MockWebview extends vscode.Webview {
   html: string;
   options: vscode.WebviewOptions;
   cspSource: string;
@@ -45,13 +51,13 @@ export interface MockWebview {
   onDidReceiveMessage: vscode.Event<any>;
 }
 
-export interface MockWebviewPanel {
+export interface MockWebviewPanel extends vscode.WebviewPanel {
   webview: MockWebview;
   viewType: string;
   title: string;
   iconPath?: vscode.Uri | { light: vscode.Uri; dark: vscode.Uri };
   options: vscode.WebviewPanelOptions;
-  viewColumn?: vscode.ViewColumn;
+  viewColumn: vscode.ViewColumn;
   active: boolean;
   visible: boolean;
   onDidChangeViewState: vscode.Event<vscode.WebviewPanelOnDidChangeViewStateEvent>;
@@ -73,7 +79,7 @@ export interface MockTreeItem {
   accessibilityInformation?: vscode.AccessibilityInformation;
 }
 
-export interface MockUri {
+export interface MockUri extends vscode.Uri {
   scheme: string;
   authority: string;
   path: string;
