@@ -36,8 +36,8 @@ export const ViewSwitcher: React.FC = () => {
             onClick={() => setViewMode(t.key)}
             aria-pressed={viewMode === t.key}
             style={{
-              padding: '8px 16px',
-              borderRadius: '4px',
+              padding: '4px 8px',
+              borderRadius: '3px',
               border: 'none',
               background: viewMode === t.key 
                 ? 'var(--vscode-button-background)' 
@@ -46,12 +46,12 @@ export const ViewSwitcher: React.FC = () => {
                 ? 'var(--vscode-button-foreground)' 
                 : 'var(--vscode-foreground)',
               cursor: 'pointer',
-              fontSize: '13px',
+              fontSize: '11px',
               fontWeight: viewMode === t.key ? '500' : '400',
               transition: 'all 0.2s ease',
               whiteSpace: 'nowrap',
               boxShadow: viewMode === t.key 
-                ? '0 1px 3px rgba(0, 0, 0, 0.2)' 
+                ? '0 1px 2px rgba(0, 0, 0, 0.15)' 
                 : 'none',
             }}
             onMouseEnter={(e) => {
