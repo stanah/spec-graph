@@ -178,9 +178,9 @@ describe('hierarchyUtils', () => {
       
       expect(grouped.size).toBe(3); // 3つのルートノードグループ
       
-      // ルートノード1のグループ: 4ノード（ルート + 子2 + 孫1）
+      // ルートノード1のグループ: 4ノード（ルート + 子2 + 孫1）（深度優先順）
       expect(grouped.get('1')).toHaveLength(4);
-      expect(grouped.get('1')?.map(n => n.id)).toEqual(['1', '1-1', '1-2', '1-1-1']);
+      expect(grouped.get('1')?.map(n => n.id)).toEqual(['1', '1-1', '1-1-1', '1-2']);
       
       // ルートノード2のグループ: 2ノード（ルート + 子1）
       expect(grouped.get('2')).toHaveLength(2);
