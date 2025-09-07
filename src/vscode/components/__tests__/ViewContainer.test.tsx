@@ -31,8 +31,8 @@ describe('ViewContainer', () => {
     setup();
     // プレースホルダーは表示されない
     expect(screen.queryByText('テーブルビュー')).not.toBeInTheDocument();
-    // テーブル要素が表示される（データがなくてもヘッダのみ構築される）
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    // HierarchicalTableViewConnected コンポーネントが表示される
+    expect(document.querySelector('.hierarchical-table')).toBeInTheDocument();
   });
 
   it('viewMode=documentでドキュメント系ビューが表示される', () => {
