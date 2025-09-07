@@ -6,8 +6,13 @@
 
   [data-print-root="true"] {
     padding: 0 !important;
-    color: #000 !important;
+    /* 既定の本文色は可読性重視のダークグレーに（子要素の色は上書き可能） */
+    color: #111;
+    /* 用紙は白背景を維持 */
     background: #fff !important;
+    /* 背景色やバッジ色を印刷時にも反映する */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   section {
@@ -21,3 +26,10 @@
   }
 }
 
+/* カラーバッジ等の可読性を確保（文字色を保持し背景色を印刷に反映） */
+[role="status"][data-testid="status-badge"],
+[data-testid="priority-badge"] {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color: #fff !important;
+}

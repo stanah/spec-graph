@@ -1,16 +1,12 @@
 /* カラーモード統一管理用CSS - 強制適用版 */
 
-/* ライトモードの強制適用 */
+/* ライトモードの基調色（過剰な子孫強制は行わない） */
 [data-color-mode="light"],
 body[data-color-mode="light"],
 .light-mode,
-body.light-mode,
-[data-color-mode="light"] *,
-body[data-color-mode="light"] *,
-.light-mode *,
-body.light-mode * {
-  /* 背景色の強制適用 */
+body.light-mode {
   background-color: #ffffff !important;
+  color: #000000;
 }
 
 [data-color-mode="light"] .view-container,
@@ -46,16 +42,13 @@ body.light-mode .table-view {
 }
 
 /* ダークモードの強制適用 */
+/* ダークモードの基調色（過剰な子孫強制は行わない） */
 [data-color-mode="dark"],
 body[data-color-mode="dark"],
 .dark-mode,
-body.dark-mode,
-[data-color-mode="dark"] *,
-body[data-color-mode="dark"] *,
-.dark-mode *,
-body.dark-mode * {
-  /* 背景色の強制適用 */
+body.dark-mode {
   background-color: #1e1e1e !important;
+  color: #ffffff;
 }
 
 [data-color-mode="dark"] .view-container,
@@ -90,13 +83,12 @@ body.dark-mode .table-view {
   color: #ffffff !important;
 }
 
-/* ルート要素の強制適用 */
+/* ルート要素の強制適用（背景のみ維持、文字色は上書き可能に） */
 [data-color-mode="light"],
 body[data-color-mode="light"],
 .light-mode,
 body.light-mode {
   background-color: #ffffff !important;
-  color: #000000 !important;
 }
 
 [data-color-mode="dark"],
@@ -104,36 +96,6 @@ body[data-color-mode="dark"],
 .dark-mode,
 body.dark-mode {
   background-color: #1e1e1e !important;
-  color: #ffffff !important;
 }
 
-/* テキストカラーの追加対応 */
-[data-color-mode="light"] p,
-[data-color-mode="light"] span,
-[data-color-mode="light"] div,
-body[data-color-mode="light"] p,
-body[data-color-mode="light"] span,
-body[data-color-mode="light"] div,
-.light-mode p,
-.light-mode span,
-.light-mode div,
-body.light-mode p,
-body.light-mode span,
-body.light-mode div {
-  color: #000000 !important;
-}
-
-[data-color-mode="dark"] p,
-[data-color-mode="dark"] span,
-[data-color-mode="dark"] div,
-body[data-color-mode="dark"] p,
-body[data-color-mode="dark"] span,
-body[data-color-mode="dark"] div,
-.dark-mode p,
-.dark-mode span,
-.dark-mode div,
-body.dark-mode p,
-body.dark-mode span,
-body.dark-mode div {
-  color: #ffffff !important;
-}
+/* テキスト色は各コンポーネント／バッジが持つ色指定を尊重する */
