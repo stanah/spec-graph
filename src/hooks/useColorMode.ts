@@ -8,8 +8,9 @@ export type ColorMode = 'light' | 'dark' | 'auto';
  */
 export const useColorMode = () => {
   const [colorMode, setColorMode] = useState<ColorMode>(() => {
-    // VSCode環境では初期値をautoに設定
-    return 'auto';
+    // デバッグ: 初期値をlightに設定してテスト
+    const stored = localStorage.getItem('colorMode') as ColorMode;
+    return stored || 'light';
   });
 
   const [resolvedMode, setResolvedMode] = useState<'light' | 'dark'>('light');
@@ -69,9 +70,15 @@ export const useColorMode = () => {
     document.body.classList.toggle('dark-mode', resolvedMode === 'dark');
   }, [resolvedMode]);
 
+  // カラーモード変更時にlocalStorageに保存
+  const handleSetColorMode = (mode: ColorMode) => {
+    setColorMode(mode);
+    localStorage.setItem('colorMode', mode);
+  };
+
   return {
     colorMode,
-    setColorMode,
+    setColorMode: handleSetColorMode,
     resolvedMode,
     isDark: resolvedMode === 'dark'
   };

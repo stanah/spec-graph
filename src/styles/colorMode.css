@@ -1,160 +1,139 @@
-/* カラーモード統一管理用CSS */
+/* カラーモード統一管理用CSS - 強制適用版 */
 
-/* デフォルト（ライトモード）の変数定義 */
-:root,
+/* ライトモードの強制適用 */
 [data-color-mode="light"],
-.light-mode {
-  --color-bg-primary: var(--vscode-editor-background, #ffffff);
-  --color-bg-secondary: var(--vscode-panel-background, #f3f3f3);
-  --color-bg-tertiary: var(--vscode-input-background, #ffffff);
-  --color-text-primary: var(--vscode-editor-foreground, #000000);
-  --color-text-secondary: var(--vscode-descriptionForeground, #666666);
-  --color-border: var(--vscode-panel-border, #e1e1e1);
-  --color-button-bg: var(--vscode-button-background, #0078d4);
-  --color-button-text: var(--vscode-button-foreground, #ffffff);
-  --color-button-hover: var(--vscode-button-hoverBackground, #106ebe);
-  --color-input-bg: var(--vscode-input-background, #ffffff);
-  --color-input-border: var(--vscode-input-border, #cccccc);
-  --color-focus: var(--vscode-focusBorder, #0078d4);
+body[data-color-mode="light"],
+.light-mode,
+body.light-mode,
+[data-color-mode="light"] *,
+body[data-color-mode="light"] *,
+.light-mode *,
+body.light-mode * {
+  /* 背景色の強制適用 */
+  background-color: #ffffff !important;
 }
 
-/* ダークモードの変数定義 */
-[data-color-mode="dark"],
-.dark-mode {
-  --color-bg-primary: var(--vscode-editor-background, #1e1e1e);
-  --color-bg-secondary: var(--vscode-panel-background, #252526);
-  --color-bg-tertiary: var(--vscode-input-background, #3c3c3c);
-  --color-text-primary: var(--vscode-editor-foreground, #ffffff);
-  --color-text-secondary: var(--vscode-descriptionForeground, #cccccc);
-  --color-border: var(--vscode-panel-border, #3c3c3c);
-  --color-button-bg: var(--vscode-button-background, #0e639c);
-  --color-button-text: var(--vscode-button-foreground, #ffffff);
-  --color-button-hover: var(--vscode-button-hoverBackground, #1177bb);
-  --color-input-bg: var(--vscode-input-background, #3c3c3c);
-  --color-input-border: var(--vscode-input-border, #464647);
-  --color-focus: var(--vscode-focusBorder, #007acc);
-}
-
-/* 基本レイアウト要素にカラーモードを適用 */
 [data-color-mode="light"] .view-container,
-.light-mode .view-container {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+body[data-color-mode="light"] .view-container,
+.light-mode .view-container,
+body.light-mode .view-container {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-color-mode="light"] .mindmap-viewer,
+body[data-color-mode="light"] .mindmap-viewer,
+.light-mode .mindmap-viewer,
+body.light-mode .mindmap-viewer {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-color-mode="light"] .document-view,
+body[data-color-mode="light"] .document-view,
+.light-mode .document-view,
+body.light-mode .document-view {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-color-mode="light"] .table-view,
+body[data-color-mode="light"] .table-view,
+.light-mode .table-view,
+body.light-mode .table-view {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* ダークモードの強制適用 */
+[data-color-mode="dark"],
+body[data-color-mode="dark"],
+.dark-mode,
+body.dark-mode,
+[data-color-mode="dark"] *,
+body[data-color-mode="dark"] *,
+.dark-mode *,
+body.dark-mode * {
+  /* 背景色の強制適用 */
+  background-color: #1e1e1e !important;
 }
 
 [data-color-mode="dark"] .view-container,
-.dark-mode .view-container {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-/* マインドマップビューアーのカラーモード対応 */
-[data-color-mode="light"] .mindmap-viewer,
-.light-mode .mindmap-viewer {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+body[data-color-mode="dark"] .view-container,
+.dark-mode .view-container,
+body.dark-mode .view-container {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
 }
 
 [data-color-mode="dark"] .mindmap-viewer,
-.dark-mode .mindmap-viewer {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-/* テーブルビューのカラーモード対応 */
-[data-color-mode="light"] .table-view,
-.light-mode .table-view {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-[data-color-mode="dark"] .table-view,
-.dark-mode .table-view {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-/* ドキュメントビューのカラーモード対応 */
-[data-color-mode="light"] .document-view,
-.light-mode .document-view {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+body[data-color-mode="dark"] .mindmap-viewer,
+.dark-mode .mindmap-viewer,
+body.dark-mode .mindmap-viewer {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
 }
 
 [data-color-mode="dark"] .document-view,
-.dark-mode .document-view {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+body[data-color-mode="dark"] .document-view,
+.dark-mode .document-view,
+body.dark-mode .document-view {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
 }
 
-/* ツールバーのカラーモード対応 */
-[data-color-mode="light"] .vscode-toolbar,
-.light-mode .vscode-toolbar {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
+[data-color-mode="dark"] .table-view,
+body[data-color-mode="dark"] .table-view,
+.dark-mode .table-view,
+body.dark-mode .table-view {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
 }
 
-[data-color-mode="dark"] .vscode-toolbar,
-.dark-mode .vscode-toolbar {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
+/* ルート要素の強制適用 */
+[data-color-mode="light"],
+body[data-color-mode="light"],
+.light-mode,
+body.light-mode {
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
-/* 空状態のカラーモード対応 */
-[data-color-mode="light"] .empty-state,
-.light-mode .empty-state {
-  color: var(--color-text-secondary);
+[data-color-mode="dark"],
+body[data-color-mode="dark"],
+.dark-mode,
+body.dark-mode {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
 }
 
-[data-color-mode="light"] .empty-state-content h3,
-.light-mode .empty-state-content h3 {
-  color: var(--color-text-primary);
+/* テキストカラーの追加対応 */
+[data-color-mode="light"] p,
+[data-color-mode="light"] span,
+[data-color-mode="light"] div,
+body[data-color-mode="light"] p,
+body[data-color-mode="light"] span,
+body[data-color-mode="light"] div,
+.light-mode p,
+.light-mode span,
+.light-mode div,
+body.light-mode p,
+body.light-mode span,
+body.light-mode div {
+  color: #000000 !important;
 }
 
-[data-color-mode="dark"] .empty-state,
-.dark-mode .empty-state {
-  color: var(--color-text-secondary);
-}
-
-[data-color-mode="dark"] .empty-state-content h3,
-.dark-mode .empty-state-content h3 {
-  color: var(--color-text-primary);
-}
-
-/* ボタンやフォーム要素のカラーモード対応 */
-[data-color-mode] button,
-.light-mode button,
-.dark-mode button {
-  background-color: var(--color-button-bg);
-  color: var(--color-button-text);
-  border-color: var(--color-button-bg);
-}
-
-[data-color-mode] button:hover,
-.light-mode button:hover,
-.dark-mode button:hover {
-  background-color: var(--color-button-hover);
-}
-
-[data-color-mode] input,
-[data-color-mode] textarea,
-.light-mode input,
-.light-mode textarea,
-.dark-mode input,
-.dark-mode textarea {
-  background-color: var(--color-input-bg);
-  color: var(--color-text-primary);
-  border-color: var(--color-input-border);
-}
-
-[data-color-mode] input:focus,
-[data-color-mode] textarea:focus,
-.light-mode input:focus,
-.light-mode textarea:focus,
-.dark-mode input:focus,
-.dark-mode textarea:focus {
-  border-color: var(--color-focus);
-  outline-color: var(--color-focus);
+[data-color-mode="dark"] p,
+[data-color-mode="dark"] span,
+[data-color-mode="dark"] div,
+body[data-color-mode="dark"] p,
+body[data-color-mode="dark"] span,
+body[data-color-mode="dark"] div,
+.dark-mode p,
+.dark-mode span,
+.dark-mode div,
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode div {
+  color: #ffffff !important;
 }
