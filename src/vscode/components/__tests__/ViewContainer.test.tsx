@@ -26,10 +26,13 @@ describe('ViewContainer', () => {
     expect(screen.getByText('サポート外のドキュメント形式')).toBeInTheDocument();
   });
 
-  it('viewMode=tableでテーブルプレースホルダーを表示', () => {
+  it('viewMode=tableでテーブルビューを表示', () => {
     useAppStore.getState().setViewMode('table');
     setup();
-    expect(screen.getByText('テーブルビュー')).toBeInTheDocument();
+    // プレースホルダーは表示されない
+    expect(screen.queryByText('テーブルビュー')).not.toBeInTheDocument();
+    // テーブル要素が表示される（データがなくてもヘッダのみ構築される）
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
   it('viewMode=documentでドキュメント系ビューが表示される', () => {
