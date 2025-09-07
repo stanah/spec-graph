@@ -193,18 +193,6 @@ function VSCodeApp() {
           </ErrorBoundary>
         </div>
       </ViewProvider>
-      
-      {/* VSCode用のステータス表示 */}
-      <div className="vscode-status">
-        <span className="status-indicator">
-          {isVSCodeReady ? '🔗 VSCode連携中' : '⚠️ ブラウザモード'}
-        </span>
-        {fileContent && (
-          <span className="content-status">
-            📊 データ読み込み済み
-          </span>
-        )}
-      </div>
     </div>
   );
 }
