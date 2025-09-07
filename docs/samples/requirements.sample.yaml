@@ -1,353 +1,514 @@
 title: spec-graph 要件ドキュメント
-version: "1.0.0"
+version: "2.0.0"
+lastUpdated: "2025-01-07"
 
+projectOverview:
+  description: |
+    要求定義・要件定義を効率的に進めるためのマインドマップツール。
+    JSON/YAML形式でのテキストベース管理と、リアルタイムでの視覚的なマインドマップ表示を提供する。
+  status: "開発中（メインコア機能実装完了、高度な機能の開発継続中）"
+  
 goals:
-  - ローカルで高速・安定の要件編集体験
-  - Gitベースの差分レビューしやすさ
-  - VSCodeワークフローへの自然な統合
-  - 文書タイプ別の最適化と拡張性
+  primary:
+    - ローカルで高速・安定の要件編集体験
+    - Gitベースの差分レビューしやすさ
+    - VSCodeワークフローへの自然な統合
+    - 文書タイプ別の最適化と拡張性
+  secondary:
+    - 複数ビュー形式での要件可視化
+    - 依存関係管理と整合性チェック
+    - エクスポート・共有機能の充実
 
-userRequirements:
-  - id: FR-EDIT-001
-    title: 体感の良い編集レスポンス
-    description: 入力に対する表示反映が遅延少なく行えること
+# === 主要機能カテゴリ ===
+
+editorFeatures:
+  category: "エディタ機能"
+  description: "テキストエディタとリアルタイムバリデーション機能"
+  
+  - id: ED-MNCO-001
+    title: Monaco Editorの統合とシンタックスハイライト
+    description: VSCodeエディタエンジンを使用したJSON/YAML編集環境
     priority: high
-    status: in-progress
-    owner: core-team
-    component: core
-    effort: 5
-    risk: medium
+    status: done
+    taskRef: "1.2, 3.1"
+    acceptanceCriteria:
+      - JSON/YAMLの適切なシンタックスハイライト
+      - コード補完とエラー検出
+      - VSCode風の操作感
+
+  - id: ED-SYNC-001
+    title: エディタ↔マインドマップの双方向同期
+    description: 入力変更を即座にビジュアル表示に反映
+    priority: high
+    status: done
+    taskRef: "5.1-5.5"
     acceptanceCriteria:
       - 入力から表示更新までの遅延100ms以内
-      - 1万ノードでも編集が破綻しない
-    relatesTo:
-      - { type: design, id: DSG-CORE-001 }
-      - { type: task, id: TASK-PERF-002 }
+      - エラー時のフォールバック機構
 
-  - id: FR-OFFL-001
-    title: オフラインで全機能を利用したい
-    description: ネットワーク接続なしに編集・プレビュー・保存が可能
+  - id: ED-VALD-001
+    title: リアルタイムバリデーションとエラー表示
+    description: JSON Schema/Zodベースの入力検証
     priority: high
-    status: pending
-    component: services
+    status: done
+    taskRef: "28.1-28.5"
     acceptanceCriteria:
-      - 拡張機能動作に外部API不要
+      - エラー位置のハイライト表示
+      - 日英対応のエラーメッセージ
 
-  - id: FR-DIFF-001
-    title: 差分レビューしやすい形式
-    description: テキスト（YAML/JSON）で変更点が明瞭に確認できる
-    priority: high
-    status: review
-    component: services
+  - id: ED-CONV-001
+    title: JSON/YAML相互変換機能
+    description: フォーマット選択と自動変換
+    priority: medium
+    status: cancelled
+    taskRef: "21.1-21.5"
     acceptanceCriteria:
-      - 保存時に安定したフォーマット順序
-      - 行単位の差分で主要変更が分かる
+      - フォーマット選択UIの提供
+      - 変換エラーの詳細表示
 
-  - id: FR-KEYB-001
-    title: キーボード中心の操作
-    description: 主要操作がショートカットで完結し、生産性を高める
-    priority: medium
-    status: pending
-    component: ui
-
-  - id: FR-VSCD-001
-    title: VSCodeワークフローへの自然統合
-    description: 右上ボタンでプレビューをサイド表示し、双方向同期
-    priority: medium
-    status: in-progress
-    component: vscode
-
-  - id: FR-TBLV-001
-    title: テーブルビューで一覧操作
-    description: ソート/フィルタ/選択/バルク操作に適したビュー
-    priority: medium
-    status: pending
-    component: ui
-
-  - id: FR-DOCV-001
-    title: ドキュメントビューで章立て表示
-    description: アウトライン/印刷/エクスポートを想定した整形表示
-    priority: medium
-    status: in-progress
-    component: ui
-
-  - id: FR-SRCH-001
-    title: 高機能検索/フィルタ
-    description: 正規表現/属性/階層レベル/ランキング
-    priority: medium
-    status: pending
-    component: ui
-
-  - id: FR-EXPT-001
-    title: PDF/クリップボード/画像エクスポート
-    description: レビュー/共有のための多様な出力手段
-    priority: medium
-    status: pending
-    component: ui
-
-  - id: FR-ERRS-001
-    title: 分かりやすいエラーメッセージ
-    description: 位置情報/原因/対処を提示して復旧容易に
+visualizationFeatures:
+  category: "ビジュアライゼーション機能"
+  description: "複数ビュー形式での要件可視化"
+  
+  - id: VZ-MIND-001
+    title: インタラクティブマインドマップ描画
+    description: D3.js力指向グラフによるマインドマップ表示
     priority: high
-    status: in-progress
-    component: services
+    status: done
+    taskRef: "4.1-4.5"
+    acceptanceCriteria:
+      - ズーム・パン・ドラッグ操作
+      - ノードの展開・折りたたみ
+      - 1万ノードでも滑らかな描画
 
-systemRequirements:
-  - id: FR-PARS-001
-    title: YAML/JSONの安全なパースと検証
-    description: Zodベースの検証で構造整合性を担保する
+  - id: VZ-TABL-001
+    title: テーブルビュー機能
+    description: "@tanstack/react-table"による高機能テーブル表示
+    priority: high
+    status: done
+    taskRef: "25.1-25.6"
+    acceptanceCriteria:
+      - ソート・フィルタ機能
+      - 仮想スクロール対応
+      - 行選択とノード同期
+
+  - id: VZ-DOCU-001
+    title: リッチドキュメントビュー
+    description: Lexicalベースの構造化ドキュメント表示
+    priority: high
+    status: done
+    taskRef: "27.1-27.5"
+    acceptanceCriteria:
+      - 章立て・目次自動生成
+      - 印刷用CSS・PDF出力
+      - 折りたたみ可能セクション
+
+  - id: VZ-VIEW-001
+    title: ビュー切り替えシステム
+    description: マップ・テーブル・ドキュメント間のシームレス切り替え
+    priority: high
+    status: done
+    taskRef: "24.1-24.5"
+    acceptanceCriteria:
+      - タブ形式のUI
+      - ビュー状態の保持
+
+  - id: VZ-INDI-001
+    title: ノード状態インジケーター
+    description: 優先度・ステータスの視覚的表示
+    priority: medium
+    status: done
+    taskRef: "22.1-22.5"
+    acceptanceCriteria:
+      - 色分け・アイコン表示
+      - 凡例パネル
+
+dataManagementFeatures:
+  category: "データ管理機能"
+  description: "スキーマ管理・検証・依存関係追跡"
+  
+  - id: DM-SCHM-001
+    title: JSON Schemaバリデーションシステム
+    description: ZodとAjvを統合したバリデーション基盤
     priority: critical
     status: done
-    component: services
+    taskRef: "2.1-2.5, 28.1-28.5"
     acceptanceCriteria:
-      - 不正データ時の詳細エラー
+      - カスタムキーワード対応
+      - スキーマバージョニング
 
-  - id: FR-AJV-001
-    title: JSON Schema(Ajv) 併用拡張
-    description: カスタムルールや型制約を柔軟に定義できる
+  - id: DM-TYPE-001
+    title: ドキュメントタイプ管理
+    description: Requirements/Stakeholders/Design/Tasks管理
     priority: high
     status: done
-    component: services
+    taskRef: "29.1-29.5"
     acceptanceCriteria:
-      - 独自キーワードの登録/検証が可能
+      - プラグイン可能なタイプ定義
+      - タイプ間関連性グラフ
 
-  - id: FR-SCMA-001
-    title: スキーマのバージョニング
-    description: 互換性と移行ログを管理する
-    priority: medium
-    status: done
-    component: services
-
-  - id: FR-AKEY-001
-    title: Ajvカスタムキーワード
-    description: nonEmptyString / uniqueNodeIds 等の拡張
-    priority: medium
-    status: done
-    component: services
-
-  - id: FR-UIDS-001
-    title: ノードIDのユニーク性
-    description: 全ノードでID重複がないこと
+  - id: DM-DEPS-001
+    title: ID・依存関係管理システム
+    description: ユニークID生成と循環参照検出
     priority: high
     status: done
-    component: core
+    taskRef: "30.1-30.5"
+    acceptanceCriteria:
+      - nanoidベースのID生成
+      - トポロジカルソートによる依存順序解決
 
-  - id: FR-DTYP-001
-    title: 文書タイプの管理
-    description: Requirements/Stakeholders/Design/Tasks をプラグイン可能に
-    priority: high
-    status: done
-    component: services
-
-  - id: FR-DEPS-001
-    title: タイプ間の依存関係グラフ
-    description: 循環検出と解決順序（トポロジカル）
-    priority: medium
-    status: done
-    component: services
-
-  - id: FR-SRCH-002
-    title: 検索/フィルタ（実装）
-    description: 正規表現/属性/階層レベルの絞り込み
+  - id: DM-EXPT-001
+    title: データエクスポート機能
+    description: CSV/Excel/PDF出力
     priority: medium
     status: pending
-    component: ui
+    taskRef: "26.1-26.5"
+    acceptanceCriteria:
+      - 設定可能な出力形式
+      - バッチ処理対応
 
-  - id: FR-RANK-001
-    title: 検索結果ランキング
-    description: 一致度/重み付けでソート
+vscodeIntegrationFeatures:
+  category: "VSCode統合機能"
+  description: "VSCode拡張としての統合とワークフロー最適化"
+  
+  - id: VS-EXTN-001
+    title: VSCode拡張基盤とWebview統合
+    description: Extension APIとWebviewの基本統合
+    priority: high
+    status: done
+    taskRef: "10.1-10.2"
+    acceptanceCriteria:
+      - 拡張機能としての基本動作
+      - Webview↔Extension間の通信
+
+  - id: VS-VIEW-001
+    title: プレビューペインとサイド表示
+    description: 右側ペインでのマインドマップ表示
+    priority: high
+    status: done
+    taskRef: "10.6-10.10"
+    acceptanceCriteria:
+      - "プレビューを開く" コマンド
+      - エディタとの同期表示
+
+  - id: VS-FILE-001
+    title: ファイルシステムAPIと自動保存
+    description: VSCodeファイル操作との統合
     priority: medium
     status: pending
-    component: ui
+    taskRef: "36.1-36.5"
+    acceptanceCriteria:
+      - ファイル変更監視
+      - 自動保存とデバウンス機構
 
-  - id: FR-TBLV-002
-    title: テーブルの仮想化（実装）
-    description: 大量データでもスクロールが滑らか
+  - id: VS-CMD-001
+    title: コマンドパレット統合
+    description: VSCodeコマンドとキーバインド
+    priority: medium
+    status: done
+    taskRef: "10.2"
+    acceptanceCriteria:
+      - 主要操作のコマンド化
+      - ショートカットキー設定
+
+usabilityFeatures:
+  category: "ユーザビリティ機能"
+  description: "操作性向上と検索・フィルタリング"
+  
+  - id: UX-KEYB-001
+    title: キーボード中心の操作体系
+    description: ショートカットによる主要操作
+    priority: medium
+    status: pending
+    acceptanceCriteria:
+      - 主要操作が2ストローク以内
+      - カスタマイズ可能なキーバインド
+
+  - id: UX-SRCH-001
+    title: 高機能検索・フィルタリング
+    description: 正規表現・属性・階層レベル検索
+    priority: medium
+    status: deferred
+    taskRef: "16.1-16.5"
+    acceptanceCriteria:
+      - 正規表現対応
+      - 検索結果ランキング
+
+  - id: UX-NODE-001
+    title: ノード操作UI
+    description: 追加・移動・削除の直感的操作
     priority: high
     status: done
-    component: ui
+    taskRef: "10.6-10.10"
+    acceptanceCriteria:
+      - ツールバーとコンテキストメニュー
+      - ドラッグ&ドロップ対応
 
-  - id: FR-OUTL-001
-    title: ドキュメントアウトライン
-    description: 見出し/目次生成
-    priority: medium
-    status: done
-    component: ui
-
-  - id: FR-LXCL-001
-    title: Lexical描画統合
-    description: リッチテキスト出力の準備
-    priority: low
-    status: in-progress
-    component: ui
-
-  - id: FR-EXPT-002
-    title: PDFエクスポート
-    description: 印刷/共有に適した出力
-    priority: medium
-    status: done
-    component: ui
-
-  - id: FR-VSCD-002
-    title: VSCodeコマンド統合
-    description: プレビューを開く/横に開く/保存/エクスポート
-    priority: medium
-    status: done
-    component: vscode
-
-  - id: FR-VSCD-003
-    title: ツリービュー連携
-    description: ファイル内の構造をツリー表示
-    priority: low
-    status: done
-    component: vscode
-
-  - id: FR-SYNC-001
-    title: エディタ↔Webviewの同期
-    description: updateContent メッセージで双方向更新
-    priority: high
-    status: in-progress
-    component: vscode
-
-  - id: FR-NOPS-001
-    title: ノード操作（追加/移動/削除）
-    description: ツールバー/ボタン/ショートカットから直感的に
+  - id: UX-ERRS-001
+    title: エラーハンドリングと復旧機能
+    description: 分かりやすいエラー表示と対処導線
     priority: high
     status: done
-    component: ui
+    taskRef: "28.3-28.4"
+    acceptanceCriteria:
+      - 位置情報付きエラー表示
+      - 自動復旧提案
 
-  - id: FR-NDET-001
-    title: ノード詳細パネル
-    description: 選択ノードのプロパティ編集
-    priority: medium
-    status: in-progress
-    component: ui
-
-  - id: FR-TBAR-001
-    title: ツールバー
-    description: ズーム/展開/折りたたみ/フォーカス等の操作
-    priority: low
-    status: done
-    component: ui
-
-  - id: FR-INTL-001
-    title: i18n
-    description: エラーメッセージやUIラベルの多言語対応
-    priority: low
-    status: done
-    component: services
-
-  - id: FR-PMON-001
-    title: パフォーマンス計測
-    description: メトリクス収集と閾値検知
-    priority: medium
-    status: done
-    component: services
-
-  - id: FR-ERRH-001
-    title: エラーハンドリング
-    description: 例外捕捉/ユーザー通知/復旧導線
-    priority: high
-    status: in-progress
-    component: services
-
-  - id: FR-MEML-001
-    title: メモリリーク防止
-    description: クリーンアップ/破棄の徹底
-    priority: medium
-    status: done
-    component: services
-
-  - id: FR-PLAT-001
-    title: プラットフォームアダプター
-    description: VSCode/ブラウザ差異の吸収
-    priority: low
-    status: done
-    component: services
-
-  - id: FR-MCP-001
-    title: MCP連携
-    description: Task Master AI等のツール連携
-    priority: low
-    status: draft
-    component: mcp-server
-
-nonFunctionalRequirements:
-  - id: NFR-PERF-001
+qualityPerformanceFeatures:
+  category: "品質・パフォーマンス機能"
+  description: "大規模対応・テスト・セキュリティ"
+  
+  - id: QP-PERF-001
     title: 大規模データ対応
-    description: 1万〜5万ノードでも操作可能
+    description: 1万〜5万ノードでの高速動作
     priority: high
-    status: in-progress
+    status: done
+    taskRef: "4.5, 5.5"
     acceptanceCriteria:
       - 初期描画3秒以内（1万ノード）
       - スクロール60fps近似
 
-  - id: NFR-PERF-002
-    title: レンダリング時間
-    description: 再描画の平均応答を抑制
+  - id: QP-MEMO-001
+    title: メモリ管理とリーク防止
+    description: 長時間利用でのメモリ効率化
     priority: medium
-    status: in-progress
+    status: done
+    acceptanceCriteria:
+      - クリーンアップの徹底
+      - メモリ使用量監視
 
-  - id: NFR-USAB-001
-    title: キーボード操作性
-    description: 主要操作が2ストローク以内
+  - id: QP-TEST-001
+    title: テスト網羅とCI/CD
+    description: 単体・統合・E2Eテスト
     priority: medium
+    status: done
+    taskRef: "23.1-23.2"
+    acceptanceCriteria:
+      - 主要機能の自動テスト
+      - リグレッション防止
+
+  - id: QP-SECU-001
+    title: セキュリティ（オフライン特化）
+    description: 外部送信ゼロの安全性
+    priority: medium
+    status: done
+    acceptanceCriteria:
+      - ローカル完結動作
+      - 入力値サニタイゼーション
+
+# === 非機能要件 ===
+
+systemRequirements:
+  category: "システム要件（アーキテクチャ）"
+  description: "プラットフォーム非依存・拡張性・互換性"
+  
+  - id: SY-ARCH-001
+    title: コアロジック分離アーキテクチャ
+    description: Web/VSCode/CLI対応の共通基盤
+    priority: high
     status: pending
+    taskRef: "23.1-23.8"
+    acceptanceCriteria:
+      - プラットフォーム非依存のコアロジック
+      - テストファーストリファクタリング
 
-  - id: NFR-RELI-001
-    title: 信頼性/復旧
-    description: 保存失敗時の再試行/差分保持
+  - id: SY-PLUG-001
+    title: プラガブルアーキテクチャ
+    description: ドキュメントタイプの拡張可能性
     priority: medium
-    status: pending
+    status: done
+    taskRef: "29.1-29.5"
+    acceptanceCriteria:
+      - カスタムタイプ登録API
+      - スキーマの動的拡張
 
-  - id: NFR-SECU-001
-    title: セキュリティ（オフライン）
-    description: 外部送信ゼロ、ローカル保護
-    priority: medium
-    status: draft
-
-  - id: NFR-TEST-001
-    title: テスト網羅
-    description: 主要機能の単体/統合/E2E
-    priority: medium
-    status: in-progress
-
-  - id: NFR-COMP-001
+  - id: SY-COMPAT-001
     title: VSCode互換性
     description: 安定版とLTSでの動作保証
     priority: medium
-    status: pending
-
-  - id: NFR-ACCS-001
-    title: アクセシビリティ
-    description: 色覚/キーボード/ARIA対応
-    priority: low
-    status: draft
-
-  - id: NFR-INTL-001
-    title: 国際化
-    description: 日英切替、エラーi18n完備
-    priority: low
     status: done
+    acceptanceCriteria:
+      - VSCode 1.75+ 対応
+      - Extension API安定利用
 
-  - id: NFR-DOCS-001
-    title: ドキュメント整備
-    description: README/拡張の使い方/サンプルの入門
+# === 今後の拡張機能（計画中） ===
+
+futureFeaturesPlanned:
+  category: "将来計画機能"
+  description: "現在未実装だが計画されている機能"
+  
+  - id: FT-DEPS-001
+    title: 依存関係ビジュアライザー
+    description: Cytoscape.jsによる依存グラフ表示
+    priority: medium
+    status: pending
+    taskRef: "31.1-31.5"
+    acceptanceCriteria:
+      - インタラクティブグラフ表示
+      - フィルタリング・ハイライト機能
+
+  - id: FT-LINK-001
+    title: リンク・ジャンプ機能
+    description: ID参照によるドキュメント間ナビゲーション
+    priority: medium
+    status: pending
+    taskRef: "32.1-32.5"
+    acceptanceCriteria:
+      - [[ID]]形式のリンク構文
+      - ナビゲーション履歴管理
+
+  - id: FT-INTG-001
+    title: 整合性チェックシステム
+    description: ID間整合性・孤立参照検出
+    priority: medium
+    status: pending
+    taskRef: "33"
+    acceptanceCriteria:
+      - 循環参照検出
+      - 自動修正提案
+
+  - id: FT-EDIT-001
+    title: 高度なテーブル編集機能
+    description: インライン編集・バルク操作
     priority: low
-    status: in-progress
+    status: pending
+    taskRef: "34"
+    acceptanceCriteria:
+      - セル内編集モード
+      - 取り消し・やり直し機能
 
-glossary:
+nonFunctionalRequirements:nonFunctionalRequirements:
+  performance:
+    - id: NFR-PERF-001
+      title: 大規模データ対応
+      description: 1万〜5万ノードでも操作可能
+      priority: high
+      status: done
+      acceptanceCriteria:
+        - 初期描画3秒以内（1万ノード）
+        - スクロール60fps近似
+
+    - id: NFR-RESP-001
+      title: レスポンシブ設計
+      description: 各種画面サイズでの適切な表示
+      priority: medium
+      status: done
+
+  usability:
+    - id: NFR-USAB-001
+      title: キーボード操作性
+      description: 主要操作が2ストローク以内
+      priority: medium
+      status: pending
+
+    - id: NFR-ACCS-001
+      title: アクセシビリティ
+      description: 色覚・キーボード・ARIA対応
+      priority: low
+      status: done
+
+  reliability:
+    - id: NFR-RELI-001
+      title: 信頼性・復旧
+      description: 保存失敗時の再試行・差分保持
+      priority: medium
+      status: done
+
+    - id: NFR-ERRO-001
+      title: エラー回復機能
+      description: 適切なエラーメッセージと復旧提案
+      priority: high
+      status: done
+
+  security:
+    - id: NFR-SECU-001
+      title: セキュリティ（オフライン）
+      description: 外部送信ゼロ、ローカル保護
+      priority: medium
+      status: done
+
+  maintainability:
+    - id: NFR-TEST-001
+      title: テスト網羅
+      description: 主要機能の単体/統合/E2E
+      priority: medium
+      status: done
+
+    - id: NFR-DOCS-001
+      title: ドキュメント整備
+      description: README/拡張の使い方/サンプルの入門
+      priority: low
+      status: done
+
+glossary:glossary:
   - term: MCP
-    definition: Model Context Protocol
+    definition: Model Context Protocol - AI エージェント間通信プロトコル
   - term: Ajv
-    definition: JSON Schema バリデータ
+    definition: Another JSON Schema Validator - 高速JSONバリデータ
+  - term: Zod
+    definition: TypeScript-first schema validation library
+  - term: Monaco Editor
+    definition: VSCode で使用されているWebベースコードエディタ
+  - term: D3.js
+    definition: データ駆動型ドキュメント操作ライブラリ
+  - term: Lexical
+    definition: Metaが開発するリッチテキストエディタフレームワーク
+  - term: TanStack React Table
+    definition: 高機能なReactテーブルライブラリ
+  - term: Cytoscape.js
+    definition: グラフ理論の可視化・分析ライブラリ
+
+implementationStatus:
+  completed_percentage: 63
+  major_milestones:
+    - "✅ エディタ機能（Monaco統合・バリデーション・双方向同期）"
+    - "✅ マインドマップビュー（D3.js描画エンジン）"
+    - "✅ テーブルビュー（@tanstack/react-table）"
+    - "✅ ドキュメントビュー（Lexical統合）"
+    - "✅ VSCode拡張基盤"
+    - "✅ データ管理システム（スキーマ・依存関係）"
+    - "🔄 VSCode統合完成度向上"
+    - "⏳ 依存関係ビジュアライザー"
+    - "⏳ 高度な検索・フィルタ機能"
 
 traceability:
-  - from: FR-EDIT-001
-    to: NFR-PERF-001
-  - from: FR-DOCV-001
-    to: FR-OUTL-001
-  - from: FR-SRCH-001
-    to: FR-SRCH-002
-  - from: FR-VSCD-001
-    to: FR-VSCD-002
+  # エディタ機能の関連性
+  - from: ED-MNCO-001
+    to: ED-SYNC-001
+    relationship: "Monaco Editor が双方向同期の基盤"
+    
+  - from: ED-VALD-001
+    to: DM-SCHM-001
+    relationship: "バリデーションはスキーマシステムに依存"
+    
+  # ビジュアライゼーション機能の関連性
+  - from: VZ-VIEW-001
+    to: [VZ-MIND-001, VZ-TABL-001, VZ-DOCU-001]
+    relationship: "ビュー切り替えは各ビューコンポーネントを統合"
+    
+  - from: VZ-INDI-001
+    to: VZ-MIND-001
+    relationship: "状態インジケーターはマインドマップに表示"
+    
+  # VSCode統合の関連性
+  - from: VS-VIEW-001
+    to: ED-SYNC-001
+    relationship: "プレビューペインは同期機能に依存"
+    
+  - from: VS-FILE-001
+    to: VS-VIEW-001
+    relationship: "ファイル操作はビュー自動切り替えをトリガー"
+    
+  # データ管理の関連性
+  - from: DM-TYPE-001
+    to: DM-SCHM-001
+    relationship: "ドキュメントタイプはスキーマ定義に基づく"
+    
+  - from: DM-DEPS-001
+    to: FT-DEPS-001
+    relationship: "依存関係管理がビジュアライザーの基盤"
+    
+  # 非機能要件との関連性
+  - from: NFR-PERF-001
+    to: [VZ-MIND-001, VZ-TABL-001]
+    relationship: "パフォーマンス要件は描画システムの制約"
