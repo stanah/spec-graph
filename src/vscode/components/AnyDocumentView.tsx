@@ -5,6 +5,12 @@ import { RequirementsDocView } from './docs/RequirementsDoc';
 import { StakeholdersDocView } from './docs/StakeholdersDoc';
 import { DesignDocView } from './docs/DesignDoc';
 import { TasksDocView } from './docs/TasksDoc';
+import { SchemaDocumentView } from './schema/SchemaDocumentView';
+// スキーマ駆動レンダリング用に、代表的なスキーマを同梱
+// 既存の要件スキーマ（拡張x-uiは任意）
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - JSON import with bundler
+import requirementsSchema from '../../../docs/schemas/requirements.v1.json';
 
 export const AnyDocumentView: React.FC = () => {
   const content = useAppStore(s => s.file.fileContent);
@@ -38,6 +44,13 @@ export const AnyDocumentView: React.FC = () => {
     case 'tasks':
       return <TasksDocView doc={data} />;
     default:
+      // フォールバック: 要件スキーマに近い形ならスキーマ駆動表示を試みる
+      if (data && typeof data === 'object') {
+        const obj = data as Record<string, unknown>;
+        if (Array.isArray(obj.systemRequirements) || Array.isArray(obj.userRequirements) || Array.isArray(obj.nonFunctionalRequirements) || Array.isArray(obj.glossary)) {
+          return <SchemaDocumentView data={data} schema={requirementsSchema as any} />;
+        }
+      }
       return (
         <div style={{ padding: 16 }}>
           <h3>サポート外のドキュメント形式</h3>
@@ -50,4 +63,3 @@ export const AnyDocumentView: React.FC = () => {
       );
   }
 };
-
