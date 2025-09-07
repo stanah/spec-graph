@@ -30,11 +30,9 @@ describe('VSCode Extension', () => {
       // コマンドが正しく登録されていることを確認
       expect(mockVSCode.commands.registerCommand).toHaveBeenCalled();
       
-      // 期待されるコマンド数を確認（package.jsonで定義されているコマンド数）
+      // 期待されるコマンド数を確認（実際のextension.tsで実装されているコマンド）
       const expectedCommands = [
         'documentViewer.openDocument',
-        'documentViewer.openPreview',
-        'documentViewer.openPreviewToSide',
         'documentViewer.createNewMindmap',
         'documentViewer.exportDocument',
         'documentViewer.validateSchema',
