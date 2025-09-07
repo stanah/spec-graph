@@ -234,32 +234,38 @@ export const DocumentView: React.FC = () => {
   }, [settings, updateSettings]);
 
   return (
-    <div data-testid="document-view" data-print-root="true" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
+    <div data-testid="document-view" data-print-root="true" style={{ 
+      height: '100vh', 
+      display: 'grid', 
+      gridTemplateColumns: '240px 1fr',
+      gridTemplateRows: '1fr',
+      backgroundColor: 'var(--vscode-editor-background)',
+      overflow: 'hidden'
+    }}>
       {outline ? (
-        <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '240px 1fr', gap: 12 }}>
+        <>
           <div 
             data-print-hide="true" 
             style={{ 
               borderRight: '1px solid var(--vscode-panel-border)', 
-              paddingRight: 12,
-              height: '100%',
-              overflowY: 'auto',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              overflow: 'hidden',
+              backgroundColor: 'var(--vscode-sideBar-background)'
             }}
           >
             {/* タブヘッダー */}
             <div style={{ 
               display: 'flex', 
               borderBottom: '1px solid var(--vscode-panel-border)', 
-              marginBottom: 8,
-              flexShrink: 0
+              flexShrink: 0,
+              backgroundColor: 'var(--vscode-tab-inactiveBackground)'
             }}>
               <button
                 onClick={() => setActiveTab('toc')}
                 style={{
                   flex: 1,
-                  padding: '4px 8px',
+                  padding: '8px 12px',
                   background: activeTab === 'toc' ? 'var(--vscode-tab-activeBackground)' : 'transparent',
                   border: 'none',
                   color: activeTab === 'toc' ? 'var(--vscode-tab-activeForeground)' : 'var(--vscode-tab-inactiveForeground)',
@@ -274,7 +280,7 @@ export const DocumentView: React.FC = () => {
                 onClick={() => setActiveTab('files')}
                 style={{
                   flex: 1,
-                  padding: '4px 8px',
+                  padding: '8px 12px',
                   background: activeTab === 'files' ? 'var(--vscode-tab-activeBackground)' : 'transparent',
                   border: 'none',
                   color: activeTab === 'files' ? 'var(--vscode-tab-activeForeground)' : 'var(--vscode-tab-inactiveForeground)',
@@ -287,13 +293,19 @@ export const DocumentView: React.FC = () => {
               </button>
             </div>
 
-            {/* タブコンテンツ - スクロール可能エリア */}
-            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            {/* タブコンテンツ - 完全独立スクロール */}
+            <div style={{ 
+              flex: 1, 
+              overflowY: 'auto', 
+              overflowX: 'hidden',
+              padding: '8px 12px',
+              minHeight: 0
+            }}>
               {activeTab === 'toc' ? (
                 <nav data-testid="doc-toc" data-print-hide="true" aria-label="Table of contents">
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                     {tocItems.map((t) => (
-                      <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>
+                      <li key={t.nodeId} style={{ marginBottom: '2px' }}>
                         <button
                           data-testid={`toc-item-${t.nodeId}`}
                           onClick={() => onClickTOC(t.nodeId)}
@@ -303,8 +315,18 @@ export const DocumentView: React.FC = () => {
                             color: 'var(--vscode-foreground)', 
                             cursor: 'pointer',
                             padding: '4px 8px',
+                            paddingLeft: `${(t.level - 1) * 12 + 8}px`,
                             width: '100%',
-                            textAlign: 'left'
+                            textAlign: 'left',
+                            borderRadius: '3px',
+                            fontSize: '13px',
+                            transition: 'background-color 0.1s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--vscode-list-hoverBackground)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
                           }}
                         >
                           {t.text}
@@ -328,15 +350,26 @@ export const DocumentView: React.FC = () => {
             </div>
           </div>
           <div style={{ 
-            height: '100%',
             overflowY: 'auto',
-            minHeight: 0
+            overflowX: 'hidden',
+            padding: '12px',
+            minHeight: 0,
+            backgroundColor: 'var(--vscode-editor-background)'
           }}>
             {renderOutline(outline)}
           </div>
-        </div>
+        </>
       ) : (
-        <div style={{ opacity: 0.7 }}>ドキュメントを表示するデータがありません。</div>
+        <div style={{ 
+          gridColumn: '1 / -1', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          opacity: 0.7,
+          padding: '12px'
+        }}>
+          ドキュメントを表示するデータがありません。
+        </div>
       )}
       {Loaded ? <div aria-hidden>{/* Lexical view mount point (optional) */}<Loaded /></div> : null}
     </div>
