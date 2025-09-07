@@ -82,14 +82,14 @@ export class DocumentWebviewProvider {
             background-color: var(--vscode-editor-background);
             width: 100%;
             height: 100vh;
-            overflow: hidden;
+            overflow: auto;
         }
         
         #root {
             width: 100%;
             height: 100vh;
             min-height: 100vh;
-            overflow: hidden;
+            overflow: auto;
             position: absolute;
             top: 0;
             left: 0;
