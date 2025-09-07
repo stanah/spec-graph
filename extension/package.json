@@ -20,11 +20,13 @@
     "diagram"
   ],
   "activationEvents": [
+    "onStartupFinished",
     "onLanguage:json",
     "onLanguage:yaml",
     "onCommand:documentViewer.openDocument",
-    "onCommand:documentViewer.createNewDocument",
+    "onCommand:documentViewer.createNewDocument", 
     "onView:documentTree",
+    "onView:documentPreview",
     "workspaceContains:**/*.mindmap.{json,yaml,yml}",
     "workspaceContains:**/*.{json,yaml,yml}"
   ],
@@ -35,18 +37,6 @@
         "command": "documentViewer.openMindmap",
         "title": "ドキュメントを開く",
         "category": "Document Viewer"
-      },
-      {
-        "command": "documentViewer.openPreview",
-        "title": "ドキュメントプレビューを開く",
-        "category": "Document Viewer",
-        "icon": "$(open-preview)"
-      },
-      {
-        "command": "documentViewer.openPreviewToSide",
-        "title": "ドキュメントプレビューを横に開く",
-        "category": "Document Viewer",
-        "icon": "$(open-preview)"
       },
       {
         "command": "documentViewer.createNewMindmap",
@@ -112,14 +102,6 @@
       }
     ],
     "menus": {
-      "editor/title": [
-        {
-          "command": "documentViewer.openPreviewToSide",
-          "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml",
-          "group": "navigation",
-          "alt": "documentViewer.openPreview"
-        }
-      ],
       "explorer/context": [
         {
           "command": "documentViewer.openMindmap",
@@ -137,14 +119,6 @@
       "commandPalette": [
         {
           "command": "documentViewer.openMindmap",
-          "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml"
-        },
-        {
-          "command": "documentViewer.openPreview",
-          "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml"
-        },
-        {
-          "command": "documentViewer.openPreviewToSide",
           "when": "resourceExtname == .json || resourceExtname == .yaml || resourceExtname == .yml"
         }
       ],
@@ -331,21 +305,28 @@
       }
     ],
     "views": {
-      "mindmapExplorer": [
+      "documentExplorer": [
         {
           "id": "documentTree",
-          "name": "マインドマップツリー",
+          "name": "ドキュメントツリー",
           "when": "workspaceHasMinMindmapFiles || documentViewer.isActive",
-          "contextualTitle": "マインドマップツリー"
+          "contextualTitle": "ドキュメントツリー"
+        },
+        {
+          "id": "documentPreview",
+          "name": "ドキュメントプレビュー",
+          "type": "webview",
+
+          "contextualTitle": "ドキュメントプレビュー"
         }
       ]
     },
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "mindmapExplorer",
-          "title": "Document Viewer",
-          "icon": "$(graph)"
+          "id": "documentExplorer",
+          "title": "Document Viewer", 
+          "icon": "$(files)"
         }
       ]
     },

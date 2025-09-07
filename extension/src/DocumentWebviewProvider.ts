@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
 /**
@@ -273,6 +274,11 @@ export class DocumentWebviewProvider {
                         } else {
                             console.log('[WebviewProvider] ❌ updateDocument: contentが無効');
                         }
+                        break;
+
+                    case 'getFileList':
+                        // ファイル一覧取得要求
+                        this.handleGetFileList(webview, message);
                         break;
 
                     default:
@@ -566,6 +572,121 @@ export class DocumentWebviewProvider {
                 });
             }
         }
+    }
+
+    /**
+     * ファイル一覧取得要求を処理
+     */
+    private async handleGetFileList(webview: vscode.Webview, message: { 
+        requestId: string; 
+        directoryPath?: string; 
+        extensions?: string[] 
+    }): Promise<void> {
+        try {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders || workspaceFolders.length === 0) {
+                webview.postMessage({
+                    command: 'fileListResponse',
+                    requestId: message.requestId,
+                    files: [],
+                    error: 'ワークスペースが開かれていません'
+                });
+                return;
+            }
+
+            const rootPath = workspaceFolders[0].uri.fsPath;
+            const targetPath = message.directoryPath 
+                ? path.join(rootPath, message.directoryPath) 
+                : rootPath;
+            
+            const allowedExtensions = message.extensions || ['.md', '.txt', '.json', '.yaml', '.yml'];
+            
+            const files = await this.scanDirectory(targetPath, allowedExtensions, rootPath);
+            
+            webview.postMessage({
+                command: 'fileListResponse',
+                requestId: message.requestId,
+                files: files
+            });
+
+        } catch (error) {
+            console.error('ファイル一覧取得エラー:', error);
+            webview.postMessage({
+                command: 'fileListResponse',
+                requestId: message.requestId,
+                files: [],
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    }
+
+    /**
+     * ディレクトリをスキャンしてファイル一覧を取得
+     */
+    private async scanDirectory(
+        dirPath: string, 
+        allowedExtensions: string[], 
+        rootPath: string,
+        maxDepth: number = 3,
+        currentDepth: number = 0
+    ): Promise<any[]> {
+        const files: any[] = [];
+        
+        try {
+            if (currentDepth >= maxDepth) {
+                return files;
+            }
+
+            const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+            
+            for (const entry of entries) {
+                // 隠しファイル・フォルダとnode_modulesをスキップ
+                if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+                    continue;
+                }
+
+                const fullPath = path.join(dirPath, entry.name);
+                const relativePath = path.relative(rootPath, fullPath);
+                
+                if (entry.isDirectory()) {
+                    const children = await this.scanDirectory(
+                        fullPath, 
+                        allowedExtensions, 
+                        rootPath, 
+                        maxDepth, 
+                        currentDepth + 1
+                    );
+                    
+                    if (children.length > 0) {
+                        files.push({
+                            name: entry.name,
+                            path: relativePath,
+                            type: 'directory',
+                            children: children
+                        });
+                    }
+                } else if (entry.isFile()) {
+                    const ext = path.extname(entry.name);
+                    if (allowedExtensions.includes(ext)) {
+                        files.push({
+                            name: entry.name,
+                            path: relativePath,
+                            type: 'file'
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`ディレクトリスキャンエラー: ${dirPath}`, error);
+        }
+        
+        return files.sort((a, b) => {
+            // ディレクトリを先に、その後ファイル名順
+            if (a.type !== b.type) {
+                return a.type === 'directory' ? -1 : 1;
+            }
+            return a.name.localeCompare(b.name);
+        });
     }
 
     /**

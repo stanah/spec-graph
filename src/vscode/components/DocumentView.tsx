@@ -6,6 +6,7 @@ import { findNodeById } from '../../utils/helpers';
 import type { MindmapNode } from '../../types';
 import './DocumentView.print.css';
 import { StatusBadge, PriorityBadge } from '../../components/table/Badges';
+import { FileList } from './FileList';
 
 const theme = {
   paragraph: 'lexical-paragraph',
@@ -210,25 +211,97 @@ export const DocumentView: React.FC = () => {
     if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
+  const [activeTab, setActiveTab] = React.useState<'toc' | 'files'>('toc');
+  const [documentRoot, setDocumentRoot] = React.useState<string>('./docs');
+  
+  // appStoreから設定を読み込み・保存
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
+  
+  // 設定からドキュメントルートを初期化
+  React.useEffect(() => {
+    const savedDocumentRoot = (settings as any).documentRoot || './docs';
+    setDocumentRoot(savedDocumentRoot);
+  }, [settings]);
+  
+  // ドキュメントルート変更時の処理
+  const handleDocumentRootChange = React.useCallback((newRoot: string) => {
+    setDocumentRoot(newRoot);
+    updateSettings({
+      ...settings,
+      documentRoot: newRoot
+    } as any);
+  }, [settings, updateSettings]);
+
   return (
     <div data-testid="document-view" data-print-root="true" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
       {outline ? (
         <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 12 }}>
-          <nav data-testid="doc-toc" data-print-hide="true" aria-label="Table of contents" style={{ borderRight: '1px solid var(--vscode-panel-border)', paddingRight: 12 }}>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {tocItems.map((t) => (
-                <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>
-                  <button
-                    data-testid={`toc-item-${t.nodeId}`}
-                    onClick={() => onClickTOC(t.nodeId)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--vscode-foreground)', cursor: 'pointer' }}
-                  >
-                    {t.text}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div data-print-hide="true" style={{ borderRight: '1px solid var(--vscode-panel-border)', paddingRight: 12 }}>
+            {/* タブヘッダー */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--vscode-panel-border)', marginBottom: 8 }}>
+              <button
+                onClick={() => setActiveTab('toc')}
+                style={{
+                  flex: 1,
+                  padding: '4px 8px',
+                  background: activeTab === 'toc' ? 'var(--vscode-tab-activeBackground)' : 'transparent',
+                  border: 'none',
+                  color: activeTab === 'toc' ? 'var(--vscode-tab-activeForeground)' : 'var(--vscode-tab-inactiveForeground)',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  borderBottom: activeTab === 'toc' ? '2px solid var(--vscode-tab-activeBorder)' : 'none'
+                }}
+              >
+                目次
+              </button>
+              <button
+                onClick={() => setActiveTab('files')}
+                style={{
+                  flex: 1,
+                  padding: '4px 8px',
+                  background: activeTab === 'files' ? 'var(--vscode-tab-activeBackground)' : 'transparent',
+                  border: 'none',
+                  color: activeTab === 'files' ? 'var(--vscode-tab-activeForeground)' : 'var(--vscode-tab-inactiveForeground)',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  borderBottom: activeTab === 'files' ? '2px solid var(--vscode-tab-activeBorder)' : 'none'
+                }}
+              >
+                ファイル
+              </button>
+            </div>
+
+            {/* タブコンテンツ */}
+            {activeTab === 'toc' ? (
+              <nav data-testid="doc-toc" data-print-hide="true" aria-label="Table of contents">
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {tocItems.map((t) => (
+                    <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>
+                      <button
+                        data-testid={`toc-item-${t.nodeId}`}
+                        onClick={() => onClickTOC(t.nodeId)}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--vscode-foreground)', cursor: 'pointer' }}
+                      >
+                        {t.text}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : (
+              <div data-testid="doc-files">
+                <FileList 
+                  rootPath={documentRoot}
+                  onRootPathChange={handleDocumentRootChange}
+                  onFileSelect={(filePath) => {
+                    console.log('選択されたファイル:', filePath);
+                    // TODO: ファイルプレビュー機能を実装
+                  }}
+                />
+              </div>
+            )}
+          </div>
           <div>
             {renderOutline(outline)}
           </div>

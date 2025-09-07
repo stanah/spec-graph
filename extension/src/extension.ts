@@ -4,11 +4,196 @@ import { DocumentEditorProvider } from './DocumentEditorProvider';
 import { DocumentWebviewProvider } from './DocumentWebviewProvider';
 import { DocumentTreeDataProvider, DocumentTreeItem } from './DocumentTreeDataProvider';
 
-// アクティブなプレビューパネルを管理
-const previewPanels = new Map<string, vscode.WebviewPanel>();
+/**
+ * サイドバープレビュー用のWebviewViewプロバイダー
+ */
+class DocumentSidebarViewProvider implements vscode.WebviewViewProvider {
+    constructor(private readonly extensionUri: vscode.Uri) {}
+
+    resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        context: vscode.WebviewViewResolveContext,
+        token: vscode.CancellationToken
+    ): void | Thenable<void> {
+        const webview = webviewView.webview;
+
+        // Webviewの設定
+        webview.options = {
+            enableScripts: true,
+            localResourceRoots: [
+                vscode.Uri.joinPath(this.extensionUri, 'dist'),
+                vscode.Uri.joinPath(this.extensionUri, 'webview')
+            ]
+        };
+
+        // HTMLコンテンツを設定
+        webview.html = this.getWebviewContent(webview);
+
+        // WebviewViewの参照を保持（サイドバープロバイダーのシングルトンで管理）
+        if (sidebarViewProviderSingleton) {
+            sidebarViewProviderSingleton.setWebviewView(webviewView);
+        }
+
+        // メッセージハンドラーを設定
+        webview.onDidReceiveMessage((message) => {
+            switch (message.command) {
+                case 'ready':
+                    console.log('サイドバープレビューが準備完了');
+                    this.updateContent(webview);
+                    break;
+                default:
+                    console.log('未処理のメッセージ:', message.command);
+                    break;
+            }
+        });
+    }
+
+    private getWebviewContent(webview: vscode.Webview): string {
+        // Webviewリソースのベースパス
+        const webviewPath = vscode.Uri.joinPath(this.extensionUri, 'webview');
+        
+        // JSファイルのパス
+        const jsUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(webviewPath, 'assets', 'index.vscode.js')
+        );
+
+        // CSPの設定
+        const csp = [
+            "default-src 'none'",
+            `script-src ${webview.cspSource} 'unsafe-inline' 'unsafe-eval'`,
+            `style-src ${webview.cspSource} 'unsafe-inline'`,
+            `img-src ${webview.cspSource} data: https:`,
+            `font-src ${webview.cspSource}`,
+            `connect-src ${webview.cspSource} https:`
+        ].join('; ');
+
+        return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="${csp}">
+    <title>Document Preview</title>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 8px;
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-sideBar-background);
+            width: 100%;
+            height: 100vh;
+            overflow: auto;
+        }
+        
+        #root {
+            width: 100%;
+            height: calc(100vh - 16px);
+            overflow: auto;
+        }
+        
+        .placeholder {
+            text-align: center;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="placeholder">
+            ドキュメントを開くとここにプレビューが表示されます
+        </div>
+    </div>
+    
+    <script>
+        // VSCode APIの初期化
+        const vscode = acquireVsCodeApi();
+        
+        // 初期データの設定
+        window.initialData = {
+            content: '',
+            fileName: '',
+            language: '',
+            isSidebar: true
+        };
+        
+        // 準備完了を通知
+        vscode.postMessage({ command: 'ready' });
+        
+        // グローバル変数の設定
+        window.vscode = vscode;
+        window.vscodeApiInstance = vscode;
+    </script>
+    
+    <script src="${jsUri}"></script>
+</body>
+</html>`;
+    }
+
+    private updateContent(webview: vscode.Webview): void {
+        // アクティブなエディターの内容を取得してプレビューを更新
+        const activeEditor = vscode.window.activeTextEditor;
+        if (activeEditor) {
+            const content = activeEditor.document.getText();
+            const fileName = activeEditor.document.fileName;
+            const language = activeEditor.document.languageId;
+
+            webview.postMessage({
+                command: 'updateContent',
+                content,
+                fileName,
+                language
+            });
+        } else {
+            // アクティブなエディターがない場合はプレースホルダーを表示
+            webview.postMessage({
+                command: 'updateContent',
+                content: '',
+                fileName: '',
+                language: ''
+            });
+        }
+    }
+
+    // WebviewViewの参照を保持
+    private webviewView: vscode.WebviewView | null = null;
+
+    // WebviewViewインスタンスを設定
+    public setWebviewView(webviewView: vscode.WebviewView): void {
+        this.webviewView = webviewView;
+    }
+
+    // アクティブドキュメント用の更新メソッド
+    public updateForDocument(document: vscode.TextDocument): void {
+        if (this.webviewView) {
+            this.updatePreview(this.webviewView, document);
+        }
+    }
+
+    // 外部からコンテンツを更新するためのメソッド
+    public updatePreview(webviewView: vscode.WebviewView, document: vscode.TextDocument): void {
+        const content = document.getText();
+        const fileName = document.fileName;
+        const language = document.languageId;
+
+        webviewView.webview.postMessage({
+            command: 'updateContent',
+            content,
+            fileName,
+            language
+        });
+    }
+
+}
+
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 // Webviewプロバイダーの参照（パネル再初期化用）
 let webviewProviderSingleton: DocumentWebviewProvider | null = null;
+// サイドバープレビュープロバイダーの参照
+let sidebarViewProviderSingleton: DocumentSidebarViewProvider | null = null;
 
 function ensureDiagnosticCollection(context: vscode.ExtensionContext): vscode.DiagnosticCollection | null {
     try {
@@ -138,7 +323,14 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(treeView);
 
-    // アクティブエディタの変更を監視してツリーとプレビューを更新
+    // サイドバープレビュープロバイダーの登録
+    const sidebarViewProvider = new DocumentSidebarViewProvider(context.extensionUri);
+    sidebarViewProviderSingleton = sidebarViewProvider;
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider('documentPreview', sidebarViewProvider)
+    );
+
+    // アクティブエディタの変更を監視してツリーとサイドバープレビューを更新
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
             if (editor) {
@@ -178,21 +370,8 @@ export function activate(context: vscode.ExtensionContext) {
                                 await treeDataProvider.setCurrentDocument(editor.document);
                             }
                             
-                            // プレビューは常に更新（構造化データとして表示）
-                            await updatePreviewForActiveEditor(editor.document);
-
-                            // フォロー設定に応じて、プレビューが開かれていなければ自動で開く
-                            try {
-                                const cfg = vscode.workspace.getConfiguration('mindmapTool');
-                                const follow = cfg.get<boolean>('preview.followActiveEditor', true);
-                                const autoOpen = cfg.get<boolean>('preview.autoOpenOnFileOpen', true);
-                                const hasVisiblePreview = Array.from(previewPanels.values()).some(p => p.visible);
-                                if (follow && autoOpen && !hasVisiblePreview) {
-                                    await openDocumentPreview(editor.document.uri, vscode.ViewColumn.Beside, context);
-                                }
-                            } catch {
-                                // 失敗しても致命的ではないためスキップ
-                            }
+                            // サイドバープレビューを更新
+                            updateSidebarPreview(editor.document);
                         }
                     } catch {
                         // 入力途中などは無視
@@ -202,59 +381,9 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
-    // 新しいテキストドキュメントが開かれた時の処理（プレビューがアクティブな場合の左側強制表示）
-    let documentOpenTimeout: NodeJS.Timeout | null = null;
-    context.subscriptions.push(
-        vscode.workspace.onDidOpenTextDocument(async (document) => {
-            // プレビューパネルがアクティブな時のみ処理
-            const activePanel = Array.from(previewPanels.values()).find(panel => panel.active);
-            if (!activePanel || document.uri.scheme !== 'file') {
-                return;
-            }
-
-            // タイムアウトがあればクリア（重複実行を防ぐ）
-            if (documentOpenTimeout) {
-                clearTimeout(documentOpenTimeout);
-            }
-
-            // 少し待ってからエディターを左側に移動（VSCodeの内部処理完了を待つ）
-            documentOpenTimeout = setTimeout(async () => {
-                try {
-                    const visibleEditors = vscode.window.visibleTextEditors.filter(
-                        editor => editor.document.uri.toString() === document.uri.toString()
-                    );
-
-                    for (const editor of visibleEditors) {
-                        // プレビューカラム以外にあるエディターを左側に移動
-                        if (editor.viewColumn !== vscode.ViewColumn.One) {
-                            await vscode.window.showTextDocument(
-                                document, 
-                                vscode.ViewColumn.One, 
-                                false // フォーカスを奪わない
-                            );
-                            console.log(`ファイルを左側に移動: ${document.fileName}`);
-                            break;
-                        }
-                    }
-                } catch (error) {
-                    console.warn(`ファイル移動に失敗: ${error}`);
-                }
-                documentOpenTimeout = null;
-            }, 100); // 100ms待機
-        })
-    );
 
     // コマンドの登録
     const commands = [
-        // マインドマッププレビューを開くコマンド
-        vscode.commands.registerCommand('documentViewer.openPreview', async (uri?: vscode.Uri) => {
-            await openDocumentPreview(uri, vscode.ViewColumn.Active, context);
-        }),
-
-        // マインドマッププレビューを横に開くコマンド  
-        vscode.commands.registerCommand('documentViewer.openPreviewToSide', async (uri?: vscode.Uri) => {
-            await openDocumentPreview(uri, vscode.ViewColumn.Beside, context);
-        }),
 
         // マインドマップを開くコマンド
         vscode.commands.registerCommand('documentViewer.openDocument', async (uri?: vscode.Uri) => {
@@ -523,7 +652,7 @@ export function activate(context: vscode.ExtensionContext) {
     // すべてのコマンドを登録
     context.subscriptions.push(...commands);
 
-    // グローバルドキュメント変更監視（全プレビューパネルの自動更新）
+    // グローバルドキュメント変更監視（サイドバープレビューの自動更新）
     context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(async (event) => {
             const document = event.document;
@@ -543,9 +672,20 @@ export function activate(context: vscode.ExtensionContext) {
                         data = JSON.parse(content);
                     }
                     
-                    // rootプロパティがある場合のみマインドマップとして扱い、プレビューを更新
-                    if (data && typeof data === 'object' && 'root' in data) {
-                        await updatePreviewForActiveEditor(document);
+                    // 構造化ドキュメントファイルかどうかを柔軟にチェック
+                    const isLikelyStructuredFile = data && typeof data === 'object' && (
+                        'root' in data ||
+                        'title' in data || 
+                        'version' in data ||
+                        'stakeholders' in data ||
+                        'epics' in data ||
+                        'requirements' in data ||
+                        Array.isArray(data)
+                    );
+                    
+                    if (isLikelyStructuredFile) {
+                        // サイドバープレビューを更新
+                        updateSidebarPreview(document);
                         
                         // Diagnostics更新
                         ensureDiagnosticCollection(context);
@@ -737,148 +877,11 @@ root:
 }
 
 /**
- * アクティブエディタに対応するプレビューパネルを更新する関数
+ * サイドバープレビューを更新する関数
  */
-async function updatePreviewForActiveEditor(document: vscode.TextDocument): Promise<void> {
-    try {
-        // 開いているすべてのプレビューパネルに新しいコンテンツを送信
-        // let updated = false;
-        const currentKey = document.uri.toString();
-        for (const [panelKey, panel] of previewPanels) {
-            if (panel) {
-                // パネルが別ファイル用に作られている場合は、再初期化して追従させる
-                if (panelKey !== currentKey) {
-                    try {
-                        if (webviewProviderSingleton) {
-                            webviewProviderSingleton.createWebview(panel, document);
-                            panel.title = `Mindmap Preview: ${path.basename(document.fileName)}`;
-                            previewPanels.delete(panelKey);
-                            previewPanels.set(currentKey, panel);
-                            // updated = true;
-                            // このループではメッセージ送信をスキップ（初期データで最新化される）
-                            continue;
-                        }
-                    } catch (e) {
-                        console.error('Failed to re-initialize webview panel:', e);
-                    }
-                }
-                const content = document.getText();
-                // const ext = path.extname(document.fileName).toLowerCase();
-                // const language = (ext === '.yaml' || ext === '.yml') ? 'yaml' : 'json';
-                const updateDocMessage = {
-                    command: 'updateDocument',
-                    content: content,
-                    fileName: document.fileName,
-                    uri: document.uri.toString(),
-                    data: {
-                        content: content,
-                        fileName: document.fileName,
-                        uri: document.uri.toString()
-                    }
-                } as const;
-                
-                try {
-                    // アクティブドキュメントに合わせてパネルタイトルも更新
-                    panel.title = `Mindmap Preview: ${path.basename(document.fileName)}`;
-                    await panel.webview.postMessage(updateDocMessage);
-                } catch (error) {
-                    console.error('Failed to post message to panel:', panelKey, error);
-                }
-                // updated = true;
-            }
-        }
-    } catch (error) {
-        console.error('プレビューパネルの更新に失敗しました:', error);
+function updateSidebarPreview(document: vscode.TextDocument): void {
+    if (sidebarViewProviderSingleton) {
+        sidebarViewProviderSingleton.updateForDocument(document);
     }
 }
 
-/**
- * マインドマッププレビューを開く関数
- */
-async function openDocumentPreview(uri: vscode.Uri | undefined, viewColumn: vscode.ViewColumn, context: vscode.ExtensionContext): Promise<void> {
-    try {
-        let targetUri = uri;
-        if (!targetUri && vscode.window.activeTextEditor) {
-            targetUri = vscode.window.activeTextEditor.document.uri;
-        }
-        
-        if (!targetUri) {
-            vscode.window.showWarningMessage('プレビューするファイルが見つかりません');
-            return;
-        }
-
-        const document = await vscode.workspace.openTextDocument(targetUri);
-        const panelKey = targetUri.toString();
-
-        // 既存のプレビューパネルがあるかチェック
-        let panel = previewPanels.get(panelKey);
-        
-        if (panel) {
-            // 既存パネルがある場合は表示（フォーカスは移さない）
-            panel.reveal(viewColumn, true); // preserveFocus: true でエディタのフォーカスを維持
-            return;
-        }
-
-        // 新しいWebviewパネルを作成
-        panel = vscode.window.createWebviewPanel(
-            'mindmapPreview',
-            `Mindmap Preview: ${path.basename(document.fileName)}`,
-            { viewColumn: viewColumn, preserveFocus: true }, // フォーカスを維持
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [
-                    context.extensionUri,
-                    vscode.Uri.joinPath(context.extensionUri, 'webview')
-                ]
-            }
-        );
-
-        // パネルを管理マップに追加
-        previewPanels.set(panelKey, panel);
-
-        // パネルが閉じられた時の処理
-        panel.onDidDispose(() => {
-            previewPanels.delete(panelKey);
-        });
-
-        // Webviewプロバイダーを使ってコンテンツを設定
-        const webviewProvider = new DocumentWebviewProvider(context.extensionUri);
-        webviewProvider.createWebview(panel, document);
-        
-        // Webviewからのメッセージハンドリングを設定
-        const webviewMsgSubscription = panel.webview.onDidReceiveMessage(
-            async (message) => {
-                console.log('[WebviewPreview] メッセージ受信:', message?.command || 'unknown command', message);
-                try {
-                    switch (message.command) {
-                        case 'saveFile':
-                            // ファイル保存 - DocumentWebviewProviderの処理を使用
-                            console.log('saveFile要求を受信 (WebviewPreview):', message);
-                            await webviewProvider.handleSaveFile(panel!.webview, document, message);
-                            break;
-                        case 'webviewReady':
-                            console.log('Webviewの準備が完了しました');
-                            break;
-                        default:
-                            console.log('未処理のメッセージ:', message.command);
-                            break;
-                    }
-                } catch (error) {
-                    console.error('Webviewメッセージの処理中にエラーが発生:', error);
-                }
-            }
-        );
-
-        // 注記: ドキュメント変更の監視は、グローバル監視で処理されるため、
-        // 個別のプレビューパネルでは不要（重複監視を避ける）
-
-        // パネルが閉じられた時にリスナーを削除
-        panel.onDidDispose(() => {
-            webviewMsgSubscription?.dispose();
-        });
-
-    } catch (error) {
-        vscode.window.showErrorMessage(`マインドマッププレビューを開けませんでした: ${error}`);
-    }
-}
