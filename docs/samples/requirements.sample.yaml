@@ -22,18 +22,7 @@ goals:
 # === 機能要件 ===
 
 functionalRequirements:
-  - id: FR-EDIT-001
-    title: Monaco Editorの統合とシンタックスハイライト
-    description: VSCodeエディタエンジンを使用したJSON/YAML編集環境
-    priority: high
-    status: done
-    taskRef: "1.2, 3.1"
-    acceptanceCriteria:
-      - JSON/YAMLの適切なシンタックスハイライト
-      - コード補完とエラー検出
-      - VSCode風の操作感
-
-  - id: FR-EDIT-002
+- id: FR-EDIT-002
     title: エディタ↔マインドマップの双方向同期
     description: 入力変更を即座にビジュアル表示に反映
     priority: high
@@ -63,7 +52,7 @@ functionalRequirements:
       - フォーマット選択UIの提供
       - 変更エラーの詳細表示
 
-  - id: FR-VZ-001
+  - id: FR-MAP-001
     title: インタラクティブマインドマップ描画
     description: D3.js力指向グラフによるマインドマップ表示
     priority: high
@@ -74,7 +63,7 @@ functionalRequirements:
       - ノードの展開・折りたたみ
       - 1万ノードでも滑らかな描画
 
-  - id: FR-VZ-002
+  - id: FR-TABLE-001
     title: テーブルビュー機能
     description: "tanstack/react-tableによる高機能テーブル表示"
     priority: high
@@ -85,7 +74,7 @@ functionalRequirements:
       - 仮想スクロール対応
       - 行選択とノード同期
 
-  - id: FR-VZ-003
+  - id: FR-DOC-001
     title: リッチドキュメントビュー
     description: Lexicalベースの構造化ドキュメント表示
     priority: high
@@ -96,7 +85,7 @@ functionalRequirements:
       - 印刷用CSS・PDF出力
       - 折りたたみ可能セクション
 
-  - id: FR-VZ-004
+  - id: FR-VIEW-001
     title: ビュー切り替えシステム
     description: マップ・テーブル・ドキュメント間のシームレス切り替え
     priority: high
@@ -106,7 +95,7 @@ functionalRequirements:
       - タブ形式のUI
       - ビュー状態の保持
 
-  - id: FR-VZ-005
+  - id: FR-UI-001
     title: ノード状態インジケーター
     description: 優先度・ステータスの視覚的表示
     priority: medium
@@ -235,48 +224,7 @@ functionalRequirements:
       - 位置情報付きエラー表示
       - 自動復旧提案
 
-  - id: FR-QP-001
-    title: 大規模データ対応
-    description: 1万〜5万ノードでの高速動作
-    priority: high
-    status: done
-    taskRef: "4.5, 5.5"
-    acceptanceCriteria:
-      - 初期描画3秒以内（1万ノード）
-      - スクロール60fps近似
-
-  - id: FR-QP-002
-    title: メモリ管理とリーク防止
-    description: 長時間利用でのメモリ効率化
-    priority: medium
-    status: done
-    acceptanceCriteria:
-      - クリーンアップの徹底
-      - メモリ使用量監視
-
-  - id: FR-QP-003
-    title: テスト網羅とCI/CD
-    description: 単体・統合・E2Eテスト
-    priority: medium
-    status: done
-    taskRef: "23.1-23.2"
-    acceptanceCriteria:
-      - 主要機能の自動テスト
-      - リグレッション防止
-
-  - id: FR-QP-004
-    title: セキュリティ（オフライン特化）
-    description: 外部送信ゼロの安全性
-    priority: medium
-    status: done
-    acceptanceCriteria:
-      - ローカル完結動作
-      - 入力値サニタイゼーション
-
-# === 将来計画機能 ===
-
-futureFeaturesPlanned:
-  - id: FR-FT-001
+  - id: FR-DM-005
     title: 依存関係ビジュアライザー
     description: Cytoscape.jsによる依存グラフ表示
     priority: medium
@@ -286,7 +234,7 @@ futureFeaturesPlanned:
       - インタラクティブグラフ表示
       - フィルタリング・ハイライト機能
 
-  - id: FR-FT-002
+  - id: FR-UX-005
     title: リンク・ジャンプ機能
     description: ID参照によるドキュメント間ナビゲーション
     priority: medium
@@ -296,7 +244,7 @@ futureFeaturesPlanned:
       - ID形式のリンク構文
       - ナビゲーション履歴管理
 
-  - id: FR-FT-003
+  - id: FR-DM-006
     title: 整合性チェックシステム
     description: ID間整合性・孤立参照検出
     priority: medium
@@ -306,7 +254,7 @@ futureFeaturesPlanned:
       - 循環参照検出
       - 自動修正提案
 
-  - id: FR-FT-004
+  - id: FR-TABLE-002
     title: 高度なテーブル編集機能
     description: インライン編集・バルク操作
     priority: low
