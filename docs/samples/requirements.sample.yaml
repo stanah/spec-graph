@@ -22,7 +22,7 @@ goals:
 # === 機能要件 ===
 
 functionalRequirements:
-- id: FR-EDIT-002
+  - id: FR-EDIT-002
     title: エディタ↔マインドマップの双方向同期
     description: 入力変更を即座にビジュアル表示に反映
     priority: high
