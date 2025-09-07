@@ -82,6 +82,7 @@
 }
 
 /* VSCode環境でのテーマ対応 */
+/* カラーモード統一管理のため無効化
 @media (prefers-color-scheme: dark) {
   .vscode-toolbar {
     background: var(--vscode-panel-background, rgba(30, 30, 30, 0.95));
@@ -96,8 +97,10 @@
     color: var(--vscode-editor-foreground, #ffffff);
   }
 }
+*/
 
 /* VSCodeのダークテーマ対応 */
+/* カラーモード統一管理のため無効化
 [data-vscode-theme-kind="vscode-dark"] .vscode-toolbar,
 [data-theme="dark"] .vscode-toolbar {
   background: rgba(30, 30, 30, 0.95);
@@ -113,6 +116,7 @@
 [data-theme="dark"] .empty-state-content h3 {
   color: #ffffff;
 }
+*/
 
 /* VSCode環境でのマインドマップノード選択スタイル */
 .mindmap-node.selected .mindmap-node-rect {

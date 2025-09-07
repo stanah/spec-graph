@@ -236,10 +236,25 @@ export const DocumentView: React.FC = () => {
   return (
     <div data-testid="document-view" data-print-root="true" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
       {outline ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 12 }}>
-          <div data-print-hide="true" style={{ borderRight: '1px solid var(--vscode-panel-border)', paddingRight: 12 }}>
+        <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '240px 1fr', gap: 12 }}>
+          <div 
+            data-print-hide="true" 
+            style={{ 
+              borderRight: '1px solid var(--vscode-panel-border)', 
+              paddingRight: 12,
+              height: '100%',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
             {/* タブヘッダー */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--vscode-panel-border)', marginBottom: 8 }}>
+            <div style={{ 
+              display: 'flex', 
+              borderBottom: '1px solid var(--vscode-panel-border)', 
+              marginBottom: 8,
+              flexShrink: 0
+            }}>
               <button
                 onClick={() => setActiveTab('toc')}
                 style={{
@@ -272,37 +287,51 @@ export const DocumentView: React.FC = () => {
               </button>
             </div>
 
-            {/* タブコンテンツ */}
-            {activeTab === 'toc' ? (
-              <nav data-testid="doc-toc" data-print-hide="true" aria-label="Table of contents">
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {tocItems.map((t) => (
-                    <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>
-                      <button
-                        data-testid={`toc-item-${t.nodeId}`}
-                        onClick={() => onClickTOC(t.nodeId)}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--vscode-foreground)', cursor: 'pointer' }}
-                      >
-                        {t.text}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ) : (
-              <div data-testid="doc-files">
-                <FileList 
-                  rootPath={documentRoot}
-                  onRootPathChange={handleDocumentRootChange}
-                  onFileSelect={(filePath) => {
-                    console.log('選択されたファイル:', filePath);
-                    // TODO: ファイルプレビュー機能を実装
-                  }}
-                />
-              </div>
-            )}
+            {/* タブコンテンツ - スクロール可能エリア */}
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              {activeTab === 'toc' ? (
+                <nav data-testid="doc-toc" data-print-hide="true" aria-label="Table of contents">
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {tocItems.map((t) => (
+                      <li key={t.nodeId} style={{ marginLeft: (t.level - 1) * 12 }}>
+                        <button
+                          data-testid={`toc-item-${t.nodeId}`}
+                          onClick={() => onClickTOC(t.nodeId)}
+                          style={{ 
+                            background: 'transparent', 
+                            border: 'none', 
+                            color: 'var(--vscode-foreground)', 
+                            cursor: 'pointer',
+                            padding: '4px 8px',
+                            width: '100%',
+                            textAlign: 'left'
+                          }}
+                        >
+                          {t.text}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              ) : (
+                <div data-testid="doc-files">
+                  <FileList 
+                    rootPath={documentRoot}
+                    onRootPathChange={handleDocumentRootChange}
+                    onFileSelect={(filePath) => {
+                      console.log('選択されたファイル:', filePath);
+                      // TODO: ファイルプレビュー機能を実装
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
-          <div>
+          <div style={{ 
+            height: '100%',
+            overflowY: 'auto',
+            minHeight: 0
+          }}>
             {renderOutline(outline)}
           </div>
         </div>

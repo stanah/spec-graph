@@ -4,6 +4,7 @@ import App from './vscode/VSCodeApp';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import './index.css';
 import './components/shared/ErrorBoundary.css';
+import './styles/colorMode.css';
 
 // VSCode拡張環境用のメインエントリーポイント
 import { PlatformAdapterFactory } from './platform';
