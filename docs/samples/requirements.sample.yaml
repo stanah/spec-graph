@@ -19,13 +19,10 @@ goals:
     - 依存関係管理と整合性チェック
     - エクスポート・共有機能の充実
 
-# === 主要機能カテゴリ ===
+# === 機能要件 ===
 
-editorFeatures:
-  category: "エディタ機能"
-  description: "テキストエディタとリアルタイムバリデーション機能"
-  
-  - id: ED-MNCO-001
+functionalRequirements:
+  - id: FR-EDIT-001
     title: Monaco Editorの統合とシンタックスハイライト
     description: VSCodeエディタエンジンを使用したJSON/YAML編集環境
     priority: high
@@ -36,7 +33,7 @@ editorFeatures:
       - コード補完とエラー検出
       - VSCode風の操作感
 
-  - id: ED-SYNC-001
+  - id: FR-EDIT-002
     title: エディタ↔マインドマップの双方向同期
     description: 入力変更を即座にビジュアル表示に反映
     priority: high
@@ -46,7 +43,7 @@ editorFeatures:
       - 入力から表示更新までの遅延100ms以内
       - エラー時のフォールバック機構
 
-  - id: ED-VALD-001
+  - id: FR-EDIT-003
     title: リアルタイムバリデーションとエラー表示
     description: JSON Schema/Zodベースの入力検証
     priority: high
@@ -56,7 +53,7 @@ editorFeatures:
       - エラー位置のハイライト表示
       - 日英対応のエラーメッセージ
 
-  - id: ED-CONV-001
+  - id: FR-EDIT-004
     title: JSON/YAML相互変換機能
     description: フォーマット選択と自動変換
     priority: medium
@@ -64,13 +61,9 @@ editorFeatures:
     taskRef: "21.1-21.5"
     acceptanceCriteria:
       - フォーマット選択UIの提供
-      - 変換エラーの詳細表示
+      - 変更エラーの詳細表示
 
-visualizationFeatures:
-  category: "ビジュアライゼーション機能"
-  description: "複数ビュー形式での要件可視化"
-  
-  - id: VZ-MIND-001
+  - id: FR-VZ-001
     title: インタラクティブマインドマップ描画
     description: D3.js力指向グラフによるマインドマップ表示
     priority: high
@@ -81,9 +74,9 @@ visualizationFeatures:
       - ノードの展開・折りたたみ
       - 1万ノードでも滑らかな描画
 
-  - id: VZ-TABL-001
+  - id: FR-VZ-002
     title: テーブルビュー機能
-    description: "@tanstack/react-table"による高機能テーブル表示
+    description: "tanstack/react-tableによる高機能テーブル表示"
     priority: high
     status: done
     taskRef: "25.1-25.6"
@@ -92,7 +85,7 @@ visualizationFeatures:
       - 仮想スクロール対応
       - 行選択とノード同期
 
-  - id: VZ-DOCU-001
+  - id: FR-VZ-003
     title: リッチドキュメントビュー
     description: Lexicalベースの構造化ドキュメント表示
     priority: high
@@ -103,7 +96,7 @@ visualizationFeatures:
       - 印刷用CSS・PDF出力
       - 折りたたみ可能セクション
 
-  - id: VZ-VIEW-001
+  - id: FR-VZ-004
     title: ビュー切り替えシステム
     description: マップ・テーブル・ドキュメント間のシームレス切り替え
     priority: high
@@ -113,7 +106,7 @@ visualizationFeatures:
       - タブ形式のUI
       - ビュー状態の保持
 
-  - id: VZ-INDI-001
+  - id: FR-VZ-005
     title: ノード状態インジケーター
     description: 優先度・ステータスの視覚的表示
     priority: medium
@@ -123,11 +116,7 @@ visualizationFeatures:
       - 色分け・アイコン表示
       - 凡例パネル
 
-dataManagementFeatures:
-  category: "データ管理機能"
-  description: "スキーマ管理・検証・依存関係追跡"
-  
-  - id: DM-SCHM-001
+  - id: FR-DM-001
     title: JSON Schemaバリデーションシステム
     description: ZodとAjvを統合したバリデーション基盤
     priority: critical
@@ -137,7 +126,7 @@ dataManagementFeatures:
       - カスタムキーワード対応
       - スキーマバージョニング
 
-  - id: DM-TYPE-001
+  - id: FR-DM-002
     title: ドキュメントタイプ管理
     description: Requirements/Stakeholders/Design/Tasks管理
     priority: high
@@ -147,7 +136,7 @@ dataManagementFeatures:
       - プラグイン可能なタイプ定義
       - タイプ間関連性グラフ
 
-  - id: DM-DEPS-001
+  - id: FR-DM-003
     title: ID・依存関係管理システム
     description: ユニークID生成と循環参照検出
     priority: high
@@ -157,7 +146,7 @@ dataManagementFeatures:
       - nanoidベースのID生成
       - トポロジカルソートによる依存順序解決
 
-  - id: DM-EXPT-001
+  - id: FR-DM-004
     title: データエクスポート機能
     description: CSV/Excel/PDF出力
     priority: medium
@@ -167,11 +156,7 @@ dataManagementFeatures:
       - 設定可能な出力形式
       - バッチ処理対応
 
-vscodeIntegrationFeatures:
-  category: "VSCode統合機能"
-  description: "VSCode拡張としての統合とワークフロー最適化"
-  
-  - id: VS-EXTN-001
+  - id: FR-VS-001
     title: VSCode拡張基盤とWebview統合
     description: Extension APIとWebviewの基本統合
     priority: high
@@ -181,17 +166,17 @@ vscodeIntegrationFeatures:
       - 拡張機能としての基本動作
       - Webview↔Extension間の通信
 
-  - id: VS-VIEW-001
+  - id: FR-VS-002
     title: プレビューペインとサイド表示
     description: 右側ペインでのマインドマップ表示
     priority: high
     status: done
     taskRef: "10.6-10.10"
     acceptanceCriteria:
-      - "プレビューを開く" コマンド
+      - プレビューを開くコマンド
       - エディタとの同期表示
 
-  - id: VS-FILE-001
+  - id: FR-VS-003
     title: ファイルシステムAPIと自動保存
     description: VSCodeファイル操作との統合
     priority: medium
@@ -201,7 +186,7 @@ vscodeIntegrationFeatures:
       - ファイル変更監視
       - 自動保存とデバウンス機構
 
-  - id: VS-CMD-001
+  - id: FR-VS-004
     title: コマンドパレット統合
     description: VSCodeコマンドとキーバインド
     priority: medium
@@ -211,11 +196,7 @@ vscodeIntegrationFeatures:
       - 主要操作のコマンド化
       - ショートカットキー設定
 
-usabilityFeatures:
-  category: "ユーザビリティ機能"
-  description: "操作性向上と検索・フィルタリング"
-  
-  - id: UX-KEYB-001
+  - id: FR-UX-001
     title: キーボード中心の操作体系
     description: ショートカットによる主要操作
     priority: medium
@@ -224,7 +205,7 @@ usabilityFeatures:
       - 主要操作が2ストローク以内
       - カスタマイズ可能なキーバインド
 
-  - id: UX-SRCH-001
+  - id: FR-UX-002
     title: 高機能検索・フィルタリング
     description: 正規表現・属性・階層レベル検索
     priority: medium
@@ -234,7 +215,7 @@ usabilityFeatures:
       - 正規表現対応
       - 検索結果ランキング
 
-  - id: UX-NODE-001
+  - id: FR-UX-003
     title: ノード操作UI
     description: 追加・移動・削除の直感的操作
     priority: high
@@ -244,7 +225,7 @@ usabilityFeatures:
       - ツールバーとコンテキストメニュー
       - ドラッグ&ドロップ対応
 
-  - id: UX-ERRS-001
+  - id: FR-UX-004
     title: エラーハンドリングと復旧機能
     description: 分かりやすいエラー表示と対処導線
     priority: high
@@ -254,11 +235,7 @@ usabilityFeatures:
       - 位置情報付きエラー表示
       - 自動復旧提案
 
-qualityPerformanceFeatures:
-  category: "品質・パフォーマンス機能"
-  description: "大規模対応・テスト・セキュリティ"
-  
-  - id: QP-PERF-001
+  - id: FR-QP-001
     title: 大規模データ対応
     description: 1万〜5万ノードでの高速動作
     priority: high
@@ -268,7 +245,7 @@ qualityPerformanceFeatures:
       - 初期描画3秒以内（1万ノード）
       - スクロール60fps近似
 
-  - id: QP-MEMO-001
+  - id: FR-QP-002
     title: メモリ管理とリーク防止
     description: 長時間利用でのメモリ効率化
     priority: medium
@@ -277,7 +254,7 @@ qualityPerformanceFeatures:
       - クリーンアップの徹底
       - メモリ使用量監視
 
-  - id: QP-TEST-001
+  - id: FR-QP-003
     title: テスト網羅とCI/CD
     description: 単体・統合・E2Eテスト
     priority: medium
@@ -287,7 +264,7 @@ qualityPerformanceFeatures:
       - 主要機能の自動テスト
       - リグレッション防止
 
-  - id: QP-SECU-001
+  - id: FR-QP-004
     title: セキュリティ（オフライン特化）
     description: 外部送信ゼロの安全性
     priority: medium
@@ -296,48 +273,10 @@ qualityPerformanceFeatures:
       - ローカル完結動作
       - 入力値サニタイゼーション
 
-# === 非機能要件 ===
-
-systemRequirements:
-  category: "システム要件（アーキテクチャ）"
-  description: "プラットフォーム非依存・拡張性・互換性"
-  
-  - id: SY-ARCH-001
-    title: コアロジック分離アーキテクチャ
-    description: Web/VSCode/CLI対応の共通基盤
-    priority: high
-    status: pending
-    taskRef: "23.1-23.8"
-    acceptanceCriteria:
-      - プラットフォーム非依存のコアロジック
-      - テストファーストリファクタリング
-
-  - id: SY-PLUG-001
-    title: プラガブルアーキテクチャ
-    description: ドキュメントタイプの拡張可能性
-    priority: medium
-    status: done
-    taskRef: "29.1-29.5"
-    acceptanceCriteria:
-      - カスタムタイプ登録API
-      - スキーマの動的拡張
-
-  - id: SY-COMPAT-001
-    title: VSCode互換性
-    description: 安定版とLTSでの動作保証
-    priority: medium
-    status: done
-    acceptanceCriteria:
-      - VSCode 1.75+ 対応
-      - Extension API安定利用
-
-# === 今後の拡張機能（計画中） ===
+# === 将来計画機能 ===
 
 futureFeaturesPlanned:
-  category: "将来計画機能"
-  description: "現在未実装だが計画されている機能"
-  
-  - id: FT-DEPS-001
+  - id: FR-FT-001
     title: 依存関係ビジュアライザー
     description: Cytoscape.jsによる依存グラフ表示
     priority: medium
@@ -347,17 +286,17 @@ futureFeaturesPlanned:
       - インタラクティブグラフ表示
       - フィルタリング・ハイライト機能
 
-  - id: FT-LINK-001
+  - id: FR-FT-002
     title: リンク・ジャンプ機能
     description: ID参照によるドキュメント間ナビゲーション
     priority: medium
     status: pending
     taskRef: "32.1-32.5"
     acceptanceCriteria:
-      - [[ID]]形式のリンク構文
+      - ID形式のリンク構文
       - ナビゲーション履歴管理
 
-  - id: FT-INTG-001
+  - id: FR-FT-003
     title: 整合性チェックシステム
     description: ID間整合性・孤立参照検出
     priority: medium
@@ -367,7 +306,7 @@ futureFeaturesPlanned:
       - 循環参照検出
       - 自動修正提案
 
-  - id: FT-EDIT-001
+  - id: FR-FT-004
     title: 高度なテーブル編集機能
     description: インライン編集・バルク操作
     priority: low
@@ -377,70 +316,97 @@ futureFeaturesPlanned:
       - セル内編集モード
       - 取り消し・やり直し機能
 
-nonFunctionalRequirements:nonFunctionalRequirements:
-  performance:
-    - id: NFR-PERF-001
-      title: 大規模データ対応
-      description: 1万〜5万ノードでも操作可能
-      priority: high
-      status: done
-      acceptanceCriteria:
-        - 初期描画3秒以内（1万ノード）
-        - スクロール60fps近似
+# === 非機能要件 ===
 
-    - id: NFR-RESP-001
-      title: レスポンシブ設計
-      description: 各種画面サイズでの適切な表示
-      priority: medium
-      status: done
+systemRequirements:
+  - id: NFR-SY-001
+    title: コアロジック分離アーキテクチャ
+    description: Web/VSCode/CLI対応の共通基盤
+    priority: high
+    status: pending
+    taskRef: "23.1-23.8"
+    acceptanceCriteria:
+      - プラットフォーム非依存のコアロジック
+      - テストファーストリファクタリング
 
-  usability:
-    - id: NFR-USAB-001
-      title: キーボード操作性
-      description: 主要操作が2ストローク以内
-      priority: medium
-      status: pending
+  - id: NFR-SY-002
+    title: プラガブルアーキテクチャ
+    description: ドキュメントタイプの拡張可能性
+    priority: medium
+    status: done
+    taskRef: "29.1-29.5"
+    acceptanceCriteria:
+      - カスタムタイプ登録API
+      - スキーマの動的拡張
 
-    - id: NFR-ACCS-001
-      title: アクセシビリティ
-      description: 色覚・キーボード・ARIA対応
-      priority: low
-      status: done
+  - id: NFR-SY-003
+    title: VSCode互換性
+    description: 安定版とLTSでの動作保証
+    priority: medium
+    status: done
+    acceptanceCriteria:
+      - VSCode 1.75+ 対応
+      - Extension API安定利用
 
-  reliability:
-    - id: NFR-RELI-001
-      title: 信頼性・復旧
-      description: 保存失敗時の再試行・差分保持
-      priority: medium
-      status: done
+nonFunctionalRequirements:
+  - id: NFR-PERF-001
+    title: 大規模データ対応
+    description: 1万〜5万ノードでも操作可能
+    priority: high
+    status: done
+    acceptanceCriteria:
+      - 初期描画3秒以内（1万ノード）
+      - スクロール60fps近似
 
-    - id: NFR-ERRO-001
-      title: エラー回復機能
-      description: 適切なエラーメッセージと復旧提案
-      priority: high
-      status: done
+  - id: NFR-RESP-001
+    title: レスポンシブ設計
+    description: 各種画面サイズでの適切な表示
+    priority: medium
+    status: done
 
-  security:
-    - id: NFR-SECU-001
-      title: セキュリティ（オフライン）
-      description: 外部送信ゼロ、ローカル保護
-      priority: medium
-      status: done
+  - id: NFR-USAB-001
+    title: キーボード操作性
+    description: 主要操作が2ストローク以内
+    priority: medium
+    status: pending
 
-  maintainability:
-    - id: NFR-TEST-001
-      title: テスト網羅
-      description: 主要機能の単体/統合/E2E
-      priority: medium
-      status: done
+  - id: NFR-ACCS-001
+    title: アクセシビリティ
+    description: 色覚・キーボード・ARIA対応
+    priority: low
+    status: done
 
-    - id: NFR-DOCS-001
-      title: ドキュメント整備
-      description: README/拡張の使い方/サンプルの入門
-      priority: low
-      status: done
+  - id: NFR-RELI-001
+    title: 信頼性・復旧
+    description: 保存失敗時の再試行・差分保持
+    priority: medium
+    status: done
 
-glossary:glossary:
+  - id: NFR-ERRO-001
+    title: エラー回復機能
+    description: 適切なエラーメッセージと復旧提案
+    priority: high
+    status: done
+
+  - id: NFR-SECU-001
+    title: セキュリティ（オフライン）
+    description: 外部送信ゼロ、ローカル保護
+    priority: medium
+    status: done
+
+  - id: NFR-TEST-001
+    title: テスト網羅
+    description: 主要機能の単体/統合/E2E
+    priority: medium
+    status: done
+
+  - id: NFR-DOCS-001
+    title: ドキュメント整備
+    description: README/拡張の使い方/サンプルの入門
+    priority: low
+    status: done
+
+glossary:
   - term: MCP
     definition: Model Context Protocol - AI エージェント間通信プロトコル
   - term: Ajv
