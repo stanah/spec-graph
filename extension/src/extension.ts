@@ -202,6 +202,48 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // 新しいテキストドキュメントが開かれた時の処理（プレビューがアクティブな場合の左側強制表示）
+    let documentOpenTimeout: NodeJS.Timeout | null = null;
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(async (document) => {
+            // プレビューパネルがアクティブな時のみ処理
+            const activePanel = Array.from(previewPanels.values()).find(panel => panel.active);
+            if (!activePanel || document.uri.scheme !== 'file') {
+                return;
+            }
+
+            // タイムアウトがあればクリア（重複実行を防ぐ）
+            if (documentOpenTimeout) {
+                clearTimeout(documentOpenTimeout);
+            }
+
+            // 少し待ってからエディターを左側に移動（VSCodeの内部処理完了を待つ）
+            documentOpenTimeout = setTimeout(async () => {
+                try {
+                    const visibleEditors = vscode.window.visibleTextEditors.filter(
+                        editor => editor.document.uri.toString() === document.uri.toString()
+                    );
+
+                    for (const editor of visibleEditors) {
+                        // プレビューカラム以外にあるエディターを左側に移動
+                        if (editor.viewColumn !== vscode.ViewColumn.One) {
+                            await vscode.window.showTextDocument(
+                                document, 
+                                vscode.ViewColumn.One, 
+                                false // フォーカスを奪わない
+                            );
+                            console.log(`ファイルを左側に移動: ${document.fileName}`);
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`ファイル移動に失敗: ${error}`);
+                }
+                documentOpenTimeout = null;
+            }, 100); // 100ms待機
+        })
+    );
+
     // コマンドの登録
     const commands = [
         // マインドマッププレビューを開くコマンド
