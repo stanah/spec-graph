@@ -3,6 +3,9 @@ import { useViewMode } from '../../hooks/useViewMode';
 import { MindmapViewer } from './MindmapViewer';
 import { DocumentView } from './DocumentView';
 import { AnyDocumentView } from './AnyDocumentView';
+import { TableViewConnected } from '../../components/table/TableViewConnected';
+import type { MindmapNode } from '../../types';
+import { getAllChildNodes } from '../../utils/helpers';
 import { useAppStore } from '../../stores/appStore';
 
 const Placeholder: React.FC<{ title: string }> = ({ title }) => (
@@ -21,7 +24,15 @@ export const ViewContainer: React.FC = () => {
     case 'mindmap':
       return <MindmapViewer />;
     case 'table':
-      return <Placeholder title="テーブルビュー" />;
+      // パース済みデータからノード配列を生成（なければ空配列）
+      const nodes: MindmapNode[] = parsedData?.root
+        ? [parsedData.root, ...getAllChildNodes(parsedData.root)]
+        : [];
+      return (
+        <div style={{ padding: 8 }}>
+          <TableViewConnected data={nodes} />
+        </div>
+      );
     case 'document':
       // Mindmapパースにエラーがある場合は、任意スキーマの汎用レンダラーを使用
       if (parseErrors && parseErrors.length > 0) return <AnyDocumentView />;
