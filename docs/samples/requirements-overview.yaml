@@ -1,0 +1,206 @@
+title: spec-graph 要件ドキュメント概要
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+
+projectOverview:
+  description: |
+    要求定義・要件定義を効率的に進めるためのマインドマップツール。
+    JSON/YAML形式でのテキストベース管理と、リアルタイムでの視覚的なマインドマップ表示を提供する。
+  status: "開発中（メインコア機能実装完了、高度な機能の開発継続中）"
+  
+goals:
+  primary:
+    - ローカルで高速・安定の要件編集体験
+    - Gitベースの差分レビューしやすさ
+    - VSCodeワークフローへの自然な統合
+    - 文書タイプ別の最適化と拡張性
+  secondary:
+    - 複数ビュー形式での要件可視化
+    - 依存関係管理と整合性チェック
+    - エクスポート・共有機能の充実
+
+# === 機能要件（カテゴリ別分割） ===
+
+functionalRequirementsFiles:
+  - file: "functional-requirements/editing-features.yaml"
+    description: "エディタ機能 - 双方向同期、バリデーション、フォーマット変換"
+    requirements_count: 3
+    
+  - file: "functional-requirements/visualization-features.yaml"
+    description: "ビジュアル表示機能 - マップ、テーブル、ドキュメントビュー"
+    requirements_count: 5
+    
+  - file: "functional-requirements/ui-ux-features.yaml"
+    description: "UI/UX機能 - インターフェース、操作性、エラーハンドリング"
+    requirements_count: 6
+    
+  - file: "functional-requirements/data-management-features.yaml"
+    description: "データ管理機能 - バリデーション、依存関係、エクスポート"
+    requirements_count: 6
+    
+  - file: "functional-requirements/vscode-integration-features.yaml"
+    description: "VSCode統合機能 - 拡張基盤、プレビュー、コマンド"
+    requirements_count: 4
+
+# === 非機能要件 ===
+
+systemRequirements:
+  - id: NFR-SY-001
+    title: コアロジック分離アーキテクチャ
+    description: Web/VSCode/CLI対応の共通基盤
+    priority: high
+    status: pending
+    taskRef: "23.1-23.8"
+    acceptanceCriteria:
+      - プラットフォーム非依存のコアロジック
+      - テストファーストリファクタリング
+
+  - id: NFR-SY-002
+    title: プラガブルアーキテクチャ
+    description: ドキュメントタイプの拡張可能性
+    priority: medium
+    status: done
+    taskRef: "29.1-29.5"
+    acceptanceCriteria:
+      - カスタムタイプ登録API
+      - スキーマの動的拡張
+
+  - id: NFR-SY-003
+    title: VSCode互換性
+    description: 安定版とLTSでの動作保証
+    priority: medium
+    status: done
+    acceptanceCriteria:
+      - VSCode 1.75+ 対応
+      - Extension API安定利用
+
+nonFunctionalRequirements:
+  - id: NFR-PERF-001
+    title: 大規模データ対応
+    description: 1万〜5万ノードでも操作可能
+    priority: high
+    status: done
+    acceptanceCriteria:
+      - 初期描画3秒以内（1万ノード）
+      - スクロール60fps近似
+
+  - id: NFR-RESP-001
+    title: レスポンシブ設計
+    description: 各種画面サイズでの適切な表示
+    priority: medium
+    status: done
+
+  - id: NFR-USAB-001
+    title: キーボード操作性
+    description: 主要操作が2ストローク以内
+    priority: medium
+    status: pending
+
+  - id: NFR-ACCS-001
+    title: アクセシビリティ
+    description: 色覚・キーボード・ARIA対応
+    priority: low
+    status: done
+
+  - id: NFR-RELI-001
+    title: 信頼性・復旧
+    description: 保存失敗時の再試行・差分保持
+    priority: medium
+    status: done
+
+  - id: NFR-ERRO-001
+    title: エラー回復機能
+    description: 適切なエラーメッセージと復旧提案
+    priority: high
+    status: done
+
+  - id: NFR-SECU-001
+    title: セキュリティ（オフライン）
+    description: 外部送信ゼロ、ローカル保護
+    priority: medium
+    status: done
+
+  - id: NFR-TEST-001
+    title: テスト網羅
+    description: 主要機能の単体/統合/E2E
+    priority: medium
+    status: done
+
+  - id: NFR-DOCS-001
+    title: ドキュメント整備
+    description: README/拡張の使い方/サンプルの入門
+    priority: low
+    status: done
+
+glossary:
+  - term: MCP
+    definition: Model Context Protocol - AI エージェント間通信プロトコル
+  - term: Ajv
+    definition: Another JSON Schema Validator - 高速JSONバリデータ
+  - term: Zod
+    definition: TypeScript-first schema validation library
+  - term: Monaco Editor
+    definition: VSCode で使用されているWebベースコードエディタ
+  - term: D3.js
+    definition: データ駆動型ドキュメント操作ライブラリ
+  - term: Lexical
+    definition: Metaが開発するリッチテキストエディタフレームワーク
+  - term: TanStack React Table
+    definition: 高機能なReactテーブルライブラリ
+  - term: Cytoscape.js
+    definition: グラフ理論の可視化・分析ライブラリ
+
+implementationStatus:
+  completed_percentage: 63
+  major_milestones:
+    - "✅ エディタ機能（Monaco統合・バリデーション・双方向同期）"
+    - "✅ マインドマップビュー（D3.js描画エンジン）"
+    - "✅ テーブルビュー（@tanstack/react-table）"
+    - "✅ ドキュメントビュー（Lexical統合）"
+    - "✅ VSCode拡張基盤"
+    - "✅ データ管理システム（スキーマ・依存関係）"
+    - "🔄 VSCode統合完成度向上"
+    - "⏳ 依存関係ビジュアライザー"
+    - "⏳ 高度な検索・フィルタ機能"
+
+traceability:
+  # エディタ機能の関連性
+  - from: ED-MNCO-001
+    to: ED-SYNC-001
+    relationship: "Monaco Editor が双方向同期の基盤"
+    
+  - from: ED-VALD-001
+    to: DM-SCHM-001
+    relationship: "バリデーションはスキーマシステムに依存"
+    
+  # ビジュアライゼーション機能の関連性
+  - from: VZ-VIEW-001
+    to: [VZ-MIND-001, VZ-TABL-001, VZ-DOCU-001]
+    relationship: "ビュー切り替えは各ビューコンポーネントを統合"
+    
+  - from: VZ-INDI-001
+    to: VZ-MIND-001
+    relationship: "状態インジケーターはマインドマップに表示"
+    
+  # VSCode統合の関連性
+  - from: VS-VIEW-001
+    to: ED-SYNC-001
+    relationship: "プレビューペインは同期機能に依存"
+    
+  - from: VS-FILE-001
+    to: VS-VIEW-001
+    relationship: "ファイル操作はビュー自動切り替えをトリガー"
+    
+  # データ管理の関連性
+  - from: DM-TYPE-001
+    to: DM-SCHM-001
+    relationship: "ドキュメントタイプはスキーマ定義に基づく"
+    
+  - from: DM-DEPS-001
+    to: FT-DEPS-001
+    relationship: "依存関係管理がビジュアライザーの基盤"
+    
+  # 非機能要件との関連性
+  - from: NFR-PERF-001
+    to: [VZ-MIND-001, VZ-TABL-001]
+    relationship: "パフォーマンス要件は描画システムの制約"

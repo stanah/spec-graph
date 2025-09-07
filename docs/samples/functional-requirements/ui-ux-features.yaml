@@ -1,0 +1,67 @@
+title: spec-graph UI/UX機能要件
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+category: "UI/UX機能"
+
+description: |
+  ユーザーインターフェース、操作性、エラーハンドリングに関する機能要件
+
+functionalRequirements:
+  - id: FR-UI-001
+    title: ノード状態インジケーター
+    description: 優先度・ステータスの視覚的表示
+    priority: medium
+    status: done
+    taskRef: "22.1-22.5"
+    acceptanceCriteria:
+      - 色分け・アイコン表示
+      - 凡例パネル
+
+  - id: FR-UX-001
+    title: キーボード中心の操作体系
+    description: ショートカットによる主要操作
+    priority: medium
+    status: pending
+    acceptanceCriteria:
+      - 主要操作が2ストローク以内
+      - カスタマイズ可能なキーバインド
+
+  - id: FR-UX-002
+    title: 高機能検索・フィルタリング
+    description: 正規表現・属性・階層レベル検索
+    priority: medium
+    status: deferred
+    taskRef: "16.1-16.5"
+    acceptanceCriteria:
+      - 正規表現対応
+      - 検索結果ランキング
+
+  - id: FR-UX-003
+    title: ノード操作UI
+    description: 追加・移動・削除の直感的操作
+    priority: high
+    status: done
+    taskRef: "10.6-10.10"
+    acceptanceCriteria:
+      - ツールバーとコンテキストメニュー
+      - ドラッグ&ドロップ対応
+
+  - id: FR-UX-004
+    title: エラーハンドリングと復旧機能
+    description: 分かりやすいエラー表示と対処導線
+    priority: high
+    status: done
+    taskRef: "28.3-28.4"
+    acceptanceCriteria:
+      - 位置情報付きエラー表示
+      - 自動復旧提案
+
+  - id: FR-UX-005
+    title: リンク・ジャンプ機能
+    description: ID参照によるドキュメント間ナビゲーション
+    priority: medium
+    status: pending
+    taskRef: "32.1-32.5"
+    acceptanceCriteria:
+      - ID形式のリンク構文
+      - ナビゲーション履歴管理

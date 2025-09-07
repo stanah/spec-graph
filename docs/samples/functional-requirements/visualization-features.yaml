@@ -1,0 +1,61 @@
+title: spec-graph ビジュアル表示機能要件
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+category: "ビジュアル表示機能"
+
+description: |
+  マインドマップ、テーブル、ドキュメントビューの表示機能に関する要件
+
+functionalRequirements:
+  - id: FR-MAP-001
+    title: インタラクティブマインドマップ描画
+    description: D3.js力指向グラフによるマインドマップ表示
+    priority: high
+    status: done
+    taskRef: "4.1-4.5"
+    acceptanceCriteria:
+      - ズーム・パン・ドラッグ操作
+      - ノードの展開・折りたたみ
+      - 1万ノードでも滑らかな描画
+
+  - id: FR-TABLE-001
+    title: テーブルビュー機能
+    description: "tanstack/react-tableによる高機能テーブル表示"
+    priority: high
+    status: done
+    taskRef: "25.1-25.6"
+    acceptanceCriteria:
+      - ソート・フィルタ機能
+      - 仮想スクロール対応
+      - 行選択とノード同期
+
+  - id: FR-DOC-001
+    title: リッチドキュメントビュー
+    description: Lexicalベースの構造化ドキュメント表示
+    priority: high
+    status: done
+    taskRef: "27.1-27.5"
+    acceptanceCriteria:
+      - 章立て・目次自動生成
+      - 印刷用CSS・PDF出力
+      - 折りたたみ可能セクション
+
+  - id: FR-VIEW-001
+    title: ビュー切り替えシステム
+    description: マップ・テーブル・ドキュメント間のシームレス切り替え
+    priority: high
+    status: done
+    taskRef: "24.1-24.5"
+    acceptanceCriteria:
+      - タブ形式のUI
+      - ビュー状態の保持
+
+  - id: FR-TABLE-002
+    title: 高度なテーブル編集機能
+    description: インライン編集・バルク操作
+    priority: low
+    status: pending
+    taskRef: "34"
+    acceptanceCriteria:
+      - セル内編集モード
+      - 取り消し・やり直し機能

@@ -4,9 +4,8 @@ import { useColorMode } from '../../hooks/useColorMode';
 import { MindmapViewer } from './MindmapViewer';
 import { DocumentView } from './DocumentView';
 import { AnyDocumentView } from './AnyDocumentView';
-import { TableViewConnected } from '../../components/table/TableViewConnected';
+import { HierarchicalTableViewConnected } from '../../components/table/HierarchicalTableViewConnected';
 import type { MindmapNode } from '../../types';
-import { getAllChildNodes } from '../../utils/helpers';
 import { useAppStore } from '../../stores/appStore';
 
 const _Placeholder: React.FC<{ title: string }> = ({ title }) => (
@@ -30,17 +29,25 @@ export const ViewContainer: React.FC = () => {
         </div>
       );
     case 'table': {
-      // パース済みデータからノード配列を生成（なければ空配列）
-      const nodes: MindmapNode[] = parsedData?.root
-        ? [parsedData.root, ...getAllChildNodes(parsedData.root)]
-        : [];
+      // パース済みデータから階層構造を維持したまま配列を生成（なければ空配列）
+      const hierarchicalNodes: MindmapNode[] = parsedData?.root ? [parsedData.root] : [];
+      
       return (
         <div 
           data-color-mode={resolvedMode} 
           className={`view-container ${resolvedMode}-mode`}
           style={{ padding: 8 }}
         >
-          <TableViewConnected data={nodes} />
+          <HierarchicalTableViewConnected 
+            data={hierarchicalNodes}
+            enableHierarchicalGrouping={true}
+            showGroupHeaders={true}
+            hierarchyIndentPx={24}
+            columnOptions={{
+              showHierarchyInfo: true,
+              showParentInfo: true
+            }}
+          />
         </div>
       );
     }

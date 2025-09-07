@@ -1,0 +1,38 @@
+title: spec-graph エディタ機能要件
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+category: "エディタ機能"
+
+description: |
+  テキストエディタとマインドマップの双方向同期、バリデーション、フォーマット変換に関する機能要件
+
+functionalRequirements:
+  - id: FR-EDIT-002
+    title: エディタ↔マインドマップの双方向同期
+    description: 入力変更を即座にビジュアル表示に反映
+    priority: high
+    status: done
+    taskRef: "5.1-5.5"
+    acceptanceCriteria:
+      - 入力から表示更新までの遅延100ms以内
+      - エラー時のフォールバック機構
+
+  - id: FR-EDIT-003
+    title: リアルタイムバリデーションとエラー表示
+    description: JSON Schema/Zodベースの入力検証
+    priority: high
+    status: done
+    taskRef: "28.1-28.5"
+    acceptanceCriteria:
+      - エラー位置のハイライト表示
+      - 日英対応のエラーメッセージ
+
+  - id: FR-EDIT-004
+    title: JSON/YAML相互変換機能
+    description: フォーマット選択と自動変換
+    priority: medium
+    status: cancelled
+    taskRef: "21.1-21.5"
+    acceptanceCriteria:
+      - フォーマット選択UIの提供
+      - 変更エラーの詳細表示

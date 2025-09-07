@@ -2,6 +2,7 @@ import React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { HierarchicalNodeInfo } from './hierarchyUtils';
 import { StatusBadge, PriorityBadge } from './Badges';
+import './HierarchicalTable.css';
 
 export type BuildHierarchicalColumnsOptions = {
   include?: string[]; // explicit base fields to include additionally
