@@ -110,16 +110,7 @@
   font-size: 14px;
 }
 
-/* テーマトグルのスタイル調整 */
-.toolbar-theme-toggle {
-  margin: 0;
-}
-
-.toolbar-theme-toggle button {
-  padding: 6px 8px;
-  min-width: 32px;
-  height: 28px;
-}
+/* カラーモードトグルはグローバルバー(ViewSwitcher)へ統合済み */
 
 /* Codiconアイコンのスタイル */
 .toolbar-button .codicon {
@@ -129,10 +120,7 @@
   display: inline-block;
 }
 
-/* テーマ切り替えアイコンの色を明示的に設定 */
-.toolbar-button .codicon-color-mode {
-  color: var(--vscode-foreground);
-}
+/* 旧: テーマ切り替えアイコン用スタイルは削除 */
 
 /* レスポンシブ対応 */
 @media (max-width: 768px) {

@@ -1,173 +1,133 @@
 {
 	"meta": {
-		"generatedAt": "2025-08-03T03:20:08.092Z",
-		"tasksAnalyzed": 20,
-		"totalTasks": 20,
-		"analysisCount": 20,
+		"generatedAt": "2025-08-28T14:37:25.926Z",
+		"tasksAnalyzed": 15,
+		"totalTasks": 35,
+		"analysisCount": 15,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
-		"usedResearch": true
+		"usedResearch": false
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 1,
-			"taskTitle": "プロジェクト基盤のセットアップと開発環境構築",
-			"complexityScore": 3,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "TypeScriptプロジェクトの初期化、package.jsonとtsconfig.jsonの設定、必要な依存関係のインストール、プロジェクトディレクトリ構造の作成、開発ツール（ESLint、Prettier、Git hooks）の設定を個別のサブタスクとして展開してください。",
-			"reasoning": "標準的なTypeScriptプロジェクトのセットアップ作業で、手順は確立されており複雑度は低い。ただし、適切な設定と構造化が必要。"
-		},
-		{
-			"taskId": 2,
-			"taskTitle": "データモデルとスキーマ定義の実装",
-			"complexityScore": 5,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "MindMapNodeインターフェースの定義、JSON Schema定義の作成、ajvを使用したバリデーション実装、YAML/JSONパーサーの実装、エラーハンドリングとリカバリー機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "データ構造の設計とスキーマバリデーションの実装が必要で、エラーハンドリングも含めると中程度の複雑度。"
-		},
-		{
 			"taskId": 3,
 			"taskTitle": "エディタコンポーネントの実装",
-			"complexityScore": 7,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Monaco Editorの基本統合、YAML/JSON言語サポートの設定、カスタムテーマの適用、リアルタイムバリデーション機能の実装、エラー表示機能の実装、インテリセンスと自動補完の設定を個別のサブタスクとして展開してください。",
-			"reasoning": "Monaco Editorの統合は複雑で、リアルタイムバリデーションとエラー表示の実装には高度な技術が必要。"
-		},
-		{
-			"taskId": 4,
-			"taskTitle": "マインドマップレンダリングエンジンの実装",
-			"complexityScore": 9,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "D3.js基本セットアップ、力指向グラフの実装、ノードのSVG描画実装、エッジ（リンク）の描画実装、ズーム・パン機能の実装、ノードのドラッグ機能実装、折りたたみ・展開アニメーションの実装を個別のサブタスクとして展開してください。",
-			"reasoning": "D3.jsを使用した複雑なビジュアライゼーションの実装で、インタラクション機能も含めると非常に高度な技術が必要。"
-		},
-		{
-			"taskId": 5,
-			"taskTitle": "リアルタイム同期システムの構築",
-			"complexityScore": 8,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Zustandストアの基本実装、エディタからマインドマップへの同期実装、マインドマップからエディタへの同期実装、差分検出アルゴリズムの実装、デバウンス処理の実装、エラーリカバリー機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "双方向データ同期の実装は複雑で、パフォーマンスとエラーハンドリングを考慮すると高度な設計が必要。"
-		},
-		{
-			"taskId": 6,
-			"taskTitle": "ローカルストレージとファイル操作の実装",
-			"complexityScore": 5,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "File System Access APIの基本実装、ファイル読み込み機能の実装、ファイル保存機能の実装、ローカルストレージによる設定管理と自動保存機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "Web APIを使用した標準的なファイル操作実装で、中程度の複雑度。"
-		},
-		{
-			"taskId": 7,
-			"taskTitle": "UIテーマとカスタマイズ機能の実装",
 			"complexityScore": 4,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "CSS変数ベースのテーマシステム構築、ダークモード実装、システム設定の自動検出機能、レイアウトカスタマイズ機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "CSS変数を使用した標準的なテーマシステムの実装で、比較的シンプル。"
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Monaco Editorの基本統合は完了しているため、残りの実装に注力する。サブタスク3（スキーマベース自動補完）は延期されており、サブタスク5（エディタUI拡張）は独立性が高い。主に双方向同期の最適化とエディタUIの拡張に焦点を当てる。",
+			"reasoning": "Monacoエディタの基本実装とリアルタイムバリデーションは完了。双方向同期も基本実装は完了しているが、高度な機能（競合解決、オフライン対応）は未実装。全体の60%程度が完了しており、残作業は明確で実装難易度は中程度。"
 		},
 		{
 			"taskId": 8,
-			"taskTitle": "高度な機能群の実装（タグ、進捗管理、テンプレート）",
-			"complexityScore": 8,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "タグシステムの基本実装、タグフィルタリング機能、進捗率計算ロジックの実装、進捗ダッシュボードUI実装、組み込みテンプレートの作成、カスタムテンプレート管理機能、テンプレートギャラリーUIの実装を個別のサブタスクとして展開してください。",
-			"reasoning": "複数の独立した機能を実装する必要があり、それぞれが中程度の複雑度を持つため全体として高い複雑度。"
-		},
-		{
-			"taskId": 9,
-			"taskTitle": "エクスポート機能とショートカットシステムの実装",
-			"complexityScore": 6,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "PDF エクスポート機能の実装、SVGエクスポート機能の実装、Mermaid記法変換の実装、ショートカットキーシステムの基本実装、Excel/CSV出力機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "複数の形式へのエクスポート実装が必要で、それぞれ異なるライブラリや技術を使用するため中程度の複雑度。"
-		},
-		{
-			"taskId": 10,
-			"taskTitle": "VSCode拡張対応とパフォーマンス最適化",
-			"complexityScore": 9,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "コアロジックの分離とモジュール化、VSCode拡張アダプターの実装、仮想スクロールの実装、Web Workerの統合、React最適化（memo、useMemo）の適用、バンドルサイズ最適化、PWA対応の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "VSCode拡張化とパフォーマンス最適化は両方とも高度な技術が必要で、アーキテクチャの再設計も含む。"
-		},
-		{
-			"taskId": 11,
-			"taskTitle": "プロジェクトセットアップとMCP基盤構築",
-			"complexityScore": 4,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "TypeScriptプロジェクトの初期化、MCPサーバー基本構造の実装、必要な依存関係のインストール、エラーハンドリングとロギング基盤の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "MCPサーバーの基本的なセットアップで、ドキュメントに従えば比較的簡単に実装可能。"
-		},
-		{
-			"taskId": 12,
-			"taskTitle": "マインドマップスキーマ定義と検証システム",
+			"taskTitle": "高度な機能群の実装（タグ、進捗管理）",
 			"complexityScore": 5,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Zodを使用した基本スキーマ定義、ノード構造の詳細定義、スキーマバリデーション関数の実装、スキーマ情報を返すMCPツールの実装を個別のサブタスクとして展開してください。",
-			"reasoning": "Zodを使用したスキーマ定義は標準的な作業だが、マインドマップ特有の再帰的構造に対応する必要がある。"
-		},
-		{
-			"taskId": 13,
-			"taskTitle": "マインドマップ読み取り機能の実装",
-			"complexityScore": 4,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "ファイル読み取り基本機能の実装、JSON解析とスキーマ検証の統合、特定ノードの検索機能実装、MCPツールとしての公開を個別のサブタスクとして展開してください。",
-			"reasoning": "基本的なファイル読み取りとJSON解析で、複雑度は低い。"
-		},
-		{
-			"taskId": 14,
-			"taskTitle": "ノード追加機能の実装",
-			"complexityScore": 5,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "ノード追加の基本ロジック実装、ID生成と重複チェック機能、親ノード検証機能、ファイル更新とバックアップ機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "ノード追加は基本的な操作だが、IDの一意性保証とトランザクション処理が必要。"
-		},
-		{
-			"taskId": 15,
-			"taskTitle": "ノード更新・削除機能の実装",
-			"complexityScore": 6,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "ノード属性更新機能の実装、ノード移動機能の実装、ノード削除機能の実装、子ノード処理ロジックの実装、ルートノード保護機能の実装を個別のサブタスクとして展開してください。",
-			"reasoning": "複数の操作タイプを実装する必要があり、特に移動と削除は複雑な処理が必要。"
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "タグシステムと進捗管理の基本実装、進捗ダッシュボードとガントチャートの可視化機能を実装する。既存のZustandストア（appStore.ts）と統合し、TagSystemとProgressManagerクラスを新規作成。React Hook（useTagFilter、useProgressCalculation）も必要。",
+			"reasoning": "既存のストア基盤とTypeScript型定義は整備済み。しかし、タグと進捗管理のコアロジックは未実装。UIコンポーネントとの統合も必要で、中程度の複雑度を持つ。"
 		},
 		{
 			"taskId": 16,
 			"taskTitle": "検索・フィルタリング機能の実装",
-			"complexityScore": 6,
+			"complexityScore": 7,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "キーワード検索エンジンの基本実装、属性ベースフィルタリング機能、階層レベル絞り込み機能、正規表現サポートの実装、検索結果のランキング実装を個別のサブタスクとして展開してください。",
-			"reasoning": "効率的な検索アルゴリズムの実装と複数の検索条件の組み合わせ処理が必要。"
+			"expansionPrompt": "マインドマップ内の全文検索とフィルタリング機能を実装。日本語対応のトークナイザー、属性ベースの複合フィルタ、正規表現サポート、検索結果のランキング、統合検索UIを段階的に構築。既存のnodeHelpers.tsを拡張し、Web Workerでパフォーマンス最適化。",
+			"reasoning": "コードベースには基本的なノードヘルパー機能はあるが、検索エンジン関連の実装は皆無。日本語処理、インデックス構築、ランキングアルゴリズムなど、実装すべき要素が多く複雑度が高い。"
 		},
 		{
 			"taskId": 17,
 			"taskTitle": "構造分析とバリデーション機能",
-			"complexityScore": 7,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "ノード統計情報の集計機能実装、循環参照検出アルゴリズムの実装、孤立ノード検出機能、構造の深さ分析機能、問題レポート生成機能、MCPツールとしての公開を個別のサブタスクとして展開してください。",
-			"reasoning": "グラフ理論に基づく分析アルゴリズムの実装が必要で、特に循環参照検出は複雑。"
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "マインドマップの構造解析エンジンを実装。統計情報集計、循環参照検出、孤立ノード検出、構造最適化提案、分析レポート生成の各機能を段階的に実装。既存のschemaManager.tsと連携し、構造検証を強化。",
+			"reasoning": "スキーマバリデーション基盤は存在するが、構造分析機能は未実装。グラフアルゴリズムの実装が必要で、中〜高程度の複雑度。テストカバレッジも重要。"
 		},
 		{
-			"taskId": 18,
-			"taskTitle": "バックアップとバージョン管理システム",
-			"complexityScore": 7,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "自動バックアップ機能の基本実装、バージョン履歴管理機能、差分検出アルゴリズムの実装、ロールバック機能の実装、バックアップ圧縮機能、MCPツールとしての公開を個別のサブタスクとして展開してください。",
-			"reasoning": "バージョン管理と差分検出は複雑で、データの整合性を保証する必要がある。"
+			"taskId": 23,
+			"taskTitle": "コアロジックの分離とプラットフォーム非依存アーキテクチャの設計",
+			"complexityScore": 3,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "既にMindmapCoreLogicとICoreLogicインターフェースが実装済み。残りはテストカバレッジの向上と、MindmapCore→MindmapRendererのリネーミング、統合テストの強化に注力。リファクタリングは段階的に実施。",
+			"reasoning": "コアロジックの分離は既に大部分が完了（MindmapCoreLogic.ts、ICoreLogic.ts等が存在）。プラットフォームアダプタも実装済み。残作業はテスト強化とリファクタリングが中心で、アーキテクチャの大枠は完成している。"
 		},
 		{
-			"taskId": 19,
-			"taskTitle": "セキュリティとアクセス制御の実装",
+			"taskId": 25,
+			"taskTitle": "テーブルビューコンポーネントの実装",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "基本的なTableViewとbuildMindmapColumnsは実装済み。残りはソート・フィルタリング、カスタムセルレンダラー、行選択同期、仮想スクロールの実装。既存のTableView.tsxを拡張し、@tanstack/react-tableの高度な機能を活用。",
+			"reasoning": "基本実装（TableView.tsx、buildMindmapColumns.ts）は完了。@tanstack/react-tableは導入済み。残りは高度な機能追加で、ライブラリのAPIを活用すれば実装難易度は中程度。"
+		},
+		{
+			"taskId": 26,
+			"taskTitle": "テーブルエクスポート機能の実装",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "CSV/Excelエクスポート機能を新規実装。ExportServiceクラス作成、Papa Parse/SheetJS統合、Web Worker実装、エクスポート設定UI、VSCode File System API連携。既存のVSCodeFileSystemAdapterを活用して保存処理を実装。",
+			"reasoning": "エクスポート機能は完全に未実装。Web Worker処理、外部ライブラリ統合、VSCode APIとの連携など、実装すべき要素が多く中〜高程度の複雑度。"
+		},
+		{
+			"taskId": 27,
+			"taskTitle": "リッチドキュメントビューの実装",
 			"complexityScore": 8,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "パストラバーサル攻撃防止の実装、入力データサニタイゼーション機能、アクセス権限管理システム、操作監査ログ機能、機密情報マスキング機能、セキュリティミドルウェアの統合を個別のサブタスクとして展開してください。",
-			"reasoning": "セキュリティは重要かつ複雑で、複数の攻撃ベクトルに対する防御が必要。"
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Lexicalフレームワークを使用した新規ビューの実装。カスタムノードタイプ定義、MindmapNode→EditorState変換、DocumentViewコンポーネント、TOC生成、PDFエクスポートを段階的に実装。新しいビューモードとして既存のViewSwitcherに統合。",
+			"reasoning": "完全に新規実装が必要。Lexicalフレームワークの学習コスト、カスタムノード実装、変換ロジック、プリントCSS、PDF生成など、実装範囲が広く複雑度が高い。"
 		},
 		{
-			"taskId": 20,
-			"taskTitle": "パフォーマンス最適化とスケーラビリティ",
-			"complexityScore": 8,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "LRUキャッシュの実装、遅延読み込み機能の実装、バッチ処理最適化、ストリーミング処理の実装、インデックス構造の導入、パフォーマンス測定ツールの実装を個別のサブタスクとして展開してください。",
-			"reasoning": "大規模データに対応するための高度な最適化技術が必要で、複数の最適化手法を組み合わせる必要がある。"
+			"taskId": 29,
+			"taskTitle": "ドキュメントタイプ管理システムの構築",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "プラガブルなドキュメントタイプシステムを新規構築。DocumentTypeRegistryとBaseDocumentType抽象クラス、組み込みタイプ（Requirements、Stakeholders、Design、Tasks）、タイプ間関連グラフ、DocumentTypeSelectorUIを実装。",
+			"reasoning": "完全に新規実装が必要。プラグインアーキテクチャ、抽象化設計、タイプ別バリデーション、関連性グラフなど、設計と実装の両面で複雑度が高い。"
+		},
+		{
+			"taskId": 31,
+			"taskTitle": "依存関係ビジュアライザーの実装",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Cytoscape.jsを使用した依存関係グラフ可視化。基本統合、スタイル定義、レイアウトアルゴリズム実装、インタラクティブ機能、リアルタイム更新、エクスポート機能を段階的に実装。既存のIDManager.tsと連携してグラフデータを構築。",
+			"reasoning": "Cytoscape.js統合は未実装。グラフレンダリング、複数レイアウト、インタラクション、パフォーマンス最適化など、実装範囲が広く複雑。ただし、ライブラリが提供する機能を活用可能。"
+		},
+		{
+			"taskId": 32,
+			"taskTitle": "リンク・ジャンプ機能の実装",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "ID参照によるディープリンク機能を実装。LinkResolverクラス、[[ID]]構文パーサー、NavigationHistory、BreadcrumbNavigation、リンクプレビューツールチップを段階的に構築。既存のnodeHelpers.tsのID管理機能を拡張。",
+			"reasoning": "ナビゲーション機能は未実装。リンク解決、履歴管理、ブレッドクラム、プレビュー機能など、実装すべきコンポーネントが多く中程度の複雑度。"
+		},
+		{
+			"taskId": 33,
+			"taskTitle": "データ整合性チェックシステム",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "DataIntegrityCheckerクラスを実装し、孤立参照・循環参照検出、自動修正アルゴリズム、IntegrityReport生成機能を構築。既存のschemaManager.tsと連携し、バリデーションを強化。Web Workerでバックグラウンド処理。",
+			"reasoning": "基本的なスキーマバリデーションは存在するが、構造的な整合性チェックは未実装。検出アルゴリズム実装とWeb Worker統合で中程度の複雑度。"
+		},
+		{
+			"taskId": 34,
+			"taskTitle": "高度なテーブル編集機能",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "既存のTableViewコンポーネントを拡張し、インライン編集、バルク操作、Undo/Redo機能を実装。ImmerでのState管理、UndoManagerクラス、Excel互換コピペ、ドラッグ&ドロップを追加。",
+			"reasoning": "基本的なテーブル表示は実装済み。編集機能、Undo/Redo、Excel互換性など、追加実装が必要だが、既存基盤を活用可能で中程度の複雑度。"
+		},
+		{
+			"taskId": 35,
+			"taskTitle": "パフォーマンス最適化とコード分割",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "React.lazyとSuspenseでのコード分割、@tanstack/react-virtualでの仮想化強化、Web Worker活用を実装。既存のperformanceMonitor.tsとperformanceOptimization.tsを拡張し、メモリ管理とバンドルサイズを最適化。",
+			"reasoning": "パフォーマンス監視基盤は存在（performanceMonitor.ts等）。最適化手法は確立されており、既存コードのリファクタリングと設定変更が中心で、実装難易度は中程度。"
+		},
+		{
+			"taskId": 36,
+			"taskTitle": "VSCode統合ファイル管理とビュー自動切り替え機能",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "既存のVSCodeFileSystemAdapterを拡張し、FileSystemWatcher統合、ファイル形式検出、自動保存機能、状態同期、TextDocumentProvider実装を段階的に追加。ViewSwitcherと連携してビュー自動切り替えを実現。",
+			"reasoning": "VSCodeFileSystemAdapterの基本実装は完了。FileWatcher、自動保存、ビュー切り替えロジックの追加実装が必要。VSCode APIとの統合は部分的に完了しており、中程度の複雑度。"
 		}
 	]
 }

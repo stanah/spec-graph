@@ -33,7 +33,8 @@ const mockVSCode = {
     visibleTextEditors: [],
     createWebviewPanel: vi.fn(),
     createTreeView: vi.fn(),
-    registerCustomEditorProvider: vi.fn()
+    registerCustomEditorProvider: vi.fn(),
+    registerWebviewViewProvider: vi.fn()
   },
   commands: {
     registerCommand: vi.fn(),

@@ -3,7 +3,7 @@
   "bump-minor-pre-major": true,
   "packages": {
     ".": {
-      "component": "req-mindmap",
+      "component": "spec-graph",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         {

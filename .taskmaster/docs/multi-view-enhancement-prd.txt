@@ -1,7 +1,7 @@
-# req-mindmap Multi-View Enhancement PRD
+# spec-graph Multi-View Enhancement PRD
 
 ## Project Overview
-req-mindmapの大幅な機能拡張として、既存のマインドマップ表示に加えて、yamlファイルをもとにした複数の表示形式とドキュメント管理機能を追加する。
+spec-graph の機能拡張として、spec（要件仕様）のグラフ表現を中心に、既存のマインドマップ表示を含む複数ビュー（Table/Document等）とドキュメント管理機能を追加する。マインドマップは主要件ではなく、specの1機能として位置付ける。
 
 ## Feature Requirements
 

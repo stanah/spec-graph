@@ -4,6 +4,7 @@ import App from './vscode/VSCodeApp';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import './index.css';
 import './components/shared/ErrorBoundary.css';
+import './styles/colorMode.css';
 
 // VSCode拡張環境用のメインエントリーポイント
 import { PlatformAdapterFactory } from './platform';
@@ -60,27 +61,7 @@ async function initializeApp() {
       </React.StrictMode>
     );
     
-    // VSCode拡張との通信用のグローバル関数を設定
-    window.mindmapApp = {
-      updateContent: (content: string) => {
-        // エディタ内容の更新処理
-        console.log('VSCodeからの内容更新:', content);
-        // 実際の更新処理は各コンポーネントで実装
-      },
-      
-      saveFile: () => {
-        // ファイル保存処理
-        console.log('VSCodeからの保存要求');
-        // 実際の保存処理は各コンポーネントで実装
-      },
-      
-      getCurrentContent: () => {
-        // 現在の内容を取得
-        console.log('VSCodeから内容取得要求');
-        // 実際の取得処理は各コンポーネントで実装
-        return '';
-      }
-    };
+    // VSCode拡張との通信用のグローバル関数は VSCodeApp.tsx で設定される
     
     // VSCode拡張に準備完了を通知
     if (window.vscode) {

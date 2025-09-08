@@ -20,16 +20,14 @@ declare global {
 
 // DOM環境の基本的な設定
 if (typeof document === 'undefined') {
-  // @ts-expect-error jsdom環境でのグローバル設定
   global.document = {
-    createElement: vi.fn(() => ({})),
-    documentElement: {},
-    body: {},
-  };
+    createElement: vi.fn(() => ({} as HTMLElement)),
+    documentElement: {} as HTMLElement,
+    body: {} as HTMLElement,
+  } as unknown as Document;
 }
 
 if (typeof window === 'undefined') {
-  // @ts-expect-error jsdom環境でのグローバル設定
   global.window = {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -38,52 +36,23 @@ if (typeof window === 'undefined') {
     location: {
       href: 'http://localhost:3000',
       origin: 'http://localhost:3000',
-    },
+    } as Location,
     navigator: {
       userAgent: 'test',
-    },
+    } as Navigator,
     showOpenFilePicker: vi.fn(),
     showSaveFilePicker: vi.fn(),
-  };
+  } as unknown as Window & typeof globalThis;
 } else {
   // jsdom環境でwindowが既に存在する場合、欠落しているプロパティを追加
-  if (!window.showOpenFilePicker) {
-    window.showOpenFilePicker = vi.fn();
+  if (!(window as any).showOpenFilePicker) {
+    (window as any).showOpenFilePicker = vi.fn();
   }
-  if (!window.showSaveFilePicker) {
-    window.showSaveFilePicker = vi.fn();
+  if (!(window as any).showSaveFilePicker) {
+    (window as any).showSaveFilePicker = vi.fn();
   }
 }
-import { vi } from 'vitest';
-import React from 'react';
-
-// monaco-editorのモック（最小限）
-vi.mock('monaco-editor', () => ({
-  default: {},
-  editor: {
-    create: vi.fn(() => ({
-      dispose: vi.fn(),
-      setValue: vi.fn(),
-      getValue: vi.fn(() => ''),
-      onDidChangeModelContent: vi.fn(() => ({ dispose: vi.fn() })),
-    })),
-  },
-}));
-
-// @monaco-editor/reactのモック（最小限）
-vi.mock('@monaco-editor/react', () => {
-  const MockEditor = vi.fn(({ value, onChange }: { value?: string; onChange?: (value: string, event: unknown) => void }) => 
-    React.createElement('div', {
-      'data-testid': 'monaco-editor',
-      onChange: onChange ? (e) => onChange(e.target.value || '', {}) : undefined,
-    }, value || '')
-  );
-
-  return {
-    default: MockEditor,
-    Editor: MockEditor,
-  };
-});
+import { vi, afterEach } from 'vitest';
 
 // D3の個別モジュールモック
 vi.mock('d3-selection', () => {
@@ -105,7 +74,7 @@ vi.mock('d3-selection', () => {
     merge: vi.fn(() => mockSelection),
     transition: vi.fn(() => mockSelection),
     duration: vi.fn(() => mockSelection),
-    each: vi.fn((fn) => {
+    each: vi.fn(() => {
       // 空のモック実装
       return mockSelection;
     }),
@@ -136,13 +105,13 @@ vi.mock('d3-zoom', () => ({
 }));
 
 vi.mock('d3-hierarchy', () => {
-  const mockTreeLayout = vi.fn(() => {
+  const mockTreeLayout: any = vi.fn(() => {
     // 空のモック実装（実際のD3では変換された階層データを返す）
   });
   mockTreeLayout.nodeSize = vi.fn().mockReturnValue(mockTreeLayout);
   mockTreeLayout.separation = vi.fn().mockReturnValue(mockTreeLayout);
 
-  const mockClusterLayout = vi.fn(() => {
+  const mockClusterLayout: any = vi.fn(() => {
     // 空のモック実装
   });
   mockClusterLayout.size = vi.fn().mockReturnValue(mockClusterLayout);
@@ -164,11 +133,11 @@ vi.mock('d3-hierarchy', () => {
 });
 
 vi.mock('d3-shape', () => {
-  const mockLinkHorizontal = vi.fn(() => "mock-path");
+  const mockLinkHorizontal: any = vi.fn(() => "mock-path");
   mockLinkHorizontal.x = vi.fn().mockReturnValue(mockLinkHorizontal);
   mockLinkHorizontal.y = vi.fn().mockReturnValue(mockLinkHorizontal);
 
-  const mockLinkRadial = vi.fn(() => "mock-path");
+  const mockLinkRadial: any = vi.fn(() => "mock-path");
   mockLinkRadial.angle = vi.fn().mockReturnValue(mockLinkRadial);
   mockLinkRadial.radius = vi.fn().mockReturnValue(mockLinkRadial);
 
@@ -179,7 +148,7 @@ vi.mock('d3-shape', () => {
 });
 
 vi.mock('d3-interpolate', () => ({
-  interpolate: vi.fn((a, b) => (t) => `interpolated-${t}`),
+  interpolate: vi.fn(() => (t: number) => `interpolated-${t}`),
 }));
 
 vi.mock('d3-scale', () => ({
@@ -252,14 +221,12 @@ global.addEventListener?.('error', () => {
 });
 
 // vitest の afterEach で失敗時のログ復元
-if (typeof afterEach !== 'undefined') {
-  afterEach(() => {
+afterEach(() => {
     // テスト失敗時はコンソールログを復元
     if (global.expect?.getState?.()?.testPath) {
       global.console = originalConsole;
     }
-  });
-}
+});
 
 // React act() 警告を抑制 - より包括的に対応
 const originalError = console.error;
@@ -295,7 +262,6 @@ console.warn = (...args: unknown[]) => {
 };
 
 // React Testing Library の act 警告も抑制
-// @ts-expect-error global環境でのReact Act設定
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 // React DevTools のメッセージも抑制

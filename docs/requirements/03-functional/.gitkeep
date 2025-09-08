@@ -1,0 +1,11 @@
+# Functional Requirements
+# This directory contains functional requirements organized by module:
+# - editor.yaml: Editor functionality (FR-EDIT-*)
+# - mindmap.yaml: Mindmap display (FR-MAP-*)  
+# - table-view.yaml: Table view (FR-TABLE-*)
+# - document-view.yaml: Document view (FR-DOC-*)
+# - view-system.yaml: View switching (FR-VIEW-*)
+# - ui-components.yaml: UI elements (FR-UI-*)
+# - data-management.yaml: Data management (FR-DM-*)
+# - vscode-integration.yaml: VSCode integration (FR-VS-*)
+# - user-experience.yaml: UX features (FR-UX-*)

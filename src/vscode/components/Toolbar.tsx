@@ -4,7 +4,6 @@
  */
 
 import React from 'react';
-import { VSCodeThemeToggle } from './VSCodeThemeToggle';
 import { 
   MdExpandMore, 
   MdExpandLess, 
@@ -225,8 +224,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         
         <div className="toolbar-separator" />
-        
-        <VSCodeThemeToggle className="toolbar-theme-toggle" />
+        {/** カラーモード切り替えはグローバルバー(ViewSwitcher)に統合済みのため削除 */}
       </div>
     </div>
   );

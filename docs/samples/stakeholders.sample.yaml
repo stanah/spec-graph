@@ -1,0 +1,24 @@
+title: spec-graph ステークホルダー
+version: "1.0.0"
+stakeholders:
+  - id: STK-001
+    name: プロダクトオーナー
+    role: product-owner
+    responsibilities: 方針・優先度の意思決定
+    contact: po@example.com
+    availability: on-demand
+    components: [ui]
+  - id: STK-002
+    name: テックリード
+    role: tech-lead
+    responsibilities: 技術判断・設計レビュー
+    contact: tl@example.com
+    availability: part-time
+    components: [core]
+  - id: STK-003
+    name: 開発者
+    role: developer
+    responsibilities: 実装・テスト・リファクタリング
+    contact: dev@example.com
+    availability: full-time
+    components: [services]

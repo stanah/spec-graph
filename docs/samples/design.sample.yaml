@@ -1,0 +1,36 @@
+title: spec-graph 設計
+version: "1.0.0"
+components:
+  - id: DSG-CORE-001
+    name: Core
+    type: module
+    responsibilities: 状態/描画/ID/依存関係の中核
+    techStack: [typescript, d3]
+    criticality: high
+    children:
+      - id: DSG-CORE-002
+        name: Logic
+        type: module
+        responsibilities: 状態遷移・イベント処理
+        techStack: [typescript]
+        criticality: high
+      - id: DSG-PARS-003
+        name: Parser
+        type: service
+        responsibilities: JSON/YAML解析・検証
+        techStack: [typescript, zod]
+        criticality: high
+  - id: DSG-SRVC-004
+    name: Services
+    type: service
+    responsibilities: スキーマ管理/テンプレート/読み込み
+    dependencies: [DSG-CORE-001]
+    techStack: [typescript, zod, ajv]
+    criticality: high
+  - id: DSG-VSCD-005
+    name: VSCode Extension
+    type: adapter
+    responsibilities: Webview/Tree/Editor 連携
+    dependencies: [DSG-SRVC-004]
+    techStack: [typescript, vscode-api]
+    criticality: medium

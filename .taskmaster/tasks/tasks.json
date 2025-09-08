@@ -142,7 +142,7 @@
         "id": 3,
         "title": "エディタコンポーネントの実装",
         "description": "JSON/YAML編集用のコードエディタを実装し、リアルタイム構文チェックと自動補完機能を提供する",
-        "status": "in-progress",
+        "status": "deferred",
         "dependencies": [
           1,
           2
@@ -283,7 +283,7 @@
           3,
           4
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
@@ -418,7 +418,7 @@
         "id": 7,
         "title": "UIテーマとカスタマイズ機能の実装",
         "description": "シンプルなダークモード対応を実装し、システム設定に連動したテーマ切り替え機能を提供する",
-        "status": "done",
+        "status": "pending",
         "dependencies": [
           5
         ],
@@ -520,7 +520,7 @@
           7,
           8
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
@@ -937,7 +937,7 @@
         "dependencies": [
           15
         ],
-        "status": "pending",
+        "status": "deferred",
         "subtasks": [
           {
             "id": 1,
@@ -1348,7 +1348,7 @@
         "id": 22,
         "title": "ノード状態インジケーター表示機能の実装",
         "description": "マインドマップのノードにpriority、status等の状態情報を視覚的にインジケーターとして表示する機能を実装する。色分け、アイコン、コンパクトなビジュアル要素を使用してノードの状態を直感的に把握できるようにする。",
-        "status": "done",
+        "status": "pending",
         "dependencies": [
           15,
           16
@@ -1598,7 +1598,7 @@
         "dependencies": [
           24
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1606,7 +1606,7 @@
             "description": "@tanstack/react-table v8.20のインストールと基本的なテーブルコンポーネントの枠組みを作成する",
             "dependencies": [],
             "details": "packages/vscode-extension/webview-ui/src/componentsディレクトリにTableViewコンポーネントを作成。@tanstack/react-tableとその型定義をインストール。基本的なuseReactTableフックの設定とflexRenderを使用したテーブル構造の実装。TanStackテーブルのコアインスタンス作成とMindmapNode型に基づくデータ構造の定義",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "テーブルコンポーネントの正常なレンダリング確認、useReactTableフックの初期化テスト、空データでのエラーハンドリング確認"
           },
           {
@@ -1617,7 +1617,7 @@
               "25.1"
             ],
             "details": "createColumnsFromNode関数の実装でMindmapNodeのプロパティを解析。ColumnDefオブジェクトの自動生成（id、title、description、metadata内の各フィールド）。ネストされたchildrenの展開とフラット化処理。アクセサー関数の定義とヘッダーラベルの自動生成。型安全性を保証するためのTypeScriptジェネリクスの活用",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "様々なMindmapNode構造でのカラム生成テスト、ネストデータの正しい展開確認、メタデータフィールドの適切な処理検証"
           },
           {
@@ -1628,7 +1628,7 @@
               "25.2"
             ],
             "details": "getSortedRowModelとgetFilteredRowModelの設定。グローバル検索用のDebouncedInputコンポーネント作成。カラムヘッダーへのソートアイコンとクリックハンドラー追加。カラムごとのフィルターUIコンポーネント（テキスト、セレクト、日付範囲）。フィルタリングロジックのカスタマイズとファジー検索の実装。ソート状態とフィルター状態のローカルストレージ永続化",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "複数カラムでの同時ソートテスト、フィルタリングのパフォーマンス測定（1000件以上）、検索結果の正確性検証、状態永続化の動作確認"
           },
           {
@@ -1639,7 +1639,7 @@
               "25.2"
             ],
             "details": "StatusBadgeコンポーネント（done、in-progress、pending等の状態表示）。PriorityIndicatorコンポーネント（high/medium/lowの色分け表示）。ProgressBarコンポーネント（進捗率の視覚化）。DateCellコンポーネント（日付のフォーマット表示）。TagsCellコンポーネント（複数タグのチップ表示）。セルレンダラーのメモ化によるパフォーマンス最適化",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各カスタムレンダラーのスナップショットテスト、異なるデータ型での表示確認、レンダリングパフォーマンスの計測"
           },
           {
@@ -1651,7 +1651,7 @@
               "25.2"
             ],
             "details": "getRowSelectionRowModelの設定と選択状態管理。チェックボックスカラムの追加（全選択/個別選択）。selectedNodeIdとの双方向バインディング実装。選択行のハイライト表示（CSSクラス適用）。キーボードショートカット（Shift+クリックで範囲選択）。選択状態変更時のコールバック処理とイベント発火",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "行選択の動作確認、selectedNodeIdとの同期テスト、複数選択時のパフォーマンス測定、キーボード操作のE2Eテスト"
           },
           {
@@ -1665,7 +1665,7 @@
               "25.5"
             ],
             "details": "columnResizeModeの設定とリサイズハンドルの実装。@tanstack/react-virtualとの統合による仮想スクロール。VirtualizedTableコンポーネントの作成（windowサイズ計算）。getPaginationRowModelによるページネーション。ページサイズ選択とナビゲーションUI。表示モード切り替え（仮想スクロール/ページネーション）。ResizeObserverによる動的サイズ調整",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "1000件以上のデータでの仮想スクロールパフォーマンステスト、カラムリサイズの動作確認、ページネーション切り替えテスト、メモリ使用量の計測"
           }
         ]
@@ -1749,7 +1749,7 @@
         "dependencies": [
           24
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1757,7 +1757,7 @@
             "description": "Lexical v0.22をVSCode拡張に統合し、RequirementNode、TaskNodeなどのカスタムノードタイプを実装する",
             "dependencies": [],
             "details": "1. Lexicalフレームワークの依存関係追加とTypeScript設定\n2. カスタムノードタイプの基底クラス作成（BaseRequirementNode extends ElementNode）\n3. RequirementNode、TaskNode、MetadataNode、PriorityNodeの実装\n4. ノードレンダラーとシリアライザーの定義\n5. EditorConfigとテーマの設定（VSCodeテーマとの統合）\n6. カスタムプラグインアーキテクチャの基盤構築",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "カスタムノードの作成・レンダリング・シリアライゼーションテスト、EditorStateの整合性テスト、VSCodeテーマ適用の視覚的回帰テスト"
           },
           {
@@ -1768,7 +1768,7 @@
               "27.1"
             ],
             "details": "1. MindmapNodeToLexicalConverter クラスの実装\n2. 階層深度に応じたHeadingNodeレベル（H1-H6）の自動計算\n3. メタデータの保持とカスタムノードへのマッピング\n4. 子ノードの再帰的変換処理\n5. 循環参照検出とエラーハンドリング\n6. 変換パフォーマンスの最適化（大規模データ対応）",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "様々な階層構造での変換テスト、メタデータ保持の検証、大規模データでのパフォーマンステスト、エッジケースのテスト"
           },
           {
@@ -1780,7 +1780,7 @@
               "27.2"
             ],
             "details": "1. DocumentView React コンポーネントの作成\n2. CollapsibleSectionPlugin の実装（Lexicalプラグイン）\n3. 折りたたみ状態の管理（localStorage連携）\n4. スムーズなアニメーション実装（CSS Transitions）\n5. キーボードショートカット（Ctrl+Shift+[/]）\n6. アクセシビリティ対応（ARIA属性、フォーカス管理）",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "コンポーネントの単体テスト、折りたたみ動作のE2Eテスト、キーボード操作テスト、アクセシビリティテスト（WCAG 2.1 AA準拠）"
           },
           {
@@ -1791,7 +1791,7 @@
               "27.3"
             ],
             "details": "1. TableOfContentsPlugin の実装\n2. HeadingNodeの自動検出と階層構造の構築\n3. TOCコンポーネントの作成（固定サイドバー/フローティング切り替え）\n4. スムーズスクロールナビゲーション\n5. 現在位置のハイライト（IntersectionObserver使用）\n6. TOCの展開・折りたたみ機能\n7. 検索機能の統合（セクション内検索）",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "TOC生成の正確性テスト、ナビゲーション動作のテスト、IntersectionObserverの動作検証、レスポンシブデザインテスト"
           },
           {
@@ -1803,7 +1803,7 @@
               "27.4"
             ],
             "details": "1. プリント用CSS（@media print）の実装\n2. ページ区切り制御（page-break-before/after/inside）\n3. ヘッダー・フッター・ページ番号の追加\n4. jsPDF v2.5の統合とカスタマイズ\n5. 日本語フォント対応（IPAフォント埋め込み）\n6. PDFエクスポートダイアログの実装\n7. プリントプレビュー機能\n8. エクスポート設定（用紙サイズ、余白、向き）",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "プリントレイアウトの視覚的回帰テスト、PDF生成の整合性テスト、日本語表示テスト、各種用紙サイズでの出力テスト"
           }
         ]
@@ -1887,7 +1887,7 @@
         "dependencies": [
           28
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1895,7 +1895,7 @@
             "description": "ドキュメントタイプを管理するレジストリクラスと、全タイプの基底となる抽象クラスを実装する",
             "dependencies": [],
             "details": "src/core/document-types/DocumentTypeRegistry.ts にシングルトンパターンでレジストリクラスを実装。BaseDocumentType.ts に抽象クラスを定義し、getSchema()、validate()、getIcon()、getColor()、getRelations()などの抽象メソッドを定義。タイプの登録・削除・取得のAPIを提供",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "レジストリへのタイプ登録・削除・重複登録のテスト、BaseDocumentTypeの継承と必須メソッド実装の確認、シングルトンインスタンスの動作確認"
           },
           {
@@ -1906,7 +1906,7 @@
               "29.1"
             ],
             "details": "src/core/document-types/built-in/RequirementsType.ts と StakeholdersType.ts を作成。各タイプ固有のスキーマ定義（優先度、ステータス、担当者などのフィールド）、バリデーションルール、デフォルトアイコン（lucide-react使用）とカラーテーマを実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各タイプのスキーマバリデーション（正常系・異常系）、必須フィールドの存在確認、データ型の妥当性チェック"
           },
           {
@@ -1917,7 +1917,7 @@
               "29.1"
             ],
             "details": "src/core/document-types/built-in/DesignType.ts と TasksType.ts を作成。設計タイプには図表リンク、承認状態フィールド、タスクタイプには進捗率、期限、依存関係フィールドを含むスキーマを定義。各タイプ特有のバリデーションロジックを実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "タスクの依存関係循環参照チェック、進捗率の範囲バリデーション、日付フォーマットの検証"
           },
           {
@@ -1930,7 +1930,7 @@
               "29.3"
             ],
             "details": "src/core/document-types/TypeRelationGraph.ts に有向グラフ構造を実装し、タイプ間の依存関係と参照関係を管理。registerCustomType() APIでプラグイン形式のカスタムタイプ登録を可能にし、スキーマ競合チェックと互換性検証を実装",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "依存関係グラフの循環検出テスト、カスタムタイプのスキーマ競合検出、プラグインAPIの動作確認"
           },
           {
@@ -1944,7 +1944,7 @@
               "29.4"
             ],
             "details": "packages/vscode/src/components/DocumentTypeSelector.tsx にセレクタコンポーネントを実装。各タイプのアイコンとカラーを表示し、選択時にコンテキストを切り替え。タイプ固有のツールバーアクションを動的に表示。Radix UIのSelectコンポーネントを活用",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "タイプ切り替え時の状態保持テスト、UIの表示崩れテスト、アクセシビリティテスト（キーボード操作、スクリーンリーダー対応）"
           }
         ]
@@ -1957,7 +1957,7 @@
         "testStrategy": "ID の一意性保証テスト、循環参照検出のアルゴリズムテスト、大規模グラフ（10000ノード）でのパフォーマンステスト、依存関係変更時の整合性テスト",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1965,7 +1965,7 @@
             "description": "ユニークID生成のための IDManager クラスを実装し、nanoid v5.0 を使用した ID 生成機能を構築する",
             "dependencies": [],
             "details": "src/core/dependencies/IDManager.ts を作成し、nanoid を使用したユニークID生成機能を実装。名前空間管理のためのプレフィックス機能、自動生成と手動設定の切り替え機能、ID の一意性検証機能を含む。シングルトンパターンで実装し、全体で一貫したID管理を保証する",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "ID の一意性テスト（10000回生成）、プレフィックス付きID生成テスト、手動ID設定時の重複検出テスト、並行生成時のスレッドセーフティテスト"
           },
           {
@@ -1976,7 +1976,7 @@
               "30.1"
             ],
             "details": "src/core/dependencies/DependencyGraph.ts を作成し、Map<string, Set<string>> 形式の隣接リストでグラフ構造を管理。addNode、removeNode、addEdge、removeEdge、getNeighbors、hasPath などの基本メソッドを実装。ノードとエッジのメタデータ管理機能も含める",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "グラフの基本操作テスト（追加・削除・検索）、大規模グラフ（10000ノード）でのパフォーマンステスト、エッジケースのテスト（存在しないノードへの操作など）"
           },
           {
@@ -1987,7 +1987,7 @@
               "30.2"
             ],
             "details": "src/core/dependencies/CycleDetector.ts を作成し、強連結成分（SCC）を検出するTarjanのアルゴリズムを実装。detectCycles メソッドで循環参照のあるノード群を特定し、詳細な循環パスを返す。計算量 O(V+E) を保証し、大規模グラフでも高速動作を実現",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "単純な循環（A→B→A）検出テスト、複雑な循環（複数の循環が絡み合うケース）テスト、循環なしグラフでの false negative テスト、1000ノード規模での性能テスト"
           },
           {
@@ -1999,7 +1999,7 @@
               "30.3"
             ],
             "details": "src/core/dependencies/TopologicalSort.ts を作成し、Kahn のアルゴリズムによるトポロジカルソートを実装。循環参照が検出された場合は適切なエラーを返す。部分的なソート（特定ノードからの依存チェーン）も可能にし、getExecutionOrder メソッドで依存関係を満たす実行順序を返す",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "DAG（有向非循環グラフ）でのソート正確性テスト、循環グラフでのエラー処理テスト、部分グラフのソートテスト、複雑な依存関係での順序保証テスト"
           },
           {
@@ -2012,7 +2012,7 @@
               "30.4"
             ],
             "details": "src/core/dependencies/DependencyEventStore.ts を作成し、AddDependency、RemoveDependency、UpdateNode などのイベントを記録。タイムスタンプ付きイベントログ、スナップショット機能、任意時点への復元機能を実装。EventEmitter を使用してリアルタイム変更通知も提供",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "イベント記録と再生テスト、スナップショット作成・復元テスト、並行変更時の整合性テスト、大量イベント（10000件）でのパフォーマンステスト"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-08-26T15:50:42.404Z",
+      "updated": "2025-09-07T03:15:28.934Z",
       "description": "Tasks for master context"
     }
   }

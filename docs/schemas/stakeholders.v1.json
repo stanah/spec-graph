@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:spec-graph:schemas:stakeholders.v1",
+  "title": "Stakeholders Document",
+  "type": "object",
+  "required": ["title", "version", "stakeholders"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "stakeholders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^STK-\\d{3}$" },
+          "name": { "type": "string" },
+          "role": { "enum": ["product-owner", "tech-lead", "developer", "qa", "analyst"], "x-ui": { "display": "badge" } },
+          "responsibilities": { "type": "string" },
+          "contact": { "type": "string" },
+          "availability": { "enum": ["full-time", "part-time", "on-demand"], "x-ui": { "display": "badge" } },
+          "components": { "type": "array", "items": { "enum": ["core", "services", "ui", "vscode", "mcp-server"] }, "x-ui": { "display": "chips" } },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "x-ui": { "display": "list", "section": "main", "order": 1, "itemTitle": "id+name" }
+    }
+  },
+  "additionalProperties": false
+}

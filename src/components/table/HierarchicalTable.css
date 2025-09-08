@@ -1,0 +1,232 @@
+/* 階層テーブル用の専用スタイル */
+
+.hierarchical-table {
+  --hierarchy-indent-base: 20px;
+  --hierarchy-line-color: #e2e8f0;
+  --hierarchy-group-bg: #f8fafc;
+  --hierarchy-group-border: #e2e8f0;
+  --hierarchy-level-bg-0: #3b82f6;
+  --hierarchy-level-bg-1: #6366f1;
+  --hierarchy-level-bg-2: #8b5cf6;
+  --hierarchy-level-bg-3: #a855f7;
+  --hierarchy-parent-color: #64748b;
+  --hierarchy-icon-color: #6366f1;
+}
+
+/* グループヘッダースタイル */
+.hierarchical-table .group-header {
+  background: linear-gradient(135deg, var(--hierarchy-group-bg) 0%, #f1f5f9 100%);
+  border: 1px solid var(--hierarchy-group-border);
+  border-radius: 8px 8px 0 0;
+  padding: 12px 16px;
+  margin-bottom: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.hierarchical-table .group-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hierarchical-table .group-header .item-count {
+  background: var(--hierarchy-group-border);
+  color: var(--hierarchy-parent-color);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* 階層インデントスタイル */
+.hierarchy-cell {
+  position: relative;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+}
+
+.hierarchy-indent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 階層線 */
+.hierarchy-connector {
+  color: var(--hierarchy-line-color);
+  font-size: 12px;
+  font-weight: normal;
+  user-select: none;
+  line-height: 1;
+}
+
+.hierarchy-connector.level-1 {
+  color: #cbd5e1;
+}
+
+.hierarchy-connector.level-2 {
+  color: #94a3b8;
+}
+
+.hierarchy-connector.level-3 {
+  color: #64748b;
+}
+
+/* 子ノードアイコン */
+.hierarchy-folder-icon {
+  color: var(--hierarchy-icon-color);
+  font-size: 12px;
+  display: inline-block;
+  min-width: 14px;
+  text-align: center;
+}
+
+.hierarchy-folder-icon.has-children {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* レベルバッジ */
+.hierarchy-level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  margin-left: auto;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.hierarchy-level-badge:hover {
+  opacity: 1;
+}
+
+.hierarchy-level-badge.level-0 {
+  background-color: var(--hierarchy-level-bg-0);
+}
+
+.hierarchy-level-badge.level-1 {
+  background-color: var(--hierarchy-level-bg-1);
+}
+
+.hierarchy-level-badge.level-2 {
+  background-color: var(--hierarchy-level-bg-2);
+}
+
+.hierarchy-level-badge.level-3 {
+  background-color: var(--hierarchy-level-bg-3);
+}
+
+.hierarchy-level-badge.level-default {
+  background-color: #6b7280;
+}
+
+/* 親ノード情報スタイル */
+.hierarchy-parent-info {
+  font-size: 12px;
+  color: var(--hierarchy-parent-color);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hierarchy-parent-arrow {
+  color: var(--hierarchy-icon-color);
+  font-weight: bold;
+}
+
+/* テーブル行ホバー効果の改善 */
+.hierarchical-table tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  transition: background-color 0.15s ease;
+}
+
+.hierarchical-table tbody tr:hover .hierarchy-level-badge {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.hierarchical-table tbody tr:hover .hierarchy-connector {
+  color: var(--hierarchy-icon-color);
+}
+
+/* 選択行のスタイル */
+.hierarchical-table tbody tr[data-selected="true"] {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid var(--hierarchy-level-bg-0);
+}
+
+.hierarchical-table tbody tr[data-selected="true"] .hierarchy-level-badge {
+  opacity: 1;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .hierarchical-table {
+    --hierarchy-indent-base: 12px;
+  }
+  
+  .hierarchy-level-badge {
+    font-size: 9px;
+    min-width: 18px;
+    height: 16px;
+  }
+  
+  .hierarchy-connector {
+    font-size: 10px;
+  }
+  
+  .hierarchy-folder-icon {
+    font-size: 10px;
+    min-width: 12px;
+  }
+}
+
+/* ダークテーマ対応 */
+@media (prefers-color-scheme: dark) {
+  .hierarchical-table {
+    --hierarchy-line-color: #374151;
+    --hierarchy-group-bg: #1f2937;
+    --hierarchy-group-border: #374151;
+    --hierarchy-parent-color: #9ca3af;
+  }
+  
+  .hierarchical-table .group-header {
+    background: linear-gradient(135deg, var(--hierarchy-group-bg) 0%, #111827 100%);
+    color: #f9fafb;
+  }
+  
+  .hierarchical-table .group-header h3 {
+    color: #f3f4f6;
+  }
+  
+  .hierarchical-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+  
+  .hierarchical-table tbody tr[data-selected="true"] {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+}

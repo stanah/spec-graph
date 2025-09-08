@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * req-mindmap MCP Server
+ * spec-graph MCP Server
  * 
  * Provides mindmap file operations via Model Context Protocol.
  * Supports reading, creating, updating, and searching mindmap files.
@@ -24,7 +24,7 @@ class MindmapMCPServer {
   constructor() {
     this.server = new Server(
       {
-        name: 'req-mindmap-mcp-server',
+        name: 'spec-graph-mcp-server',
         version: '1.0.0',
       },
       {
@@ -133,7 +133,7 @@ class MindmapMCPServer {
   async run(): Promise<void> {
     const transport = new StdioServerTransport();
     
-    logger.info('Starting req-mindmap MCP server...');
+    logger.info('Starting spec-graph MCP server...');
     
     try {
       await this.server.connect(transport);

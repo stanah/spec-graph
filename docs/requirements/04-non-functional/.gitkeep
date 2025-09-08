@@ -1,0 +1,8 @@
+# Non-Functional Requirements
+# This directory contains non-functional requirements by quality attributes:
+# - performance.yaml: Performance requirements (NFR-PERF-*)
+# - usability.yaml: Usability requirements (NFR-USAB-*)
+# - reliability.yaml: Reliability requirements (NFR-RELI-*)
+# - security.yaml: Security requirements (NFR-SECU-*)
+# - maintainability.yaml: Maintainability requirements (NFR-MAIN-*)
+# - portability.yaml: Portability requirements (NFR-PORT-*)

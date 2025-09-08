@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:spec-graph:schemas:requirements.v1",
+  "title": "Requirements Document",
+  "type": "object",
+  "required": ["title", "version", "systemRequirements"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "goals": { "type": "array", "items": { "type": "string" }, "x-ui": { "display": "list", "section": "meta", "order": 1 } },
+    "functionalRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 0 } },
+    "functionalRequirementsFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": { "type": "string" },
+          "description": { "type": "string" },
+          "requirements_count": { "type": "number" }
+        },
+        "additionalProperties": true
+      },
+      "x-ui": { "display": "table", "section": "main", "order": 0 }
+    },
+    "userRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 1 } },
+    "systemRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 2 } },
+    "nonFunctionalRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 3 } },
+    "glossary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["term", "definition"],
+        "properties": {
+          "term": { "type": "string" },
+          "definition": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "x-ui": { "display": "table", "section": "appendix", "order": 99 }
+    },
+    "traceability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "RequirementList": { "type": "array", "items": { "$ref": "#/$defs/Requirement" } },
+    "Ref": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["stakeholder", "design", "task", "requirement"] },
+        "id": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "requirement" } } },
+          "then": { "properties": { "id": { "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "stakeholder" } } },
+          "then": { "properties": { "id": { "pattern": "^STK-\\d{3}$" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "design" } } },
+          "then": { "properties": { "id": { "pattern": "^DSG-[A-Z]{3,4}-\\d{3}$" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "task" } } },
+          "then": { "properties": { "id": { "pattern": "^TASK-[A-Z]{3,4}-\\d{3}$" } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "Requirement": {
+      "type": "object",
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "owner": { "type": "string" },
+        "priority": { "enum": ["critical", "high", "medium", "low"], "x-ui": { "display": "badge" } },
+        "status": { "enum": ["draft", "pending", "in-progress", "review", "done", "cancelled", "deferred"], "x-ui": { "display": "badge" } },
+        "component": { "enum": ["core", "services", "vscode", "mcp-server", "ui"] },
+        "effort": { "type": "number", "minimum": 0 },
+        "risk": { "enum": ["low", "medium", "high"] },
+        "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
+        "dependsOn": { "type": "array", "items": { "type": "string", "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" } },
+        "relatesTo": { "type": "array", "items": { "$ref": "#/$defs/Ref" } },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

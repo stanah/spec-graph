@@ -1,0 +1,5 @@
+# Architecture Requirements
+# This directory contains architecture-related requirements:
+# - technical-arch.yaml: Technical architecture requirements
+# - integration.yaml: Integration requirements  
+# - dependencies.yaml: Dependencies and external interfaces

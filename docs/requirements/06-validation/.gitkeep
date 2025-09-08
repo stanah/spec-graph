@@ -1,0 +1,5 @@
+# Validation & Traceability
+# This directory contains validation and traceability documentation:
+# - acceptance-criteria.yaml: Acceptance criteria definitions
+# - test-requirements.yaml: Test requirements and strategies
+# - traceability-matrix.yaml: Requirements traceability matrix

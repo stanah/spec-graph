@@ -1,0 +1,68 @@
+title: spec-graph データ管理機能要件
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+category: "データ管理機能"
+
+description: |
+  データバリデーション、タイプ管理、依存関係管理、エクスポートに関する機能要件
+
+functionalRequirements:
+  - id: FR-DM-001
+    title: JSON Schemaバリデーションシステム
+    description: ZodとAjvを統合したバリデーション基盤
+    priority: critical
+    status: done
+    taskRef: "2.1-2.5, 28.1-28.5"
+    acceptanceCriteria:
+      - カスタムキーワード対応
+      - スキーマバージョニング
+
+  - id: FR-DM-002
+    title: ドキュメントタイプ管理
+    description: Requirements/Stakeholders/Design/Tasks管理
+    priority: high
+    status: done
+    taskRef: "29.1-29.5"
+    acceptanceCriteria:
+      - プラグイン可能なタイプ定義
+      - タイプ間関連性グラフ
+
+  - id: FR-DM-003
+    title: ID・依存関係管理システム
+    description: ユニークID生成と循環参照検出
+    priority: high
+    status: done
+    taskRef: "30.1-30.5"
+    acceptanceCriteria:
+      - nanoidベースのID生成
+      - トポロジカルソートによる依存順序解決
+
+  - id: FR-DM-004
+    title: データエクスポート機能
+    description: CSV/Excel/PDF出力
+    priority: medium
+    status: pending
+    taskRef: "26.1-26.5"
+    acceptanceCriteria:
+      - 設定可能な出力形式
+      - バッチ処理対応
+
+  - id: FR-DM-005
+    title: 依存関係ビジュアライザー
+    description: Cytoscape.jsによる依存グラフ表示
+    priority: medium
+    status: pending
+    taskRef: "31.1-31.5"
+    acceptanceCriteria:
+      - インタラクティブグラフ表示
+      - フィルタリング・ハイライト機能
+
+  - id: FR-DM-006
+    title: 整合性チェックシステム
+    description: ID間整合性・孤立参照検出
+    priority: medium
+    status: pending
+    taskRef: "33"
+    acceptanceCriteria:
+      - 循環参照検出
+      - 自動修正提案

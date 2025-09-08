@@ -30,22 +30,20 @@ describe('VSCode Extension', () => {
       // コマンドが正しく登録されていることを確認
       expect(mockVSCode.commands.registerCommand).toHaveBeenCalled();
       
-      // 期待されるコマンド数を確認（package.jsonで定義されているコマンド数）
+      // 期待されるコマンド数を確認（実際のextension.tsで実装されているコマンド）
       const expectedCommands = [
-        'mindmapTool.openMindmap',
-        'mindmapTool.openPreview',
-        'mindmapTool.openPreviewToSide',
-        'mindmapTool.createNewMindmap',
-        'mindmapTool.exportMindmap',
-        'mindmapTool.validateSchema',
-        'mindmapTool.refreshMindmapTree',
-        'mindmapTool.selectNode',
-        'mindmapTool.addChildNode',
-        'mindmapTool.addSiblingNode',
-        'mindmapTool.editNode',
-        'mindmapTool.deleteNode',
-        'mindmapTool.collapseAll',
-        'mindmapTool.expandAll'
+        'documentViewer.openDocument',
+        'documentViewer.createNewMindmap',
+        'documentViewer.exportDocument',
+        'documentViewer.validateSchema',
+        'documentViewer.refreshDocumentTree',
+        'documentViewer.selectNode',
+        'documentViewer.addChildNode',
+        'documentViewer.addSiblingNode',
+        'documentViewer.editNode',
+        'documentViewer.deleteNode',
+        'documentViewer.collapseAll',
+        'documentViewer.expandAll'
       ];
 
       expectedCommands.forEach(command => {
@@ -60,7 +58,7 @@ describe('VSCode Extension', () => {
       activate(mockContext);
 
       expect(mockVSCode.window.registerCustomEditorProvider).toHaveBeenCalledWith(
-        'mindmapTool.mindmapEditor',
+        'documentViewer.documentEditor',
         expect.any(Object),
         expect.objectContaining({
           webviewOptions: {
@@ -75,7 +73,7 @@ describe('VSCode Extension', () => {
       activate(mockContext);
 
       expect(mockVSCode.window.createTreeView).toHaveBeenCalledWith(
-        'mindmapTree',
+        'documentTree',
         expect.objectContaining({
           treeDataProvider: expect.any(Object),
           showCollapseAll: true
@@ -111,7 +109,7 @@ describe('VSCode Extension', () => {
 
       // createNewMindmapコマンドをシミュレート
       const createCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
       expect(createCommand).toBeDefined();
       // 実際のテンプレート生成をテストする場合は、内部関数を公開する必要がある
@@ -123,13 +121,13 @@ describe('VSCode Extension', () => {
       activate(mockContext);
     });
 
-    it('should handle openMindmap command without URI', async () => {
+    it('should handle openDocument command without URI', async () => {
       mockVSCode.window.showOpenDialog.mockResolvedValue([
         { fsPath: '/test/mindmap.json' }
       ]);
 
       const openCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.openMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.openDocument')?.[1];
 
       expect(openCommand).toBeDefined();
       if (openCommand) {
@@ -138,16 +136,16 @@ describe('VSCode Extension', () => {
         expect(mockVSCode.commands.executeCommand).toHaveBeenCalledWith(
           'vscode.openWith',
           expect.any(Object),
-          'mindmapTool.mindmapEditor'
+          'documentViewer.documentEditor'
         );
       }
     });
 
-    it('should handle openMindmap command with URI', async () => {
+    it('should handle openDocument command with URI', async () => {
       const testUri = { fsPath: '/test/mindmap.json' };
       
       const openCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.openMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.openDocument')?.[1];
 
       expect(openCommand).toBeDefined();
       if (openCommand) {
@@ -155,7 +153,7 @@ describe('VSCode Extension', () => {
         expect(mockVSCode.commands.executeCommand).toHaveBeenCalledWith(
           'vscode.openWith',
           testUri,
-          'mindmapTool.mindmapEditor'
+          'documentViewer.documentEditor'
         );
       }
     });
@@ -170,7 +168,7 @@ describe('VSCode Extension', () => {
       });
 
       const createCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
       expect(createCommand).toBeDefined();
       if (createCommand) {
@@ -191,7 +189,7 @@ describe('VSCode Extension', () => {
       };
 
       const validateCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.validateSchema')?.[1];
+        .find(call => call[0] === 'documentViewer.validateSchema')?.[1];
 
       expect(validateCommand).toBeDefined();
       if (validateCommand) {
@@ -202,9 +200,9 @@ describe('VSCode Extension', () => {
       }
     });
 
-    it('should handle refreshMindmapTree command', async () => {
+    it('should handle refreshDocumentTree command', async () => {
       const refreshCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.refreshMindmapTree')?.[1];
+        .find(call => call[0] === 'documentViewer.refreshDocumentTree')?.[1];
 
       expect(refreshCommand).toBeDefined();
       if (refreshCommand) {
@@ -214,7 +212,7 @@ describe('VSCode Extension', () => {
       }
     });
 
-    it('should handle exportMindmap command', async () => {
+    it('should handle exportDocument command', async () => {
       (mockVSCode.window as any).activeTextEditor = {
         document: {
           getText: () => '{"root": {"id": "1", "text": "Test"}}',
@@ -227,7 +225,7 @@ describe('VSCode Extension', () => {
       });
 
       const exportCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.exportMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.exportDocument')?.[1];
 
       expect(exportCommand).toBeDefined();
       if (exportCommand) {
@@ -317,11 +315,11 @@ describe('VSCode Extension', () => {
       activate(mockContext);
     });
 
-    it('should handle openMindmap command when no file selected', async () => {
+    it('should handle openDocument command when no file selected', async () => {
       mockVSCode.window.showOpenDialog.mockResolvedValue(undefined);
 
       const openCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.openMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.openDocument')?.[1];
 
       expect(openCommand).toBeDefined();
       if (openCommand) {
@@ -330,7 +328,7 @@ describe('VSCode Extension', () => {
         expect(mockVSCode.commands.executeCommand).not.toHaveBeenCalledWith(
           'vscode.openWith',
           expect.anything(),
-          'mindmapTool.mindmapEditor'
+          'documentViewer.documentEditor'
         );
       }
     });
@@ -340,7 +338,7 @@ describe('VSCode Extension', () => {
       mockVSCode.window.showSaveDialog.mockClear(); // モックをクリア
 
       const createCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
       expect(createCommand).toBeDefined();
       if (createCommand) {
@@ -358,7 +356,7 @@ describe('VSCode Extension', () => {
       mockVSCode.window.showSaveDialog.mockResolvedValue(undefined);
 
       const createCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
       expect(createCommand).toBeDefined();
       if (createCommand) {
@@ -378,7 +376,7 @@ describe('VSCode Extension', () => {
       };
 
       const validateCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.validateSchema')?.[1];
+        .find(call => call[0] === 'documentViewer.validateSchema')?.[1];
 
       expect(validateCommand).toBeDefined();
       if (validateCommand) {
@@ -394,7 +392,7 @@ describe('VSCode Extension', () => {
       (mockVSCode.window as any).activeTextEditor = undefined;
 
       const validateCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.validateSchema')?.[1];
+        .find(call => call[0] === 'documentViewer.validateSchema')?.[1];
 
       expect(validateCommand).toBeDefined();
       if (validateCommand) {
@@ -405,11 +403,11 @@ describe('VSCode Extension', () => {
       }
     });
 
-    it('should handle openMindmap command errors', async () => {
+    it('should handle openDocument command errors', async () => {
       mockVSCode.commands.executeCommand.mockRejectedValue(new Error('Failed to open'));
 
       const openCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.openMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.openDocument')?.[1];
 
       expect(openCommand).toBeDefined();
       if (openCommand) {
@@ -432,7 +430,7 @@ describe('VSCode Extension', () => {
       mockVSCode.workspace.fs.writeFile.mockRejectedValue(new Error('Write failed'));
 
       const createCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
       expect(createCommand).toBeDefined();
       if (createCommand) {
@@ -443,11 +441,11 @@ describe('VSCode Extension', () => {
       }
     });
 
-    it('should handle exportMindmap when no active editor', async () => {
+    it('should handle exportDocument when no active editor', async () => {
       (mockVSCode.window as any).activeTextEditor = undefined;
 
       const exportCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.exportMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.exportDocument')?.[1];
 
       expect(exportCommand).toBeDefined();
       if (exportCommand) {
@@ -458,7 +456,7 @@ describe('VSCode Extension', () => {
       }
     });
 
-    it('should handle exportMindmap when format not selected', async () => {
+    it('should handle exportDocument when format not selected', async () => {
       (mockVSCode.window as any).activeTextEditor = {
         document: {
           getText: () => '{"root": {"id": "1", "text": "Test"}}',
@@ -468,7 +466,7 @@ describe('VSCode Extension', () => {
       mockVSCode.window.showQuickPick.mockResolvedValue(undefined);
 
       const exportCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.exportMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.exportDocument')?.[1];
 
       expect(exportCommand).toBeDefined();
       if (exportCommand) {
@@ -478,7 +476,7 @@ describe('VSCode Extension', () => {
       }
     });
 
-    it('should handle exportMindmap when save dialog cancelled', async () => {
+    it('should handle exportDocument when save dialog cancelled', async () => {
       (mockVSCode.window as any).activeTextEditor = {
         document: {
           getText: () => '{"root": {"id": "1", "text": "Test"}}',
@@ -492,7 +490,7 @@ describe('VSCode Extension', () => {
       mockVSCode.window.showSaveDialog.mockResolvedValue(undefined);
 
       const exportCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.exportMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.exportDocument')?.[1];
 
       expect(exportCommand).toBeDefined();
       if (exportCommand) {
@@ -560,7 +558,7 @@ describe('VSCode Extension', () => {
 
     it('should handle selectNode command', async () => {
       const selectCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.selectNode')?.[1];
+        .find(call => call[0] === 'documentViewer.selectNode')?.[1];
 
       expect(selectCommand).toBeDefined();
       if (selectCommand) {
@@ -583,7 +581,7 @@ describe('VSCode Extension', () => {
       };
 
       const addChildCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.addChildNode')?.[1];
+        .find(call => call[0] === 'documentViewer.addChildNode')?.[1];
 
       expect(addChildCommand).toBeDefined();
       if (addChildCommand) {
@@ -605,7 +603,7 @@ describe('VSCode Extension', () => {
       };
 
       const addChildCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.addChildNode')?.[1];
+        .find(call => call[0] === 'documentViewer.addChildNode')?.[1];
 
       expect(addChildCommand).toBeDefined();
       if (addChildCommand) {
@@ -629,7 +627,7 @@ describe('VSCode Extension', () => {
       };
 
       const addSiblingCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.addSiblingNode')?.[1];
+        .find(call => call[0] === 'documentViewer.addSiblingNode')?.[1];
 
       expect(addSiblingCommand).toBeDefined();
       if (addSiblingCommand) {
@@ -650,7 +648,7 @@ describe('VSCode Extension', () => {
       };
 
       const editCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.editNode')?.[1];
+        .find(call => call[0] === 'documentViewer.editNode')?.[1];
 
       expect(editCommand).toBeDefined();
       if (editCommand) {
@@ -673,7 +671,7 @@ describe('VSCode Extension', () => {
       };
 
       const editCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.editNode')?.[1];
+        .find(call => call[0] === 'documentViewer.editNode')?.[1];
 
       expect(editCommand).toBeDefined();
       if (editCommand) {
@@ -692,7 +690,7 @@ describe('VSCode Extension', () => {
       };
 
       const editCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.editNode')?.[1];
+        .find(call => call[0] === 'documentViewer.editNode')?.[1];
 
       expect(editCommand).toBeDefined();
       if (editCommand) {
@@ -713,7 +711,7 @@ describe('VSCode Extension', () => {
       };
 
       const deleteCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.deleteNode')?.[1];
+        .find(call => call[0] === 'documentViewer.deleteNode')?.[1];
 
       expect(deleteCommand).toBeDefined();
       if (deleteCommand) {
@@ -739,7 +737,7 @@ describe('VSCode Extension', () => {
       };
 
       const deleteCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.deleteNode')?.[1];
+        .find(call => call[0] === 'documentViewer.deleteNode')?.[1];
 
       expect(deleteCommand).toBeDefined();
       if (deleteCommand) {
@@ -753,7 +751,7 @@ describe('VSCode Extension', () => {
 
     it('should handle collapseAll command', async () => {
       const collapseCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.collapseAll')?.[1];
+        .find(call => call[0] === 'documentViewer.collapseAll')?.[1];
 
       expect(collapseCommand).toBeDefined();
       if (collapseCommand) {
@@ -766,7 +764,7 @@ describe('VSCode Extension', () => {
 
     it('should handle expandAll command', async () => {
       const expandCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.expandAll')?.[1];
+        .find(call => call[0] === 'documentViewer.expandAll')?.[1];
 
       expect(expandCommand).toBeDefined();
       if (expandCommand) {
@@ -862,11 +860,11 @@ describe('VSCode Extension', () => {
     it('should handle command execution errors gracefully', async () => {
       activate(mockContext);
 
-      // openMindmapコマンドで例外を発生させる
+      // openDocumentコマンドで例外を発生させる
       mockVSCode.window.showOpenDialog.mockRejectedValue(new Error('Dialog failed'));
 
       const openCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.openMindmap')?.[1];
+        .find(call => call[0] === 'documentViewer.openDocument')?.[1];
 
       expect(openCommand).toBeDefined();
       if (openCommand) {
@@ -942,7 +940,7 @@ describe('VSCode Extension', () => {
         await activate(testContext);
         
         const createCommand = mockVSCode.commands.registerCommand.mock.calls
-          .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+          .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
         if (createCommand) {
           await createCommand();
@@ -1005,12 +1003,17 @@ describe('VSCode Extension', () => {
           setTimeout(() => reject(new Error('Network timeout')), 100);
         });
 
+        // Add catch handler to prevent unhandled rejection
+        slowOperation.catch(() => {
+          // Expected rejection, handled silently
+        });
+
         mockVSCode.workspace.fs.readFile.mockReturnValue(slowOperation);
         
         await activate(testContext);
         
         const openCommand = mockVSCode.commands.registerCommand.mock.calls
-          .find(call => call[0] === 'mindmapTool.openMindmap')?.[1];
+          .find(call => call[0] === 'documentViewer.openDocument')?.[1];
 
         if (openCommand) {
           mockVSCode.window.showOpenDialog.mockResolvedValue([{ fsPath: '/test/remote-file.json' }]);
@@ -1170,7 +1173,7 @@ describe('VSCode Extension', () => {
       templateTypes.forEach(type => {
         // createNewMindmapコマンドをテスト
         const createCommand = mockVSCode.commands.registerCommand.mock.calls
-          .find(call => call[0] === 'mindmapTool.createNewMindmap')?.[1];
+          .find(call => call[0] === 'documentViewer.createNewMindmap')?.[1];
 
         expect(createCommand).toBeDefined();
       });
@@ -1267,10 +1270,10 @@ describe('VSCode Extension', () => {
 
       // 複数のコマンドを同時実行
       const refreshCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.refreshMindmapTree')?.[1];
+        .find(call => call[0] === 'documentViewer.refreshDocumentTree')?.[1];
       
       const validateCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.validateSchema')?.[1];
+        .find(call => call[0] === 'documentViewer.validateSchema')?.[1];
 
       if (refreshCommand && validateCommand) {
         // 同時実行でもエラーが発生しないことを確認
@@ -1323,7 +1326,7 @@ describe('VSCode Extension', () => {
       activate(mockContext);
 
       const refreshCommand = mockVSCode.commands.registerCommand.mock.calls
-        .find(call => call[0] === 'mindmapTool.refreshMindmapTree')?.[1];
+        .find(call => call[0] === 'documentViewer.refreshDocumentTree')?.[1];
 
       if (refreshCommand) {
         const startTime = Date.now();

@@ -23,7 +23,8 @@
     "allowImportingTsExtensions": false,
     "noEmit": false,
     "incremental": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": ["node"]
   },
   "include": [
     "src/**/*"

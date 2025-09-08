@@ -129,7 +129,7 @@ export class ParserServiceImpl implements ParserService {
   /**
    * 汎用パース関数（JSON/YAMLを自動判定）
    */
-  async parse(content: string): Promise<{ success: boolean; data?: MindmapData; errors?: ParseError[] }> {
+  async parse(content: string): Promise<{ success: boolean; data?: MindmapData; errors?: ParseError[]; intermediateData?: any }> {
     console.log('ParserService.parse開始 - content length:', content.length);
     try {
       // 空文字列チェック
@@ -162,6 +162,34 @@ export class ParserServiceImpl implements ParserService {
           return { success: true, data };
         } catch (yamlError) {
           console.log('YAML解析失敗:', yamlError);
+          
+          // YAML構文自体は正しいが、Zodバリデーションで失敗している可能性を確認
+          try {
+            const rawYamlData = yaml.load(content, {
+              schema: yaml.JSON_SCHEMA,
+              json: true
+            });
+            
+            if (rawYamlData && typeof rawYamlData === 'object') {
+              console.log('YAML構文は有効だが、構造バリデーションに失敗:', Object.keys(rawYamlData));
+              // YAMLは正常だが、マインドマップ構造ではない場合
+              const parseErrors = [{
+                line: 1,
+                column: 1,
+                message: 'YAMLファイルですが、マインドマップ構造ではありません',
+                severity: 'warning' as const,
+                code: 'INVALID_MINDMAP_STRUCTURE'
+              }];
+              return {
+                success: false,
+                errors: parseErrors,
+                intermediateData: rawYamlData
+              };
+            }
+          } catch (rawYamlError) {
+            console.log('YAML基本パースも失敗:', rawYamlError);
+          }
+          
           // 両方失敗した場合、パースエラーを返す
           const parseErrors = this.getParseErrors(content);
           return {

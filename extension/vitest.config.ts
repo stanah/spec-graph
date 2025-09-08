@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     // 成功テストのログを削減
-    reporter: 'verbose',
+    reporters: 'verbose',
     silent: false,
     logHeapUsage: false,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -43,8 +43,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
-      // monaco-editorの依存関係をモック
-      'monaco-editor': resolve(__dirname, './src/test/mocks/monaco-editor.ts')
     }
   },
   // VSCodeモック用の設定
@@ -55,7 +53,4 @@ export default defineConfig({
   esbuild: {
     target: 'node16'
   },
-  optimizeDeps: {
-    exclude: ['monaco-editor']
-  }
 });

@@ -16,10 +16,10 @@ describe('ViewSwitcher', () => {
     </ViewProvider>
   );
 
-  it('初期表示でマインドマップが選択されている', () => {
+  it('初期表示でドキュメントが選択されている', () => {
     setup();
-    const mindmapBtn = screen.getByRole('button', { name: 'マインドマップ' });
-    expect(mindmapBtn).toHaveAttribute('aria-pressed', 'true');
+    const documentBtn = screen.getByRole('button', { name: 'ドキュメント' });
+    expect(documentBtn).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('テーブル/ドキュメントへ切り替えできる', () => {
@@ -33,4 +33,3 @@ describe('ViewSwitcher', () => {
     expect(useAppStore.getState().ui.viewMode).toBe('document');
   });
 });
-

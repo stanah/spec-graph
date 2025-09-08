@@ -1,0 +1,101 @@
+/* カラーモード統一管理用CSS - 強制適用版 */
+
+/* ライトモードの基調色（過剰な子孫強制は行わない） */
+[data-color-mode="light"],
+body[data-color-mode="light"],
+.light-mode,
+body.light-mode {
+  background-color: #ffffff !important;
+  color: #000000;
+}
+
+[data-color-mode="light"] .view-container,
+body[data-color-mode="light"] .view-container,
+.light-mode .view-container,
+body.light-mode .view-container {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-color-mode="light"] .mindmap-viewer,
+body[data-color-mode="light"] .mindmap-viewer,
+.light-mode .mindmap-viewer,
+body.light-mode .mindmap-viewer {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-color-mode="light"] .document-view,
+body[data-color-mode="light"] .document-view,
+.light-mode .document-view,
+body.light-mode .document-view {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-color-mode="light"] .table-view,
+body[data-color-mode="light"] .table-view,
+.light-mode .table-view,
+body.light-mode .table-view {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* ダークモードの強制適用 */
+/* ダークモードの基調色（過剰な子孫強制は行わない） */
+[data-color-mode="dark"],
+body[data-color-mode="dark"],
+.dark-mode,
+body.dark-mode {
+  background-color: #1e1e1e !important;
+  color: #ffffff;
+}
+
+[data-color-mode="dark"] .view-container,
+body[data-color-mode="dark"] .view-container,
+.dark-mode .view-container,
+body.dark-mode .view-container {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+[data-color-mode="dark"] .mindmap-viewer,
+body[data-color-mode="dark"] .mindmap-viewer,
+.dark-mode .mindmap-viewer,
+body.dark-mode .mindmap-viewer {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+[data-color-mode="dark"] .document-view,
+body[data-color-mode="dark"] .document-view,
+.dark-mode .document-view,
+body.dark-mode .document-view {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+[data-color-mode="dark"] .table-view,
+body[data-color-mode="dark"] .table-view,
+.dark-mode .table-view,
+body.dark-mode .table-view {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+/* ルート要素の強制適用（背景のみ維持、文字色は上書き可能に） */
+[data-color-mode="light"],
+body[data-color-mode="light"],
+.light-mode,
+body.light-mode {
+  background-color: #ffffff !important;
+}
+
+[data-color-mode="dark"],
+body[data-color-mode="dark"],
+.dark-mode,
+body.dark-mode {
+  background-color: #1e1e1e !important;
+}
+
+/* テキスト色は各コンポーネント／バッジが持つ色指定を尊重する */

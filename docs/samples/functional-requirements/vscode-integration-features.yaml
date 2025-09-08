@@ -1,0 +1,48 @@
+title: spec-graph VSCode統合機能要件
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+category: "VSCode統合機能"
+
+description: |
+  VSCode拡張としての統合機能、プレビュー機能、コマンド機能に関する要件
+
+functionalRequirements:
+  - id: FR-VS-001
+    title: VSCode拡張基盤とWebview統合
+    description: Extension APIとWebviewの基本統合
+    priority: high
+    status: done
+    taskRef: "10.1-10.2"
+    acceptanceCriteria:
+      - 拡張機能としての基本動作
+      - Webview↔Extension間の通信
+
+  - id: FR-VS-002
+    title: プレビューペインとサイド表示
+    description: 右側ペインでのマインドマップ表示
+    priority: high
+    status: done
+    taskRef: "10.6-10.10"
+    acceptanceCriteria:
+      - プレビューを開くコマンド
+      - エディタとの同期表示
+
+  - id: FR-VS-003
+    title: ファイルシステムAPIと自動保存
+    description: VSCodeファイル操作との統合
+    priority: medium
+    status: pending
+    taskRef: "36.1-36.5"
+    acceptanceCriteria:
+      - ファイル変更監視
+      - 自動保存とデバウンス機構
+
+  - id: FR-VS-004
+    title: コマンドパレット統合
+    description: VSCodeコマンドとキーバインド
+    priority: medium
+    status: done
+    taskRef: "10.2"
+    acceptanceCriteria:
+      - 主要操作のコマンド化
+      - ショートカットキー設定

@@ -1,0 +1,24 @@
+title: "spec-graph Requirements Documentation"
+version: "2.0.0"
+lastUpdated: "2025-01-07"
+status: "approved"
+description: "Modular requirements documentation structure based on ISO/IEC/IEEE 29148"
+
+authors:
+  - name: "Development Team"
+    role: "Requirements Engineer"
+
+approvals:
+  - name: "Project Lead"
+    date: "2025-01-07"
+    status: "approved"
+
+changeHistory:
+  - version: "2.0.0"
+    date: "2025-01-07"
+    description: "Restructured into modular format, removed obsolete Monaco Editor requirements"
+    author: "Development Team"
+  - version: "1.0.0"
+    date: "2024-12-01"
+    description: "Initial comprehensive requirements document"
+    author: "Development Team"

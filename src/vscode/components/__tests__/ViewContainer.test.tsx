@@ -16,22 +16,29 @@ describe('ViewContainer', () => {
     </ViewProvider>
   );
 
-  it('デフォルトでMindmapViewerを表示（プレースホルダー文言が出ない）', () => {
+  it('デフォルトでドキュメント系ビューを表示する', () => {
     setup();
+    // 初期viewModeがdocumentであること
+    expect(useAppStore.getState().ui.viewMode).toBe('document');
+    // テーブルのプレースホルダーは表示されない
     expect(screen.queryByText('テーブルビュー')).not.toBeInTheDocument();
-    expect(screen.queryByText('ドキュメントビュー')).not.toBeInTheDocument();
+    // コンテンツ未設定時は汎用ドキュメントビューの案内が出る
+    expect(screen.getByText('サポート外のドキュメント形式')).toBeInTheDocument();
   });
 
-  it('viewMode=tableでテーブルプレースホルダーを表示', () => {
+  it('viewMode=tableでテーブルビューを表示', () => {
     useAppStore.getState().setViewMode('table');
     setup();
-    expect(screen.getByText('テーブルビュー')).toBeInTheDocument();
+    // プレースホルダーは表示されない
+    expect(screen.queryByText('テーブルビュー')).not.toBeInTheDocument();
+    // HierarchicalTableViewConnected コンポーネントが表示される
+    expect(document.querySelector('.hierarchical-table')).toBeInTheDocument();
   });
 
-  it('viewMode=documentでドキュメントプレースホルダーを表示', () => {
+  it('viewMode=documentでドキュメント系ビューが表示される', () => {
     useAppStore.getState().setViewMode('document');
     setup();
-    expect(screen.getByText('ドキュメントビュー')).toBeInTheDocument();
+    // コンテンツ未設定のため汎用ビューの案内が出る
+    expect(screen.getByText('サポート外のドキュメント形式')).toBeInTheDocument();
   });
 });
-
