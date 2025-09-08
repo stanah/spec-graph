@@ -8,6 +8,21 @@
     "title": { "type": "string", "minLength": 1 },
     "version": { "type": "string" },
     "goals": { "type": "array", "items": { "type": "string" }, "x-ui": { "display": "list", "section": "meta", "order": 1 } },
+    "functionalRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 0 } },
+    "functionalRequirementsFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "file": { "type": "string" },
+          "description": { "type": "string" },
+          "requirements_count": { "type": "number" }
+        },
+        "additionalProperties": true
+      },
+      "x-ui": { "display": "table", "section": "main", "order": 0 }
+    },
     "userRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 1 } },
     "systemRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 2 } },
     "nonFunctionalRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 3 } },

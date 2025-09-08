@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:spec-graph:schemas:functional-requirements.v1",
+  "title": "Functional Requirements Document",
+  "type": "object",
+  "required": ["title", "version", "functionalRequirements"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "lastUpdated": { "type": "string", "format": "date-time" },
+    "category": { "type": "string" },
+    "description": { "type": "string" },
+    "functionalRequirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(FR|NFR)-[A-Z]{3,4}-\\d{3}$" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "priority": { "enum": ["critical", "high", "medium", "low"], "x-ui": { "display": "badge" } },
+          "status": { "enum": ["draft", "pending", "in-progress", "review", "done", "cancelled", "deferred"], "x-ui": { "display": "badge" } },
+          "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
+          "tags": { "type": "array", "items": { "type": "string" }, "x-ui": { "display": "chips" } }
+        },
+        "additionalProperties": true
+      },
+      "x-ui": { "display": "list", "section": "main", "order": 1, "itemTitle": "id+title", "collapsed": false }
+    }
+  },
+  "additionalProperties": true
+}
+

@@ -11,6 +11,8 @@ import { SchemaDocumentView } from './schema/SchemaDocumentView';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - JSON import with bundler
 import requirementsSchema from '../../../docs/schemas/requirements.v1.json';
+// @ts-ignore - JSON import
+import functionalRequirementsSchema from '../../../docs/schemas/functional-requirements.v1.json';
 
 export const AnyDocumentView: React.FC = () => {
   const content = useAppStore(s => s.file.fileContent);
@@ -36,6 +38,14 @@ export const AnyDocumentView: React.FC = () => {
 
   switch (type) {
     case 'requirements':
+      // 固定ビューで扱わない拡張プロパティ（functionalRequirements/functionalRequirementsFiles）が
+      // 存在する場合はスキーマ駆動ビューで表示
+      if (data && typeof data === 'object') {
+        const obj = data as Record<string, unknown>;
+        if (Array.isArray(obj.functionalRequirements) || Array.isArray(obj.functionalRequirementsFiles)) {
+          return <SchemaDocumentView data={data} schema={requirementsSchema as any} />;
+        }
+      }
       return <RequirementsDocView doc={data} />;
     case 'stakeholders':
       return <StakeholdersDocView doc={data} />;
@@ -44,11 +54,14 @@ export const AnyDocumentView: React.FC = () => {
     case 'tasks':
       return <TasksDocView doc={data} />;
     default:
-      // フォールバック: 要件スキーマに近い形ならスキーマ駆動表示を試みる
+      // フォールバック: 要件スキーマや機能要件スキーマに近い形ならスキーマ駆動表示
       if (data && typeof data === 'object') {
         const obj = data as Record<string, unknown>;
         if (Array.isArray(obj.systemRequirements) || Array.isArray(obj.userRequirements) || Array.isArray(obj.nonFunctionalRequirements) || Array.isArray(obj.glossary)) {
           return <SchemaDocumentView data={data} schema={requirementsSchema as any} />;
+        }
+        if (Array.isArray(obj.functionalRequirements)) {
+          return <SchemaDocumentView data={data} schema={functionalRequirementsSchema as any} />;
         }
       }
       return (
