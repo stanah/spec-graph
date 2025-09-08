@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import React from 'react';
 import { SchemaDocumentView } from '../schema/SchemaDocumentView';
 
@@ -33,8 +33,8 @@ describe('SchemaDocumentView (toc & collapsed)', () => {
     const toc = screen.getByTestId('schema-toc');
     expect(toc).toBeInTheDocument();
     // セクション名や項目リンクが表示
-    expect(screen.getByText('meta')).toBeInTheDocument();
-    expect(screen.getByText('main')).toBeInTheDocument();
+    expect(within(toc).getByText('meta')).toBeInTheDocument();
+    expect(within(toc).getByText('main')).toBeInTheDocument();
     expect(screen.getByTestId('toc-item-prop-meta-goals')).toBeInTheDocument();
     expect(screen.getByTestId('toc-item-prop-main-items')).toBeInTheDocument();
 
@@ -56,4 +56,3 @@ describe('SchemaDocumentView (toc & collapsed)', () => {
     fireEvent.click(screen.getByTestId('toc-item-prop-main-items'));
   });
 });
-
