@@ -50,7 +50,7 @@ function renderPrimitive(name: string, schema: any, value: unknown): React.React
   if (ui.display === 'badge' || name === 'status' || name === 'priority') {
     if (name === 'status') return <><span style={{ fontWeight: 600 }}>{lbl}:</span>{' '}<StatusBadge status={String(value)} /></>;
     if (name === 'priority') return <><span style={{ fontWeight: 600 }}>{lbl}:</span>{' '}<PriorityBadge priority={String(value)} /></>;
-    return <span style={chipStyle}>{String(value)}</span>;
+    return <span className={chipClass} style={{ borderColor: 'var(--vscode-panel-border)' }}>{String(value)}</span>;
   }
 
   return (
