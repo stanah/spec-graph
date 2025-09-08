@@ -102,9 +102,10 @@ describe('SchemaDocumentView', () => {
     expect(withinLi.getByText(/全文検索を提供する/)).toBeInTheDocument();
     expect(withinLi.getByTestId('priority-badge')).toHaveTextContent('high');
     expect(withinLi.getByTestId('status-badge')).toHaveTextContent('in-progress');
-    // 受け入れ条件の表示
+    // 受け入れ条件の表示（ボックス化あり）
     expect(withinLi.getByText('キーワード一致')).toBeInTheDocument();
     expect(withinLi.getByText('日本語形態素')).toBeInTheDocument();
+    expect(withinLi.getByTestId('ac-box')).toBeInTheDocument();
 
     // システム要件の項目一つ
     expect(screen.getByText(/FR-ABC-002/)).toBeInTheDocument();
