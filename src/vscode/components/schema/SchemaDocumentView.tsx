@@ -24,7 +24,11 @@ function getUiHint(s: any): UIHint {
 
 function labelFor(propName: string, schema: any): string {
   const ui = getUiHint(schema);
-  return ui.label || schema.title || propName;
+  if (ui.label) return ui.label;
+  if (schema.title) return schema.title;
+  // 簡易な既定ラベル
+  if (propName === 'acceptanceCriteria') return '受け入れ条件';
+  return propName;
 }
 
 const Section: React.FC<{ title: string }>=({ title, children })=> (
@@ -131,22 +135,20 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
         <ul style={{ margin: 0, paddingLeft: 18 }}>
           {value.map((r: any, idx: number) => (
             <li key={r?.id || idx} style={{ marginBottom: 6 }}>
-              {(() => {
-                const ui = getUiHint(schema);
-                const itemTitle = (ui.itemTitle as string | undefined)?.split('+').map(s => s.trim()).filter(Boolean);
-                if (itemTitle && itemTitle.length > 0) {
-                  const parts = itemTitle.map((k) => String(r?.[k] ?? '')).filter(Boolean);
-                  return <strong>{parts.join(': ') || (r?.title || '(無題)')}</strong>;
-                }
-                return <strong>{r?.id ? `${r.id}: ` : ''}{r?.title || '(無題)'}</strong>;
-              })()}
-              {/* バッジ */}
-              <span style={{ marginLeft: 8 }}>
+              {/* ヘッダー行: バッジ -> タイトル */}
+              <div data-testid="item-header" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {r?.status ? <StatusBadge status={r.status} /> : null}
-              </span>
-              <span style={{ marginLeft: 6 }}>
                 {r?.priority ? <PriorityBadge priority={r.priority} /> : null}
-              </span>
+                {(() => {
+                  const ui = getUiHint(schema);
+                  const itemTitle = (ui.itemTitle as string | undefined)?.split('+').map(s => s.trim()).filter(Boolean);
+                  if (itemTitle && itemTitle.length > 0) {
+                    const parts = itemTitle.map((k) => String(r?.[k] ?? '')).filter(Boolean);
+                    return <strong>{parts.join(': ') || (r?.title || '(無題)')}</strong>;
+                  }
+                  return <strong>{r?.id ? `${r.id}: ` : ''}{r?.title || '(無題)'}</strong>;
+                })()}
+              </div>
               {r?.description && <div style={{ marginTop: 4, opacity: 0.9 }}>{r.description}</div>}
               {/* 追加フィールド（role/availability/tagsなど x-ui を尊重） */}
               {(() => {
@@ -169,6 +171,18 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
                         <div key={`chips-${k}`} style={{ marginTop: 6 }}>
                           <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>{labelFor(k, ps)}</span>
                           {(val as unknown[]).map((v, i) => <span key={i} style={chipStyle}>{String(v)}</span>)}
+                        </div>
+                      );
+                      continue;
+                    }
+                    // chipsでない配列はリスト表示（例: acceptanceCriteria）
+                    if (Array.isArray(val)) {
+                      blocks.push(
+                        <div key={`list-${k}`} style={{ marginTop: 6 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.8 }}>{labelFor(k, ps)}</div>
+                          <ul style={{ margin: '2px 0 0 18px', padding: 0 }}>
+                            {(val as unknown[]).map((v, i) => <li key={i}>{String(v)}</li>)}
+                          </ul>
                         </div>
                       );
                       continue;
