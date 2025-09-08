@@ -7,10 +7,10 @@
   "properties": {
     "title": { "type": "string", "minLength": 1 },
     "version": { "type": "string" },
-    "goals": { "type": "array", "items": { "type": "string" } },
-    "userRequirements": { "$ref": "#/$defs/RequirementList" },
-    "systemRequirements": { "$ref": "#/$defs/RequirementList" },
-    "nonFunctionalRequirements": { "$ref": "#/$defs/RequirementList" },
+    "goals": { "type": "array", "items": { "type": "string" }, "x-ui": { "display": "list", "section": "meta", "order": 1 } },
+    "userRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 1 } },
+    "systemRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 2 } },
+    "nonFunctionalRequirements": { "$ref": "#/$defs/RequirementList", "x-ui": { "display": "list", "section": "main", "order": 3 } },
     "glossary": {
       "type": "array",
       "items": {
@@ -21,7 +21,8 @@
           "definition": { "type": "string" }
         },
         "additionalProperties": false
-      }
+      },
+      "x-ui": { "display": "table", "section": "appendix", "order": 99 }
     },
     "traceability": {
       "type": "array",
@@ -73,8 +74,8 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "owner": { "type": "string" },
-        "priority": { "enum": ["critical", "high", "medium", "low"] },
-        "status": { "enum": ["draft", "pending", "in-progress", "review", "done", "cancelled", "deferred"] },
+        "priority": { "enum": ["critical", "high", "medium", "low"], "x-ui": { "display": "badge" } },
+        "status": { "enum": ["draft", "pending", "in-progress", "review", "done", "cancelled", "deferred"], "x-ui": { "display": "badge" } },
         "component": { "enum": ["core", "services", "vscode", "mcp-server", "ui"] },
         "effort": { "type": "number", "minimum": 0 },
         "risk": { "enum": ["low", "medium", "high"] },
