@@ -111,7 +111,7 @@ export function HierarchicalTableView({
     });
 
     return { groupedData: grouped, groupHeaders: headers };
-  }, [flattenedData, enableHierarchicalGrouping, groupingType]);
+  }, [flattenedData, enableHierarchicalGrouping]);
 
   // グループヘッダー付きのテーブル内容を生成
   if (enableHierarchicalGrouping && showGroupHeaders) {

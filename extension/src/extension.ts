@@ -191,7 +191,7 @@ class DocumentSidebarViewProvider implements vscode.WebviewViewProvider {
 
 let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 // Webviewプロバイダーの参照（パネル再初期化用）
-let webviewProviderSingleton: DocumentWebviewProvider | null = null;
+const _webviewProviderSingleton: DocumentWebviewProvider | null = null;
 // サイドバープレビュープロバイダーの参照
 let sidebarViewProviderSingleton: DocumentSidebarViewProvider | null = null;
 
@@ -298,7 +298,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Webviewプロバイダーの登録
     const _webviewProvider = new DocumentWebviewProvider(context.extensionUri);
-    webviewProviderSingleton = _webviewProvider;
+    // Note: _webviewProviderSingleton は使用されていないため、削除予定
     
     // カスタムエディタープロバイダーの登録
     const editorProvider = new DocumentEditorProvider(context);

@@ -18,7 +18,7 @@ function VSCodeApp() {
     initialize,
     initialized,
     ui: { isLoading, loadingMessage },
-    file: { fileContent },
+    file: { fileContent: _fileContent },
     addNotification,
     updateContent
   } = useAppStore();

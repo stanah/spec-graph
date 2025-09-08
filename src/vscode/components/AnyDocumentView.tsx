@@ -8,10 +8,7 @@ import { TasksDocView } from './docs/TasksDoc';
 import { SchemaDocumentView } from './schema/SchemaDocumentView';
 // スキーマ駆動レンダリング用に、代表的なスキーマを同梱
 // 既存の要件スキーマ（拡張x-uiは任意）
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - JSON import with bundler
 import requirementsSchema from '../../../docs/schemas/requirements.v1.json';
-// @ts-ignore - JSON import
 import functionalRequirementsSchema from '../../../docs/schemas/functional-requirements.v1.json';
 
 export const AnyDocumentView: React.FC = () => {

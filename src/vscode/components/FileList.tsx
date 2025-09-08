@@ -108,7 +108,7 @@ export const FileList: React.FC<FileListProps> = ({
   // 初期ロード
   React.useEffect(() => {
     handlePathChange(rootPath);
-  }, [rootPath]);
+  }, [rootPath, handlePathChange]);
 
   // rootPathプロパティが変更された時の処理
   React.useEffect(() => {

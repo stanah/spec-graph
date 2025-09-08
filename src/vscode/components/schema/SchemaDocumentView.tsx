@@ -275,7 +275,7 @@ export const SchemaDocumentView: React.FC<{ data: any; schema: AnySchema }>=({ d
       }
     }
     return set;
-  }, []);
+  }, [orderedSections]);
   const [collapsed, setCollapsed] = React.useState<Set<string>>(initialCollapsed);
   const toggle = React.useCallback((section: string, prop: string) => {
     setCollapsed((prev) => {
