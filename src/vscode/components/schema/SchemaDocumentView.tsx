@@ -131,7 +131,15 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
         <ul style={{ margin: 0, paddingLeft: 18 }}>
           {value.map((r: any, idx: number) => (
             <li key={r?.id || idx} style={{ marginBottom: 6 }}>
-              <strong>{r?.id ? `${r.id}: ` : ''}{r?.title || '(無題)'}</strong>
+              {(() => {
+                const ui = getUiHint(schema);
+                const itemTitle = (ui.itemTitle as string | undefined)?.split('+').map(s => s.trim()).filter(Boolean);
+                if (itemTitle && itemTitle.length > 0) {
+                  const parts = itemTitle.map((k) => String(r?.[k] ?? '')).filter(Boolean);
+                  return <strong>{parts.join(': ') || (r?.title || '(無題)')}</strong>;
+                }
+                return <strong>{r?.id ? `${r.id}: ` : ''}{r?.title || '(無題)'}</strong>;
+              })()}
               {/* バッジ */}
               <span style={{ marginLeft: 8 }}>
                 {r?.status ? <StatusBadge status={r.status} /> : null}
@@ -248,4 +256,3 @@ export const SchemaDocumentView: React.FC<{ data: any; schema: AnySchema }>=({ d
 };
 
 export default SchemaDocumentView;
-

@@ -9,7 +9,8 @@
     "version": { "type": "string" },
     "components": {
       "type": "array",
-      "items": { "$ref": "#/$defs/Component" }
+      "items": { "$ref": "#/$defs/Component" },
+      "x-ui": { "display": "list", "section": "main", "order": 1, "itemTitle": "id+name" }
     }
   },
   "$defs": {

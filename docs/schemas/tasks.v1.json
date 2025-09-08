@@ -7,7 +7,7 @@
   "properties": {
     "title": { "type": "string", "minLength": 1 },
     "version": { "type": "string" },
-    "epics": { "type": "array", "items": { "$ref": "#/$defs/TaskItem" } }
+    "epics": { "type": "array", "items": { "$ref": "#/$defs/TaskItem" }, "x-ui": { "display": "list", "section": "main", "order": 1, "itemTitle": "id+title" } }
   },
   "$defs": {
     "Relation": {
@@ -26,15 +26,15 @@
         "id": { "type": "string", "pattern": "^TASK-[A-Z]{3,4}-\\d{3}$" },
         "title": { "type": "string" },
         "type": { "enum": ["feature", "bug", "chore", "doc"], "default": "feature" },
-        "status": { "enum": ["todo", "in-progress", "review", "done", "deferred", "cancelled"] },
-        "priority": { "enum": ["critical", "high", "medium", "low"] },
+        "status": { "enum": ["todo", "in-progress", "review", "done", "deferred", "cancelled"], "x-ui": { "display": "badge" } },
+        "priority": { "enum": ["critical", "high", "medium", "low"], "x-ui": { "display": "badge" } },
         "assignee": { "type": "string", "pattern": "^STK-\\d{3}$" },
         "estimate": { "type": "number", "minimum": 0 },
         "dueDate": { "type": "string", "format": "date-time" },
         "relatesTo": { "type": "array", "items": { "$ref": "#/$defs/Relation" } },
         "children": { "type": "array", "items": { "$ref": "#/$defs/TaskItem" } },
         "notes": { "type": "string" },
-        "tags": { "type": "array", "items": { "type": "string" } }
+        "tags": { "type": "array", "items": { "type": "string" }, "x-ui": { "display": "chips" } }
       },
       "additionalProperties": false
     }
