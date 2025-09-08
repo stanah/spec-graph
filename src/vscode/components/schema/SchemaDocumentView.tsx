@@ -148,6 +148,40 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
                 {r?.priority ? <PriorityBadge priority={r.priority} /> : null}
               </span>
               {r?.description && <div style={{ marginTop: 4, opacity: 0.9 }}>{r.description}</div>}
+              {/* 追加フィールド（role/availability/tagsなど x-ui を尊重） */}
+              {(() => {
+                const itemSchema = (schema && schema.items) || {};
+                const props = (itemSchema.properties || {}) as Record<string, any>;
+                const ui = getUiHint(schema);
+                const tokens = (ui.itemTitle as string | undefined)?.split('+').map(s => s.trim()) ?? [];
+                const exclude = new Set<string>(['id', 'title', 'name', 'description', 'status', 'priority', ...tokens]);
+                const blocks: JSX.Element[] = [];
+                for (const k of Object.keys(props)) {
+                  if (exclude.has(k)) continue;
+                  const ps = props[k];
+                  const val = r?.[k];
+                  if (val === undefined || val === null) continue;
+                  // array<string> with chips
+                  if (ps?.type === 'array' && ps?.items?.type === 'string') {
+                    const iui = getUiHint(ps);
+                    if (iui.display === 'chips' && Array.isArray(val)) {
+                      blocks.push(
+                        <div key={`chips-${k}`} style={{ marginTop: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>{labelFor(k, ps)}</span>
+                          {(val as unknown[]).map((v, i) => <span key={i} style={chipStyle}>{String(v)}</span>)}
+                        </div>
+                      );
+                      continue;
+                    }
+                  }
+                  // primitive with badge/text
+                  if (ps?.type === 'string' || ps?.type === 'number' || ps?.type === 'integer' || ps?.type === 'boolean' || getUiHint(ps).display === 'badge') {
+                    blocks.push(<div key={`meta-${k}`} style={metaRow}>{renderPrimitive(k, ps, val)}</div>);
+                    continue;
+                  }
+                }
+                return blocks.length ? <>{blocks}</> : null;
+              })()}
             </li>
           ))}
         </ul>
