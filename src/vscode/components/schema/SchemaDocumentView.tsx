@@ -120,6 +120,25 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
   }
 
   // デフォルト: リスト表示（id/title/description/priority/statusなどをリッチ表示）
+  const priorityAccent: Record<string, string> = {
+    critical: 'border-l-red-500',
+    high: 'border-l-orange-500',
+    medium: 'border-l-amber-500',
+    low: 'border-l-emerald-500',
+  };
+  const statusAccent: Record<string, string> = {
+    pending: 'border-l-amber-500',
+    'in-progress': 'border-l-blue-500',
+    review: 'border-l-purple-500',
+    done: 'border-l-green-500',
+    cancelled: 'border-l-rose-500',
+    deferred: 'border-l-gray-500',
+  };
+  const accentClassFor = (item: any): string => {
+    const p = String(item?.priority || '').toLowerCase();
+    const s = String(item?.status || '').toLowerCase();
+    return priorityAccent[p] || statusAccent[s] || 'border-l-slate-300';
+  };
   return (
       <div>
         <div className="text-xs font-semibold opacity-80 mb-1">{lbl}</div>
@@ -128,7 +147,10 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
         ) : (
           <ul className="m-0 ml-4 space-y-2">
             {value.map((r: any, idx: number) => (
-              <li key={r?.id || idx} className="rounded border shadow-card p-3" style={{ borderColor: 'var(--vscode-panel-border)' }}>
+              <li
+                key={r?.id || idx}
+                className={`rounded border shadow-card p-3 border-slate-200 dark:border-slate-700 border-l-4 ${accentClassFor(r)}`}
+              >
                 {/* ヘッダー行: バッジ -> タイトル */}
                 <div data-testid="item-header" className="flex items-center gap-2">
                   {r?.status ? <StatusBadge status={r.status} /> : null}
@@ -171,10 +193,17 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
                       }
                       // chipsでない配列はリスト表示（例: acceptanceCriteria）
                       if (Array.isArray(val)) {
+                        const isAc = k === 'acceptanceCriteria';
                         blocks.push(
-                          <div key={`list-${k}`} className="mt-2">
+                          <div
+                            key={`list-${k}`}
+                            className={isAc
+                              ? 'mt-2 p-3 rounded-md border shadow-inner bg-[var(--vscode-list-hoverBackground)] border-[var(--vscode-panel-border)]'
+                              : 'mt-2'}
+                            data-testid={isAc ? 'ac-box' : undefined}
+                          >
                             <div className="text-xs font-semibold opacity-80">{labelFor(k, ps)}</div>
-                            <ul className="mt-0.5 ml-4 list-disc">
+                            <ul className={`mt-1 ml-4 list-disc`}>
                               {(val as unknown[]).map((v, i) => <li key={i} className="text-sm">{String(v)}</li>)}
                             </ul>
                           </div>
