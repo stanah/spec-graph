@@ -24,7 +24,8 @@ describe('SchemaDocumentView', () => {
               title: { type: 'string' },
               description: { type: 'string' },
               status: { enum: ['draft', 'in-progress', 'done'], 'x-ui': { display: 'badge' } },
-              priority: { enum: ['critical', 'high', 'medium', 'low'], 'x-ui': { display: 'badge' } }
+              priority: { enum: ['critical', 'high', 'medium', 'low'], 'x-ui': { display: 'badge' } },
+              acceptanceCriteria: { type: 'array', items: { type: 'string' } }
             },
             additionalProperties: true
           },
@@ -71,7 +72,8 @@ describe('SchemaDocumentView', () => {
           title: '検索機能',
           description: '全文検索を提供する',
           priority: 'high',
-          status: 'in-progress'
+          status: 'in-progress',
+          acceptanceCriteria: ['キーワード一致', '日本語形態素']
         }
       ],
       systemRequirements: [
@@ -91,10 +93,18 @@ describe('SchemaDocumentView', () => {
     // ユーザー要求 → リスト表示 + バッジ
     const li = screen.getAllByText(/FR-ABC-001/)[0].closest('li')!;
     const withinLi = within(li);
+    // バッジはタイトルより前に表示される
+    const header = withinLi.getByTestId('item-header');
+    const headerChildren = Array.from(header.children) as HTMLElement[];
+    expect(headerChildren[0]).toHaveAttribute('data-testid', 'status-badge');
+    expect(headerChildren[1]).toHaveAttribute('data-testid', 'priority-badge');
     expect(withinLi.getByText(/検索機能/)).toBeInTheDocument();
     expect(withinLi.getByText(/全文検索を提供する/)).toBeInTheDocument();
     expect(withinLi.getByTestId('priority-badge')).toHaveTextContent('high');
     expect(withinLi.getByTestId('status-badge')).toHaveTextContent('in-progress');
+    // 受け入れ条件の表示
+    expect(withinLi.getByText('キーワード一致')).toBeInTheDocument();
+    expect(withinLi.getByText('日本語形態素')).toBeInTheDocument();
 
     // システム要件の項目一つ
     expect(screen.getByText(/FR-ABC-002/)).toBeInTheDocument();
@@ -106,4 +116,3 @@ describe('SchemaDocumentView', () => {
     expect(glossaryTable).toHaveTextContent('非機能要件');
   });
 });
-
