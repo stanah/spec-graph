@@ -265,6 +265,27 @@ export const SchemaDocumentView: React.FC<{ data: any; schema: AnySchema }>=({ d
     return { name: secName, props: orderedProps };
   });
 
+  // 折りたたみ状態: prop単位で管理
+  const initialCollapsed = React.useMemo(() => {
+    const set = new Set<string>();
+    for (const s of orderedSections) {
+      for (const p of s.props) {
+        const ui = getUiHint(p.schema);
+        if (ui.collapsed) set.add(`${s.name}/${p.name}`);
+      }
+    }
+    return set;
+  }, []);
+  const [collapsed, setCollapsed] = React.useState<Set<string>>(initialCollapsed);
+  const toggle = React.useCallback((section: string, prop: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      const key = `${section}/${prop}`;
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }, []);
+
   return (
     <div>
       <header style={{ padding: '12px 16px', borderBottom: '1px solid var(--vscode-panel-border)' }}>
@@ -276,13 +297,54 @@ export const SchemaDocumentView: React.FC<{ data: any; schema: AnySchema }>=({ d
         </h2>
       </header>
 
+      {/* TOC: セクションとプロパティの一覧 */}
+      <nav data-testid="schema-toc" aria-label="Schema TOC" style={{ padding: '8px 16px', opacity: 0.9 }}>
+        {orderedSections.map((sec) => (
+          <div key={`toc-${sec.name}`} style={{ marginBottom: 6 }}>
+            <div style={{ fontWeight: 600 }}>{sec.name}</div>
+            <ul style={{ margin: '2px 0 0 12px', padding: 0, listStyle: 'none' }}>
+              {sec.props.map((p) => (
+                <li key={`toc-${sec.name}-${p.name}`}>
+                  <a
+                    href={`#prop-${sec.name}-${p.name}`}
+                    data-testid={`toc-item-prop-${sec.name}-${p.name}`}
+                    style={{ color: 'var(--vscode-textLink-foreground)', textDecoration: 'none' }}
+                  >
+                    {labelFor(p.name, p.schema)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+
       {orderedSections.map((sec) => (
         <Section key={sec.name} title={sec.name}>
-          {sec.props.map(({ name, schema: ps }) => (
-            <div key={name} style={{ marginBottom: 8 }}>
-              {renderProperty(name, ps, (data as any)?.[name])}
-            </div>
-          ))}
+          {sec.props.map(({ name, schema: ps }) => {
+            const key = `${sec.name}/${name}`;
+            const isCollapsed = collapsed.has(key);
+            return (
+              <div key={name} id={`prop-${sec.name}-${name}`} data-testid={`prop-block-${sec.name}-${name}`} data-collapsed={isCollapsed ? 'true' : 'false'} style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    data-testid={`toggle-${sec.name}-${name}`}
+                    onClick={() => toggle(sec.name, name)}
+                    aria-label={isCollapsed ? 'expand' : 'collapse'}
+                    style={{ border: '1px solid var(--vscode-panel-border)', background: 'transparent', cursor: 'pointer' }}
+                  >
+                    {isCollapsed ? '+' : '−'}
+                  </button>
+                  <div style={{ fontWeight: 600 }}>{labelFor(name, ps)}</div>
+                </div>
+                {!isCollapsed && (
+                  <div style={{ marginTop: 6 }}>
+                    {renderProperty(name, ps, (data as any)?.[name])}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </Section>
       ))}
     </div>
