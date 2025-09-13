@@ -2035,7 +2035,7 @@
             "description": "Cytoscape.js v3.30をプロジェクトに統合し、依存関係グラフを表示するための基本的なReactコンポーネントを作成する",
             "dependencies": [],
             "details": "1. Cytoscape.jsとreact-cytoscapejsのインストール\n2. DependencyGraphView.tsxコンポーネントの作成\n3. GraphContextとuseGraphフックの実装\n4. 基本的なグラフ初期化とレンダリング処理\n5. ノードとエッジのデータ構造定義（GraphNode、GraphEdge型）\n6. VSCode拡張のWebviewへの組み込み準備",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Cytoscape.jsの正常な初期化確認、コンポーネントのマウント・アンマウントテスト、メモリリークの検証"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-13T19:11:39.828Z",
+      "updated": "2025-09-13T19:24:09.967Z",
       "description": "Tasks for master context"
     }
   }
