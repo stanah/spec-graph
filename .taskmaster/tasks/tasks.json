@@ -2046,7 +2046,7 @@
               "31.1"
             ],
             "details": "1. グラフスタイルシートの定義（styles/graphStyles.ts）\n2. ノードの状態別スタイル（pending、in-progress、done）\n3. エッジのアニメーション定義（データフロー表現）\n4. dagre、cola、fcoseレイアウトの統合\n5. レイアウト切り替えUIコントロールの実装\n6. compound nodesによるグルーピング表示機能",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各レイアウトアルゴリズムの動作確認、スタイル適用の正確性テスト、レイアウト切り替えのパフォーマンス測定"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-13T19:24:09.967Z",
+      "updated": "2025-09-13T19:27:49.515Z",
       "description": "Tasks for master context"
     }
   }
