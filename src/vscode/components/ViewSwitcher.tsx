@@ -7,6 +7,7 @@ const tabs: { key: ViewMode; label: string }[] = [
   { key: 'document', label: 'ドキュメント' },
   { key: 'table', label: 'テーブル' },
   { key: 'mindmap', label: 'マインドマップ' },
+  { key: 'deps', label: '依存関係' },
 ];
 
 const getColorModeIcon = (mode: 'light' | 'dark' | 'auto') => {
@@ -132,4 +133,3 @@ export const ViewSwitcher: React.FC = () => {
     </div>
   );
 };
-

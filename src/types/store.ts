@@ -19,7 +19,7 @@ import type {
 /**
  * ビューモードの型
  */
-export type ViewMode = 'mindmap' | 'table' | 'document';
+export type ViewMode = 'mindmap' | 'table' | 'document' | 'deps';
 
 /**
  * ファイル状態

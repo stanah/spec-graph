@@ -5,6 +5,7 @@ import { MindmapViewer } from './MindmapViewer';
 import { DocumentView } from './DocumentView';
 import { AnyDocumentView } from './AnyDocumentView';
 import { HierarchicalTableViewConnected } from '../../components/table/HierarchicalTableViewConnected';
+import { DependencyGraphView } from './DependencyGraphView';
 import type { MindmapNode } from '../../types';
 import { useAppStore } from '../../stores/appStore';
 
@@ -72,6 +73,12 @@ export const ViewContainer: React.FC = () => {
       return (
         <div data-color-mode={resolvedMode} className={`view-container ${resolvedMode}-mode`}>
           <AnyDocumentView />
+        </div>
+      );
+    case 'deps':
+      return (
+        <div data-color-mode={resolvedMode} className={`view-container ${resolvedMode}-mode`}>
+          <DependencyGraphView />
         </div>
       );
     default:
