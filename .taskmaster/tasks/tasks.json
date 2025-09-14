@@ -2166,7 +2166,53 @@
           31
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "DataIntegrityCheckerクラスの基盤実装",
+            "description": "基本的な整合性チェック機能を持つDataIntegrityCheckerクラスを実装し、孤立参照と未使用IDの検出アルゴリズムを構築する",
+            "dependencies": [],
+            "details": "DataIntegrityCheckerクラスの作成、基本的な検出機能（孤立参照、未使用ID）の実装、schemaManager.tsとの連携インターフェース設計。エラーパターンの分類とログ出力機能も含める。",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "循環参照検出アルゴリズムと可視化",
+            "description": "循環参照の検出と可視化機能を実装し、グラフ理論を用いた効率的な検出アルゴリズムを構築する",
+            "dependencies": [
+              "33.1"
+            ],
+            "details": "深度優先探索を用いた循環参照検出、参照チェーンの可視化、検出結果のグラフィカル表示機能の実装。複雑な循環パターンの検出と報告機能も含める。",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "自動修正アルゴリズムとIntegrityReport生成",
+            "description": "安全な自動修正アルゴリズムを実装し、HTML/JSON形式のIntegrityReportを生成する機能を構築する",
+            "dependencies": [
+              "33.1",
+              "33.2"
+            ],
+            "details": "安全性を重視した自動修正提案機能、IntegrityReportクラスの実装、HTML/JSON形式でのレポート出力、修正前後の差分表示機能。ユーザー確認を伴う修正フローも含める。",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Web Workerバックグラウンド処理とリアルタイム通知",
+            "description": "Web Workerを使用したバックグラウンドでの整合性チェック処理と、問題検出時のリアルタイム通知システムを実装する",
+            "dependencies": [
+              "33.1",
+              "33.2",
+              "33.3"
+            ],
+            "details": "Web Workerでの非同期処理実装、定期的なバックグラウンドチェック、リアルタイム通知システム（Toast、Badge表示）、進捗表示とキャンセル機能。メインスレッドとのメッセージング最適化も含める。",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 34,
