@@ -1,5 +1,6 @@
 import type { MindmapData, MindmapNode } from '../types';
 import { LinkResolver, type LinkToken } from './linkResolver';
+import { DependencyGraph } from '../core/deps/DependencyGraph';
 
 export type DanglingReference = {
   token: LinkToken;
@@ -70,5 +71,30 @@ export class DataIntegrityChecker {
       .filter(r => !ids.has(r.id))
       .map(({ sourceNodeId, ...token }) => ({ token, sourceNodeId }));
   }
-}
 
+  /**
+   * 参照関係から依存グラフを構築
+   */
+  buildReferenceGraph(): DependencyGraph {
+    const g = new DependencyGraph();
+    const ids = this.collectIds();
+    for (const id of ids) g.addNode(id);
+
+    const refs = this.collectReferences();
+    for (const r of refs) {
+      // 既存ノード間の参照のみエッジに採用（未知IDは除外）
+      if (ids.has(r.id) && ids.has(r.sourceNodeId)) {
+        g.addEdge(r.sourceNodeId, r.id);
+      }
+    }
+    return g;
+  }
+
+  /**
+   * 循環参照を検出し、各循環をノードID配列として返す
+   */
+  detectCycles(): string[][] {
+    const g = this.buildReferenceGraph();
+    return g.findCycles();
+  }
+}
