@@ -2113,7 +2113,7 @@
               "32.1"
             ],
             "details": "src/core/navigation/NavigationHistory.tsを作成し、以下を実装：\n1. NavigationHistoryクラス - 履歴スタック管理\n2. push()メソッド - 新しい履歴エントリの追加（History.pushState()連携）\n3. back()/forward()メソッド - 履歴の移動\n4. popstateイベントリスナー - ブラウザボタンとの同期\n5. HistoryEntry型定義 - nodeId、scrollPosition、timestamp等を含む\n6. 履歴の永続化（sessionStorage活用）\n7. 最大履歴数の制限と古いエントリの削除",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "履歴スタック操作の単体テスト、popstateイベントの統合テスト、sessionStorageとの同期テスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T06:44:15.255Z",
+      "updated": "2025-09-14T06:47:16.258Z",
       "description": "Tasks for master context"
     }
   }
