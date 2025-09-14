@@ -2209,7 +2209,7 @@
               "33.3"
             ],
             "details": "Web Workerでの非同期処理実装、定期的なバックグラウンドチェック、リアルタイム通知システム（Toast、Badge表示）、進捗表示とキャンセル機能。メインスレッドとのメッセージング最適化も含める。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           }
         ]
@@ -2317,7 +2317,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T16:09:10.216Z",
+      "updated": "2025-09-14T16:25:32.305Z",
       "description": "Tasks for master context"
     }
   }
