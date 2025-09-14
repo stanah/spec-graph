@@ -12,6 +12,7 @@ export const DependencyGraphView: React.FC = () => {
   const [ready, setReady] = useState(false);
   const cyRef = useRef<any>(null);
   const [layout, setLayout] = useState<'cose' | 'grid' | 'circle' | 'concentric' | 'breadthfirst' | 'dagre' | 'cola' | 'fcose'>('cose');
+  const [zoom, setZoom] = useState(1);
 
   // 最小統合: Cytoscapeを遅延ロードして階層を仮表示
   useEffect(() => {
@@ -49,6 +50,9 @@ export const DependencyGraphView: React.FC = () => {
           layout: { name: layout, animate: false },
           wheelSensitivity: 0.2,
         });
+        try {
+          cyRef.current.zoom(zoom);
+        } catch {}
       } catch (e) {
         // ライブラリ未導入でも壊れないようにフォールバック
         console.warn('[DependencyGraphView] Cytoscape unavailable, showing placeholder.', e);
@@ -63,6 +67,28 @@ export const DependencyGraphView: React.FC = () => {
       cyRef.current = null;
     };
   }, [parsed, layout]);
+
+  // ズームの反映（Cytoscapeが無い場合はCSS transformで代替）
+  useEffect(() => {
+    if (cyRef.current) {
+      try { cyRef.current.zoom(zoom); } catch {}
+    } else if (containerRef.current) {
+      const el = containerRef.current;
+      el.style.transformOrigin = '0 0';
+      el.style.transform = `scale(${zoom})`;
+    }
+  }, [zoom]);
+
+  const handleZoomIn = () => setZoom((z) => Math.min(3, +(z + 0.1).toFixed(2)));
+  const handleZoomOut = () => setZoom((z) => Math.max(0.2, +(z - 0.1).toFixed(2)));
+  const handleZoomReset = () => setZoom(1);
+  const handleFit = () => {
+    if (cyRef.current) {
+      try { cyRef.current.fit(); } catch {}
+    } else {
+      setZoom(1);
+    }
+  };
 
   function buildElementsFromMindmap(data: MindmapData): any[] {
     const nodes: any[] = [];
@@ -88,7 +114,7 @@ export const DependencyGraphView: React.FC = () => {
       {/* ツールバー: レイアウト選択 */}
       <div
         data-testid="layout-toolbar"
-        style={{ position: 'absolute', top: 8, right: 8, zIndex: 1, background: 'var(--vscode-editor-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: 6, padding: '6px 8px', display: 'flex', gap: 8, alignItems: 'center' }}
+        style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, background: 'var(--vscode-editor-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: 6, padding: '6px 8px', display: 'flex', gap: 8, alignItems: 'center' }}
       >
         <label htmlFor="layout-select" style={{ fontSize: 12, opacity: 0.8 }}>レイアウト</label>
         <select
@@ -108,6 +134,17 @@ export const DependencyGraphView: React.FC = () => {
           <option value="fcose">fcose</option>
         </select>
       </div>
+
+      {/* ツールバー: ズーム操作 */}
+      <div
+        style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 2, background: 'var(--vscode-editor-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: 6, padding: '6px 8px', display: 'flex', gap: 8, alignItems: 'center' }}
+      >
+        <button data-testid="zoom-out" onClick={handleZoomOut} aria-label="zoom-out" style={{ fontSize: 14 }}>－</button>
+        <span data-testid="zoom-indicator" style={{ fontSize: 12 }}>{`Zoom: ${zoom.toFixed(2)}`}</span>
+        <button data-testid="zoom-in" onClick={handleZoomIn} aria-label="zoom-in" style={{ fontSize: 14 }}>＋</button>
+        <button data-testid="zoom-reset" onClick={handleZoomReset} aria-label="zoom-reset" style={{ fontSize: 12 }}>Reset</button>
+        <button data-testid="zoom-fit" onClick={handleFit} aria-label="zoom-fit" style={{ fontSize: 12 }}>Fit</button>
+      </div>
       <div
         ref={containerRef}
         style={{ width: '100%', height: '100%', minHeight: 320 }}
@@ -123,6 +160,14 @@ export const DependencyGraphView: React.FC = () => {
           依存関係ビュー（ベータ）
         </div>
       )}
+
+      {/* ミニマップ（最小プレースホルダー、Cytoscapeがあれば将来プラグイン統合） */}
+      <div
+        data-testid="mini-map"
+        style={{ position: 'absolute', bottom: 12, left: 12, width: 140, height: 90, border: '1px solid var(--vscode-panel-border)', background: 'var(--vscode-editor-background)', opacity: 0.8, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}
+      >
+        ミニマップ
+      </div>
     </div>
   );
 };
