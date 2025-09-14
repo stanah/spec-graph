@@ -2102,7 +2102,7 @@
             "description": "[[ID]]形式のリンク構文を解析し、実際のノードへの参照を解決するLinkResolverクラスを作成する",
             "dependencies": [],
             "details": "src/core/navigation/LinkResolver.tsを作成し、以下を実装：\n1. LinkResolverクラス - リンク解析と解決の中心的な役割\n2. parseLinkSyntax()メソッド - [[ID]]形式の正規表現マッチング\n3. resolveLink()メソッド - IDから実際のノードオブジェクトへの変換\n4. validateLink()メソッド - リンクの有効性チェック（存在確認、循環参照チェック）\n5. LinkCacheクラス - 解決済みリンクのキャッシュ管理\n6. リアルタイムバリデーション用のwatchLinks()メソッド",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "正規表現パターンマッチングテスト、存在しないIDへのリンク検証、循環参照検出テスト、キャッシュ動作の確認"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T06:42:30.088Z",
+      "updated": "2025-09-14T06:44:15.255Z",
       "description": "Tasks for master context"
     }
   }
