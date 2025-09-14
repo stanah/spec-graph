@@ -9,10 +9,12 @@ import type { MindmapData, MindmapNode } from '../../types';
 export const DependencyGraphView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const parsed = useAppStore((s) => s.parse.parsedData);
+  const selectedNodeId = useAppStore((s) => s.ui.selectedNodeId);
   const [ready, setReady] = useState(false);
   const cyRef = useRef<any>(null);
   const [layout, setLayout] = useState<'cose' | 'grid' | 'circle' | 'concentric' | 'breadthfirst' | 'dagre' | 'cola' | 'fcose'>('cose');
   const [zoom, setZoom] = useState(1);
+  const [stats, setStats] = useState<{ nodes: number; edges: number }>({ nodes: 0, edges: 0 });
 
   // 最小統合: Cytoscapeを遅延ロードして階層を仮表示
   useEffect(() => {
@@ -39,13 +41,16 @@ export const DependencyGraphView: React.FC = () => {
           if (fcose && (fcose as any).default) cytoscape.use((fcose as any).default);
         } catch {}
 
-        const elements = buildElementsFromMindmap(parsed);
+        const { elements, counts } = buildElementsFromMindmap(parsed);
+        setStats(counts);
         cyRef.current = cytoscape({
           container: containerRef.current,
           elements,
           style: [
             { selector: 'node', style: { 'label': 'data(label)', 'font-size': 10, 'background-color': '#5B8FF9', 'color': '#fff' } },
             { selector: 'edge', style: { 'width': 1, 'line-color': '#A0A0A0', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#A0A0A0', 'curve-style': 'bezier' } },
+            { selector: 'node:selected', style: { 'background-color': '#FA8C16' } },
+            { selector: '.highlight', style: { 'background-color': '#FA8C16' } },
           ],
           layout: { name: layout, animate: false },
           wheelSensitivity: 0.2,
@@ -90,21 +95,42 @@ export const DependencyGraphView: React.FC = () => {
     }
   };
 
-  function buildElementsFromMindmap(data: MindmapData): any[] {
-    const nodes: any[] = [];
-    const edges: any[] = [];
-    const visit = (n: MindmapNode, parent?: MindmapNode) => {
-      nodes.push({ data: { id: n.id, label: n.title ?? n.id } });
-      if (parent) {
-        edges.push({ data: { id: `${parent.id}->${n.id}`, source: parent.id, target: n.id } });
+  function buildElementsFromMindmap(data: MindmapData): { elements: any[]; counts: { nodes: number; edges: number } } {
+    const nodeSet = new Map<string, string>();
+    const edges: Array<{ id: string; source: string; target: string }> = [];
+
+    const collect = (n: MindmapNode) => {
+      nodeSet.set(n.id, n.title ?? n.id);
+      const cf: any = n.customFields || {};
+      if (Array.isArray(cf.dependsOn)) {
+        for (const dep of cf.dependsOn as string[]) {
+          if (typeof dep === 'string' && dep.trim()) {
+            nodeSet.set(dep, dep);
+            edges.push({ id: `${dep}->${n.id}`, source: dep, target: n.id });
+          }
+        }
       }
       if (Array.isArray(n.children)) {
-        for (const c of n.children) visit(c, n);
+        for (const c of n.children) collect(c);
       }
     };
-    if (data.root) visit(data.root);
-    return [...nodes, ...edges];
+    if (data.root) collect(data.root);
+    const nodes = [...nodeSet.entries()].map(([id, label]) => ({ data: { id, label } }));
+    const edgeElems = edges.map(e => ({ data: e }));
+    return { elements: [...nodes, ...edgeElems], counts: { nodes: nodes.length, edges: edgeElems.length } };
   }
+
+  // 選択中ノードのハイライト（簡易）
+  useEffect(() => {
+    if (!selectedNodeId) return;
+    if (cyRef.current) {
+      try {
+        cyRef.current.nodes().removeClass('highlight');
+        const node = cyRef.current.getElementById(selectedNodeId);
+        if (node) node.addClass('highlight');
+      } catch {}
+    }
+  }, [selectedNodeId]);
 
   return (
     <div
@@ -156,8 +182,12 @@ export const DependencyGraphView: React.FC = () => {
         </div>
       )}
       {ready && parsed && (
-        <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 12, opacity: 0.7 }}>
-          依存関係ビュー（ベータ）
+        <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 12, opacity: 0.85, display: 'flex', gap: 12 }}>
+          <div>依存関係ビュー（ベータ）</div>
+          <div data-testid="graph-stats">nodes: {stats.nodes} / edges: {stats.edges}</div>
+          {selectedNodeId && (
+            <div data-testid="selected-node">選択中: {selectedNodeId}</div>
+          )}
         </div>
       )}
 
