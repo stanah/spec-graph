@@ -29,15 +29,32 @@ export type SafeFix = {
 export class DataIntegrityChecker {
   private data: MindmapData | null;
   private resolver: LinkResolver;
+  private listeners: Map<'report'|'issue', Set<(payload: unknown) => void>> = new Map();
 
   constructor(data: MindmapData | null = null) {
     this.data = data;
     this.resolver = new LinkResolver(data);
+    this.listeners.set('report', new Set());
+    this.listeners.set('issue', new Set());
   }
 
   setData(data: MindmapData | null) {
     this.data = data;
     this.resolver.setData(data);
+  }
+
+  on(event: 'report'|'issue', cb: (payload: unknown) => void) {
+    this.listeners.get(event)?.add(cb);
+  }
+
+  off(event: 'report'|'issue', cb: (payload: unknown) => void) {
+    this.listeners.get(event)?.delete(cb);
+  }
+
+  private emit(event: 'report'|'issue', payload: unknown) {
+    for (const cb of this.listeners.get(event) ?? []) {
+      try { cb(payload); } catch { /* no-op */ }
+    }
   }
 
   /** 全ノードのIDをSetで収集 */
@@ -231,5 +248,27 @@ export class DataIntegrityChecker {
       <h2>Unused IDs</h2>
       <ul>${rowsUnused || '<li>None</li>'}</ul>
     </body></html>`;
+  }
+
+  /**
+   * 非同期に整合性チェックを実行し、進捗（issue）と完了（report）を通知
+   */
+  async runInBackground(): Promise<ReturnType<DataIntegrityChecker['generateReportJSON']>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const report = this.generateReportJSON();
+        if (report.danglingReferences.length > 0) {
+          this.emit('issue', { type: 'dangling', count: report.danglingReferences.length });
+        }
+        if (report.cycles.length > 0) {
+          this.emit('issue', { type: 'cycles', count: report.cycles.length });
+        }
+        if (report.unusedIds.length > 0) {
+          this.emit('issue', { type: 'unused', count: report.unusedIds.length });
+        }
+        this.emit('report', report);
+        resolve(report);
+      }, 0);
+    });
   }
 }
