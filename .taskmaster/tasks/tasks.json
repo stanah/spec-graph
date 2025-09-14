@@ -2149,7 +2149,7 @@
               "32.4"
             ],
             "details": "src/components/navigation/LinkPreview.tsxを作成し、以下を実装：\n1. LinkPreviewTooltipコンポーネント - ホバー時のプレビュー表示\n2. useHoverDelay()フック - 表示遅延とデバウンス処理\n3. PreviewContentRenderer - ノードコンテンツの簡略表示\n4. ポジショニングロジック（画面端での自動調整）\n5. プレビュー内のメタデータ表示（優先度、ステータス等）\n6. プレビュー内からの直接ジャンプ機能\n7. プレビューのキャッシュ管理\n8. VSCodeテーマとの統合されたスタイリング",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "ホバーイベントのテスト、ツールチップ位置計算テスト、プレビューコンテンツ生成テスト、パフォーマンステスト"
           }
         ]
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T08:26:19.454Z",
+      "updated": "2025-09-14T08:32:27.732Z",
       "description": "Tasks for master context"
     }
   }
