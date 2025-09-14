@@ -2068,7 +2068,7 @@
               "31.3"
             ],
             "details": "1. TaskからGraphNodeへの変換ロジック実装\n2. 依存関係からGraphEdgeへのマッピング\n3. Redux/Zustandストアとの連携（状態管理）\n4. データ変更時の差分更新アルゴリズム\n5. WebSocketまたはEventEmitterによるリアルタイム同期\n6. 循環依存検出とエラー表示",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "データ変換の正確性テスト、リアルタイム更新の遅延測定、循環依存検出アルゴリズムの検証"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T05:29:43.504Z",
+      "updated": "2025-09-14T05:44:39.151Z",
       "description": "Tasks for master context"
     }
   }
