@@ -2125,7 +2125,7 @@
               "32.2"
             ],
             "details": "src/components/navigation/BreadcrumbNavigation.tsxを作成し、以下を実装：\n1. BreadcrumbNavigationコンポーネント - React FCとして実装\n2. buildBreadcrumbPath()関数 - 現在のノードから親を辿る\n3. BreadcrumbItem - 各階層のクリッカブルな要素\n4. 区切り文字（/や>）のカスタマイズ機能\n5. 長いパスの省略表示（中間部分を...で省略）\n6. ホバー時の完全パス表示\n7. アクティブな階層のハイライト\n8. VSCodeのテーマと統一されたスタイリング",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "階層パス構築の正確性テスト、クリックイベントのテスト、省略表示ロジックのテスト、レンダリングテスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T06:47:16.258Z",
+      "updated": "2025-09-14T07:00:17.318Z",
       "description": "Tasks for master context"
     }
   }
