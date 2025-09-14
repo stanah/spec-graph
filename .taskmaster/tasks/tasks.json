@@ -2137,7 +2137,7 @@
               "32.2"
             ],
             "details": "src/core/navigation/LinkHandler.tsを作成し、以下を実装：\n1. LinkClickHandler - イベント処理の統合管理\n2. handleLinkClick()メソッド - クリック時の処理フロー\n3. scrollToNode()メソッド - smoothScrollIntoView実装\n4. focusNode()メソッド - ノードのハイライトとフォーカス\n5. Ctrl+クリックの検出と新規タブでの開き方\n6. Alt+クリックでリンクプレビュー表示\n7. アニメーション設定（duration、easing）\n8. スクロール完了コールバック",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "イベントハンドリングのE2Eテスト、修飾キーの組み合わせテスト、スクロールアニメーションテスト"
           },
           {
@@ -2271,7 +2271,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T07:00:17.318Z",
+      "updated": "2025-09-14T08:26:19.454Z",
       "description": "Tasks for master context"
     }
   }
