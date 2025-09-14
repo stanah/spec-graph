@@ -1,10 +1,23 @@
 import type { MindmapData, MindmapNode } from '../types';
 import { LinkResolver, type LinkToken } from './linkResolver';
 import { DependencyGraph } from '../core/deps/DependencyGraph';
+import { deepClone } from '../utils/helpers';
 
 export type DanglingReference = {
   token: LinkToken;
   sourceNodeId: string;
+};
+
+type SourceField = 'title' | 'description';
+type ReferenceToken = LinkToken & { sourceNodeId: string; sourceField: SourceField };
+
+export type SafeFix = {
+  type: 'removeLink';
+  nodeId: string;
+  linkId: string;
+  field: SourceField;
+  start: number;
+  end: number;
 };
 
 /**
@@ -42,19 +55,19 @@ export class DataIntegrityChecker {
   }
 
   /** ノードのタイトル/説明からリンク参照を抽出 */
-  collectReferences(): Array<LinkToken & { sourceNodeId: string } > {
-    const refs: Array<LinkToken & { sourceNodeId: string }> = [];
+  collectReferences(): ReferenceToken[] {
+    const refs: ReferenceToken[] = [];
     const root = this.data?.root;
     if (!root) return refs;
 
     const walk = (node: MindmapNode) => {
-      const texts: string[] = [];
-      if (typeof node.title === 'string') texts.push(node.title);
-      if (typeof node.description === 'string') texts.push(node.description);
-
-      for (const t of texts) {
-        const tokens = this.resolver.parseMarkdownLinks(t);
-        for (const token of tokens) refs.push({ ...token, sourceNodeId: node.id });
+      if (typeof node.title === 'string') {
+        const tokens = this.resolver.parseMarkdownLinks(node.title);
+        for (const token of tokens) refs.push({ ...token, sourceNodeId: node.id, sourceField: 'title' });
+      }
+      if (typeof node.description === 'string') {
+        const tokens = this.resolver.parseMarkdownLinks(node.description);
+        for (const token of tokens) refs.push({ ...token, sourceNodeId: node.id, sourceField: 'description' });
       }
 
       if (node.children) node.children.forEach(walk);
@@ -96,5 +109,127 @@ export class DataIntegrityChecker {
   detectCycles(): string[][] {
     const g = this.buildReferenceGraph();
     return g.findCycles();
+  }
+
+  /**
+   * 参照されていないID（ROOTは除外）
+   */
+  detectUnusedIds(): string[] {
+    const ids = this.collectIds();
+    const refs = this.collectReferences();
+    const referenced = new Set<string>();
+    for (const r of refs) referenced.add(r.id);
+    // 未使用 = ids - referenced - {ROOT}
+    const result: string[] = [];
+    for (const id of ids) {
+      if (id === 'ROOT') continue;
+      if (!referenced.has(id)) result.push(id);
+    }
+    result.sort();
+    return result;
+  }
+
+  /**
+   * 安全な修正提案（ダングリング参照のリンク文字列を除去）
+   */
+  suggestSafeFixes(): SafeFix[] {
+    const ids = this.collectIds();
+    const refs = this.collectReferences();
+    const fixes: SafeFix[] = [];
+    for (const r of refs) {
+      if (!ids.has(r.id)) {
+        fixes.push({
+          type: 'removeLink',
+          nodeId: r.sourceNodeId,
+          linkId: r.id,
+          field: r.sourceField,
+          start: r.start,
+          end: r.end,
+        });
+      }
+    }
+    return fixes;
+  }
+
+  /**
+   * 提案された安全な修正を適用した新しいデータを返す
+   */
+  applySafeFixes(): MindmapData {
+    const fixes = this.suggestSafeFixes();
+    const data = deepClone(this.data)!;
+    if (!data?.root) return data as MindmapData;
+
+    // ノードごと・フィールドごとにグループ化し、start降順で適用
+    const grouped = new Map<string, { field: SourceField; start: number; end: number }[]>();
+    for (const f of fixes) {
+      const key = `${f.nodeId}::${f.field}`;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key)!.push({ field: f.field, start: f.start, end: f.end });
+    }
+
+    const applyToNode = (node: MindmapNode) => {
+      for (const field of ['title', 'description'] as const) {
+        const key = `${node.id}::${field}`;
+        const list = grouped.get(key);
+        if (!list?.length) continue;
+        // start の降順に並べて末尾から切り落としていく
+        list.sort((a, b) => b.start - a.start);
+        const src = (node as any)[field];
+        if (typeof src !== 'string') continue;
+        let text = src;
+        for (const fix of list) {
+          text = text.slice(0, fix.start) + text.slice(fix.end);
+        }
+        (node as any)[field] = text;
+      }
+      if (node.children) node.children.forEach(applyToNode);
+    };
+    applyToNode(data.root);
+    return data;
+  }
+
+  /** JSON形式の整合性レポート */
+  generateReportJSON(): {
+    timestamp: string;
+    danglingReferences: Array<{ nodeId: string; id: string; field: SourceField; start: number; end: number; }>;
+    cycles: string[][];
+    unusedIds: string[];
+  } {
+    const fixes = this.suggestSafeFixes();
+    const dangling = fixes.map(f => ({ nodeId: f.nodeId, id: f.linkId, field: f.field, start: f.start, end: f.end }));
+    return {
+      timestamp: new Date().toISOString(),
+      danglingReferences: dangling,
+      cycles: this.detectCycles(),
+      unusedIds: this.detectUnusedIds(),
+    };
+  }
+
+  /** HTML形式の整合性レポート（簡易） */
+  generateReportHTML(): string {
+    const r = this.generateReportJSON();
+    const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const rowsDangling = r.danglingReferences
+      .map(d => `<tr><td>${esc(d.nodeId)}</td><td>${esc(d.id)}</td><td>${esc(d.field)}</td><td>${d.start}-${d.end}</td></tr>`)
+      .join('');
+    const rowsCycles = r.cycles
+      .map(c => `<li>${esc(c.join(' -> '))}</li>`)
+      .join('');
+    const rowsUnused = r.unusedIds
+      .map(id => `<li>${esc(id)}</li>`) 
+      .join('');
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Integrity Report</title></head><body>
+      <h1>Integrity Report</h1>
+      <p>Generated: ${esc(r.timestamp)}</p>
+      <h2>Dangling References</h2>
+      <table border="1" cellspacing="0" cellpadding="4">
+        <thead><tr><th>Node</th><th>ID</th><th>Field</th><th>Range</th></tr></thead>
+        <tbody>${rowsDangling || '<tr><td colspan="4">None</td></tr>'}</tbody>
+      </table>
+      <h2>Cycles</h2>
+      <ul>${rowsCycles || '<li>None</li>'}</ul>
+      <h2>Unused IDs</h2>
+      <ul>${rowsUnused || '<li>None</li>'}</ul>
+    </body></html>`;
   }
 }
