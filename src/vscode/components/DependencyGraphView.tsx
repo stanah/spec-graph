@@ -15,6 +15,8 @@ export const DependencyGraphView: React.FC = () => {
   const [layout, setLayout] = useState<'cose' | 'grid' | 'circle' | 'concentric' | 'breadthfirst' | 'dagre' | 'cola' | 'fcose'>('cose');
   const [zoom, setZoom] = useState(1);
   const [stats, setStats] = useState<{ nodes: number; edges: number }>({ nodes: 0, edges: 0 });
+  const [exportInfo, setExportInfo] = useState<{ type: 'png' | 'svg' | null; bytes: number } | null>(null);
+  const [perfMode, setPerfMode] = useState(false);
 
   // 最小統合: Cytoscapeを遅延ロードして階層を仮表示
   useEffect(() => {
@@ -54,6 +56,10 @@ export const DependencyGraphView: React.FC = () => {
           ],
           layout: { name: layout, animate: false },
           wheelSensitivity: 0.2,
+          pixelRatio: perfMode ? 1 : undefined,
+          textureOnViewport: perfMode ? true : undefined,
+          motionBlur: perfMode ? true : undefined,
+          hideEdgesOnViewport: perfMode ? true : undefined,
         });
         try {
           cyRef.current.zoom(zoom);
@@ -71,7 +77,7 @@ export const DependencyGraphView: React.FC = () => {
       } catch {}
       cyRef.current = null;
     };
-  }, [parsed, layout]);
+  }, [parsed, layout, perfMode]);
 
   // ズームの反映（Cytoscapeが無い場合はCSS transformで代替）
   useEffect(() => {
@@ -94,6 +100,81 @@ export const DependencyGraphView: React.FC = () => {
       setZoom(1);
     }
   };
+
+  // エクスポート処理（Cytoscapeが無い場合はフォールバックSVG）
+  const exportSVG = async () => {
+    let dataUrl = '';
+    if (cyRef.current && typeof cyRef.current.svg === 'function') {
+      try {
+        const svgTxt = cyRef.current.svg({ scale: 1, full: true });
+        dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgTxt);
+      } catch {}
+    }
+    if (!dataUrl) {
+      const svgTxt = buildFallbackSVG(parsed);
+      dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgTxt);
+    }
+    setExportInfo({ type: 'svg', bytes: dataUrl.length });
+    triggerDownload(dataUrl, 'dependency-graph.svg');
+  };
+
+  const exportPNG = async () => {
+    let dataUrl = '';
+    if (cyRef.current && typeof cyRef.current.png === 'function') {
+      try {
+        dataUrl = cyRef.current.png({ full: true, scale: 2, bg: '#fff' });
+      } catch {}
+    }
+    if (!dataUrl) {
+      // フォールバック: SVGを生成してそのままデータURLを返す（PNG等価ではないが最低限）
+      const svgTxt = buildFallbackSVG(parsed);
+      dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgTxt);
+    }
+    setExportInfo({ type: 'png', bytes: dataUrl.length });
+    triggerDownload(dataUrl, 'dependency-graph.png');
+  };
+
+  function triggerDownload(href: string, filename: string) {
+    try {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch {}
+  }
+
+  function buildFallbackSVG(data: MindmapData | null): string {
+    if (!data) return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"></svg>';
+    const { elements } = buildElementsFromMindmap(data);
+    const nodes = elements.filter(e => e.data && e.data.id && e.data.label);
+    const edges = elements.filter(e => e.data && e.data.source && e.data.target);
+    const W = 800, H = 600, margin = 40;
+    const cols = Math.max(1, Math.ceil(Math.sqrt(nodes.length)));
+    const cellW = (W - margin * 2) / cols;
+    const cellH = (H - margin * 2) / cols;
+    const pos: Record<string, { x: number; y: number }> = {};
+    nodes.forEach((n, i) => {
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+      pos[n.data.id] = { x: margin + c * cellW + cellW / 2, y: margin + r * cellH + cellH / 2 };
+    });
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const edgeSvg = edges.map((e: any) => {
+      const s = pos[e.data.source];
+      const t = pos[e.data.target];
+      if (!s || !t) return '';
+      return `<line x1="${s.x}" y1="${s.y}" x2="${t.x}" y2="${t.y}" stroke="#A0A0A0" stroke-width="1" marker-end="url(#arrow)"/>`;
+    }).join('');
+    const nodeSvg = nodes.map((n: any) => {
+      const p = pos[n.data.id];
+      const r = 12;
+      return `<g><circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#5B8FF9" /><text x="${p.x + r + 4}" y="${p.y + 4}" font-size="10" fill="#333">${esc(n.data.label)}</text></g>`;
+    }).join('');
+    return `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#A0A0A0"/></marker></defs>${edgeSvg}${nodeSvg}</svg>`;
+  }
 
   function buildElementsFromMindmap(data: MindmapData): { elements: any[]; counts: { nodes: number; edges: number } } {
     const nodeSet = new Map<string, string>();
@@ -190,6 +271,23 @@ export const DependencyGraphView: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* エクスポートツールバー */}
+      <div data-testid="export-toolbar" style={{ position: 'absolute', top: 48, right: 8, zIndex: 2, background: 'var(--vscode-editor-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: 6, padding: '6px 8px', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button data-testid="export-png" onClick={exportPNG} style={{ fontSize: 12 }}>PNG</button>
+        <button data-testid="export-svg" onClick={exportSVG} style={{ fontSize: 12 }}>SVG</button>
+        <div data-testid="export-info" style={{ fontSize: 11, opacity: 0.8 }}>
+          {exportInfo ? `type: ${exportInfo.type} bytes: ${exportInfo.bytes}` : 'not exported'}
+        </div>
+      </div>
+
+      {/* パフォーマンスモード切替 */}
+      <div style={{ position: 'absolute', top: 80, right: 8, zIndex: 2, background: 'var(--vscode-editor-background)', border: '1px solid var(--vscode-panel-border)', borderRadius: 6, padding: '6px 8px', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <label style={{ fontSize: 12 }}>
+          <input data-testid="perf-toggle" type="checkbox" checked={perfMode} onChange={(e) => setPerfMode(e.target.checked)} /> 高パフォーマンス
+        </label>
+        <span data-testid="perf-indicator" style={{ fontSize: 12, opacity: 0.8 }}>perf: {perfMode ? 'on' : 'off'}</span>
+      </div>
 
       {/* ミニマップ（最小プレースホルダー、Cytoscapeがあれば将来プラグイン統合） */}
       <div
