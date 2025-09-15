@@ -88,10 +88,11 @@ describe('ProgressSystem', () => {
 
   describe('進捗の設定と取得', () => {
     it('ノードの進捗率を設定できる', () => {
-      progressSystem.setProgress('1', 75, 'Test progress');
-      
+      // デバッグ: ノードが見つかるかチェック
+      expect(() => progressSystem.setProgress('1', 75, 'Test progress')).not.toThrow();
+
       expect(progressSystem.getProgress('1')).toBe(75);
-      
+
       const progressInfo = progressSystem.getProgressInfo('1');
       expect(progressInfo?.progress).toBe(75);
       expect(progressInfo?.isManuallySet).toBe(true);
@@ -171,10 +172,10 @@ describe('ProgressSystem', () => {
       
       const summary: ProgressSummary = progressSystem.getProgressSummary();
       
-      expect(summary.totalNodes).toBe(7); // 全ノード数
-      expect(summary.completedNodes).toBe(1); // 100%のノード
-      expect(summary.inProgressNodes).toBe(2); // 1-99%のノード
-      expect(summary.notStartedNodes).toBe(4); // 0%のノード
+      expect(summary.totalNodes).toBe(9); // 全ノード数 (修正: 1,1-1,1-1-1,1-1-2,1-2,2,2-1,2-2,3 = 9個)
+      expect(summary.completedNodes).toBe(1); // 100%のノード (id: '1')
+      expect(summary.inProgressNodes).toBe(2); // 1-99%のノード (id: '1-1', '2')
+      expect(summary.notStartedNodes).toBe(6); // 0%のノード (残りの6個)
     });
 
     it('全体進捗率が正しく計算される', () => {
@@ -281,17 +282,24 @@ describe('ProgressSystem', () => {
     });
 
     it('リスナーでエラーが発生しても処理が継続される', () => {
+      // console.errorをモックしてstderr出力を抑制
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
       const errorListener = vi.fn(() => {
         throw new Error('Listener error');
       });
       const normalListener = vi.fn();
-      
+
       progressSystem.addProgressChangeListener(errorListener);
       progressSystem.addProgressChangeListener(normalListener);
-      
+
       // エラーが発生してもsetProgressが完了することを確認
       expect(() => progressSystem.setProgress('1', 50)).not.toThrow();
       expect(normalListener).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in progress change listener:', expect.any(Error));
+
+      // モックを復元
+      consoleErrorSpy.mockRestore();
     });
   });
 

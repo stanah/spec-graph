@@ -48,9 +48,9 @@ export const DocumentView: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    // Skip loading during Vitest to keep tests lightweight
+    // Skip loading during tests to keep tests lightweight
     // @ts-expect-error vitest flag injected by Vitest
-    if (import.meta?.vitest) return;
+    if (import.meta?.vitest || process.env.NODE_ENV === 'test' || typeof global !== 'undefined' && global.vitest) return;
     const importModule = (p: string) => import(/* @vite-ignore */ p);
     (async () => {
       try {

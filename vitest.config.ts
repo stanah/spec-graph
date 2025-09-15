@@ -17,5 +17,7 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
+    'process.env.NODE_ENV': '"test"',
+    'import.meta.vitest': 'true'
   },
 });
