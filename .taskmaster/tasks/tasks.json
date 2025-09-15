@@ -283,7 +283,7 @@
           3,
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -418,7 +418,7 @@
         "id": 7,
         "title": "UIテーマとカスタマイズ機能の実装",
         "description": "シンプルなダークモード対応を実装し、システム設定に連動したテーマ切り替え機能を提供する",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           5
         ],
@@ -464,7 +464,7 @@
         "id": 8,
         "title": "高度な機能群の実装（タグ、進捗管理）",
         "description": "タグシステムと進捗管理機能を実装する",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           5,
           6
@@ -520,7 +520,7 @@
           7,
           8
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1007,7 +1007,7 @@
         "dependencies": [
           16
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1348,7 +1348,7 @@
         "id": 22,
         "title": "ノード状態インジケーター表示機能の実装",
         "description": "マインドマップのノードにpriority、status等の状態情報を視覚的にインジケーターとして表示する機能を実装する。色分け、アイコン、コンパクトなビジュアル要素を使用してノードの状態を直感的に把握できるようにする。",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           15,
           16
@@ -1421,7 +1421,7 @@
         "description": "マインドマップのコアロジックをプラットフォーム固有の実装から分離し、Web/VSCode/CLIなど複数環境で動作可能な共通基盤を構築する。テストファースト・リファクタリング戦略により段階的に実装する。",
         "details": "1. ドメインモデルとインターフェースの定義\n   ```typescript\n   // core/domain/models.ts\n   export interface MindmapNode {\n     id: string;\n     title: string;\n     description?: string;\n     children: MindmapNode[];\n     metadata?: NodeMetadata;\n   }\n\n   export interface NodeMetadata {\n     priority?: 'high' | 'medium' | 'low';\n     status?: 'pending' | 'in-progress' | 'done';\n     tags?: string[];\n     createdAt: Date;\n     updatedAt: Date;\n   }\n\n   // core/domain/ports.ts\n   export interface FileSystemPort {\n     readFile(path: string): Promise<string>;\n     writeFile(path: string, content: string): Promise<void>;\n     exists(path: string): Promise<boolean>;\n   }\n\n   export interface RenderingPort {\n     render(mindmap: MindmapNode): void;\n     update(node: MindmapNode): void;\n   }\n   ```\n\n2. コアビジネスロジックの実装\n   ```typescript\n   // core/usecases/mindmap-service.ts\n   export class MindmapService {\n     constructor(\n       private fileSystem: FileSystemPort,\n       private parser: ParserPort,\n       private validator: ValidatorPort\n     ) {}\n\n     async loadMindmap(path: string): Promise<MindmapNode> {\n       const content = await this.fileSystem.readFile(path);\n       const parsed = await this.parser.parse(content);\n       const validated = await this.validator.validate(parsed);\n       return validated;\n     }\n\n     async saveMindmap(path: string, mindmap: MindmapNode): Promise<void> {\n       const validated = await this.validator.validate(mindmap);\n       const serialized = await this.parser.serialize(validated);\n       await this.fileSystem.writeFile(path, serialized);\n     }\n   }\n   ```\n\n3. アダプターパターンによるプラットフォーム固有実装\n   ```typescript\n   // adapters/web/file-system-adapter.ts\n   export class WebFileSystemAdapter implements FileSystemPort {\n     async readFile(path: string): Promise<string> {\n       const response = await fetch(path);\n       return response.text();\n     }\n   }\n\n   // adapters/vscode/file-system-adapter.ts\n   export class VSCodeFileSystemAdapter implements FileSystemPort {\n     constructor(private vscode: typeof import('vscode')) {}\n     \n     async readFile(path: string): Promise<string> {\n       const uri = this.vscode.Uri.file(path);\n       const data = await this.vscode.workspace.fs.readFile(uri);\n       return new TextDecoder().decode(data);\n     }\n   }\n   ```\n\n4. 依存性注入コンテナの実装\n   ```typescript\n   // core/di/container.ts\n   export class DIContainer {\n     private services = new Map<string, any>();\n     private factories = new Map<string, () => any>();\n\n     register<T>(token: string, factory: () => T): void {\n       this.factories.set(token, factory);\n     }\n\n     get<T>(token: string): T {\n       if (!this.services.has(token)) {\n         const factory = this.factories.get(token);\n         if (!factory) throw new Error(`Service ${token} not registered`);\n         this.services.set(token, factory());\n       }\n       return this.services.get(token);\n     }\n   }\n   ```\n\n5. テスト駆動開発による段階的リファクタリング\n   ```typescript\n   // tests/core/mindmap-service.test.ts\n   describe('MindmapService', () => {\n     let service: MindmapService;\n     let mockFileSystem: jest.Mocked<FileSystemPort>;\n\n     beforeEach(() => {\n       mockFileSystem = {\n         readFile: jest.fn(),\n         writeFile: jest.fn(),\n         exists: jest.fn()\n       };\n       service = new MindmapService(mockFileSystem, mockParser, mockValidator);\n     });\n\n     it('should load mindmap from file system', async () => {\n       mockFileSystem.readFile.mockResolvedValue(validJsonContent);\n       const result = await service.loadMindmap('test.json');\n       expect(result).toMatchObject(expectedMindmap);\n     });\n   });\n   ```",
         "testStrategy": "1. ユニットテストによるコアロジックの検証\n   - ドメインモデルの振る舞いテスト\n   - ビジネスロジックの単体テスト\n   - モックを使用したポート実装の独立性テスト\n   - エラーケースとエッジケースの網羅的テスト\n\n2. 統合テストによるアダプター動作の確認\n   - 各プラットフォームアダプターの実装テスト\n   - ファイルシステム操作の実環境テスト\n   - レンダリングアダプターの描画結果検証\n   - プラットフォーム間の互換性テスト\n\n3. アーキテクチャテストによる設計品質の保証\n   - 依存関係の方向性チェック（コアは外部に依存しない）\n   - レイヤー間の結合度測定\n   - インターフェース実装の完全性検証\n   - 循環依存の検出\n\n4. パフォーマンステストによる最適化効果の測定\n   - 大規模マインドマップでのメモリ使用量\n   - ファイル読み書きの速度測定\n   - プラットフォーム間のパフォーマンス比較\n   - リファクタリング前後の性能差分析",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           15,
           16,
@@ -1459,7 +1459,7 @@
             "title": "Phase1-3: プラットフォーム統合テスト強化",
             "description": "Web環境とVSCode環境での動作差異を検証するテストを追加し、プラットフォーム固有の問題を事前に発見する",
             "details": "既存のプラットフォームアダプターのテストを強化し、ブラウザ環境とVSCode拡張環境での動作差異を検証。ファイルシステム操作、UI表示、イベント処理などの環境差異をテストでカバーする。",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               "23.2"
             ],
@@ -1470,7 +1470,7 @@
             "title": "Phase1-4: E2Eテスト拡充とカバレッジ確認",
             "description": "エンドツーエンドテストを拡充し、テストカバレッジを測定してテスト網羅性を確保する",
             "details": "ユーザーシナリオに基づいたE2Eテストを追加し、テストカバレッジ計測ツールでコードカバレッジを90%以上に向上。不足しているテストケースを特定し、重要な機能の動作保証を強化する。",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               "23.3"
             ],
@@ -1481,7 +1481,7 @@
             "title": "Phase2-1: ICoreLogicインターフェース定義",
             "description": "データ管理、ノード操作、イベントシステム、状態管理のための抽象インターフェースを設計・定義する",
             "details": "プラットフォーム非依存のコアロジック用インターフェースを定義。ICoreLogic、INodeManager、IEventSystem、IStateManagerなどの抽象化レイヤーを作成し、実装の指針を明確化する。",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               "23.4"
             ],
@@ -1492,7 +1492,7 @@
             "title": "Phase2-2: MindmapCoreLogicクラス新規作成",
             "description": "ICoreLogicを実装し、プラットフォーム非依存のコアロジックを集約したMindmapCoreLogicクラスを作成する",
             "details": "定義したインターフェースに基づき、真のコアロジッククラスを実装。データ構造管理、ノード操作API、イベントシステム、状態管理（Undo/Redo）を含む完全な実装を作成し、既存のテストを通過させる。",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               "23.5"
             ],
@@ -1503,7 +1503,7 @@
             "title": "Phase2-3: 既存コードとの段階的統合",
             "description": "テストを通過させながら、既存のMindmapCoreから新しいMindmapCoreLogicへ責務を段階的に移行する",
             "details": "現在のMindmapCoreクラスから新しいMindmapCoreLogicクラスへ、段階的に機能を移行。各ステップでテストを実行し、動作に問題がないことを確認しながらリファクタリングを進める。",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               "23.6"
             ],
@@ -1514,7 +1514,7 @@
             "title": "Phase2-4: MindmapCore→MindmapRenderer移行",
             "description": "最終的にMindmapCoreを描画専用のMindmapRendererクラスにリネームし、責務を明確化して統合テストで動作確認する",
             "details": "MindmapCoreクラスを描画専用のMindmapRendererクラスにリネームし、責務を明確に分離。新しいアーキテクチャでの動作をすべてのテストで確認し、リファクタリング完了を確認する。",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               "23.7"
             ],
@@ -2240,7 +2240,7 @@
           27,
           31
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -2249,7 +2249,7 @@
         "description": "VSCodeのファイルシステムAPIと統合し、ファイル形式に応じた適切なビュー（マインドマップ、テーブル、リッチドキュメント）への自動切り替えと、ファイル変更監視・自動保存・状態同期を実装する",
         "details": "実装内容：\n\n1. VSCodeファイルシステムAPI統合\n```typescript\n// vscode/FileSystemIntegration.ts\nexport class VSCodeFileSystemAdapter implements FileSystemPort {\n  private fileWatcher: vscode.FileSystemWatcher;\n  private autoSaveTimer: NodeJS.Timeout | null = null;\n  \n  constructor(\n    private context: vscode.ExtensionContext,\n    private workspace: typeof vscode.workspace\n  ) {\n    this.initializeFileWatcher();\n  }\n  \n  private initializeFileWatcher(): void {\n    const pattern = new vscode.RelativePattern(\n      vscode.workspace.workspaceFolders![0],\n      '**/*.{json,md,mindmap}'\n    );\n    \n    this.fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);\n    this.fileWatcher.onDidChange(this.handleFileChange.bind(this));\n    this.fileWatcher.onDidCreate(this.handleFileCreate.bind(this));\n    this.fileWatcher.onDidDelete(this.handleFileDelete.bind(this));\n  }\n}\n```\n\n2. ファイル形式検出とビュー切り替えロジック\n```typescript\n// core/ViewSwitcher.ts\nexport class ViewSwitcher {\n  private static readonly FILE_TYPE_MAPPINGS = {\n    '.mindmap': 'mindmap',\n    '.mm': 'mindmap',\n    '.csv': 'table',\n    '.tsv': 'table',\n    '.md': 'document',\n    '.markdown': 'document',\n    '.json': 'auto' // JSON構造を解析して判定\n  };\n  \n  detectViewType(uri: vscode.Uri, content?: string): ViewType {\n    const extension = path.extname(uri.fsPath).toLowerCase();\n    const mappedType = ViewSwitcher.FILE_TYPE_MAPPINGS[extension];\n    \n    if (mappedType === 'auto' && content) {\n      return this.analyzeJsonStructure(content);\n    }\n    \n    return mappedType || 'mindmap';\n  }\n  \n  private analyzeJsonStructure(content: string): ViewType {\n    try {\n      const data = JSON.parse(content);\n      if (this.isMindmapStructure(data)) return 'mindmap';\n      if (this.isTableStructure(data)) return 'table';\n      if (this.isDocumentStructure(data)) return 'document';\n      return 'mindmap'; // デフォルト\n    } catch {\n      return 'mindmap';\n    }\n  }\n}\n```\n\n3. ファイル変更監視と自動保存\n```typescript\n// vscode/AutoSaveManager.ts\nexport class AutoSaveManager {\n  private pendingChanges = new Map<string, any>();\n  private saveDebounceTime = 2000; // 2秒\n  \n  constructor(\n    private fileSystem: VSCodeFileSystemAdapter,\n    private eventBus: EventEmitter\n  ) {\n    this.eventBus.on('document:change', this.scheduleAutoSave.bind(this));\n  }\n  \n  private scheduleAutoSave(uri: string, content: any): void {\n    this.pendingChanges.set(uri, content);\n    \n    if (this.autoSaveTimer) {\n      clearTimeout(this.autoSaveTimer);\n    }\n    \n    this.autoSaveTimer = setTimeout(() => {\n      this.executePendingSaves();\n    }, this.saveDebounceTime);\n  }\n  \n  private async executePendingSaves(): Promise<void> {\n    const saves = Array.from(this.pendingChanges.entries()).map(\n      ([uri, content]) => this.fileSystem.save(uri, content)\n    );\n    \n    await Promise.allSettled(saves);\n    this.pendingChanges.clear();\n  }\n}\n```\n\n4. ファイル状態同期メカニズム\n```typescript\n// core/FileSyncManager.ts\nexport class FileSyncManager {\n  private fileStates = new Map<string, FileState>();\n  private conflictResolver: ConflictResolver;\n  \n  async syncFileState(uri: string): Promise<SyncResult> {\n    const localState = this.fileStates.get(uri);\n    const remoteState = await this.fetchRemoteState(uri);\n    \n    if (this.hasConflict(localState, remoteState)) {\n      return this.conflictResolver.resolve(localState, remoteState);\n    }\n    \n    return this.mergeStates(localState, remoteState);\n  }\n  \n  private hasConflict(local: FileState, remote: FileState): boolean {\n    return local.version !== remote.version && \n           local.lastModified !== remote.lastModified;\n  }\n}\n```\n\n5. VSCode TextDocument APIとの統合\n```typescript\n// vscode/DocumentProvider.ts\nexport class MindmapDocumentProvider implements vscode.TextDocumentContentProvider {\n  private _onDidChange = new vscode.EventEmitter<vscode.Uri>();\n  readonly onDidChange = this._onDidChange.event;\n  \n  provideTextDocumentContent(uri: vscode.Uri): string | Thenable<string> {\n    const viewType = this.viewSwitcher.detectViewType(uri);\n    const content = this.fileSystem.readFile(uri);\n    \n    return this.renderContent(content, viewType);\n  }\n}\n```\n\n6. ファイル操作コマンドの実装\n```typescript\n// vscode/commands/FileCommands.ts\nexport function registerFileCommands(context: vscode.ExtensionContext) {\n  context.subscriptions.push(\n    vscode.commands.registerCommand('mindmap.openWith', async (uri: vscode.Uri) => {\n      const viewType = await vscode.window.showQuickPick(\n        ['マインドマップ', 'テーブル', 'リッチドキュメント'],\n        { placeHolder: 'ビューを選択してください' }\n      );\n      \n      await openInView(uri, viewType);\n    })\n  );\n}\n```\n\n7. ファイルタイプ別のシリアライザー\n```typescript\n// core/serializers/FileSerializer.ts\nexport interface FileSerializer<T> {\n  serialize(data: T): string;\n  deserialize(content: string): T;\n  getFileExtension(): string;\n}\n\nexport class MindmapSerializer implements FileSerializer<MindmapData> {\n  serialize(data: MindmapData): string {\n    return JSON.stringify(data, null, 2);\n  }\n  \n  deserialize(content: string): MindmapData {\n    return JSON.parse(content);\n  }\n  \n  getFileExtension(): string {\n    return '.mindmap';\n  }\n}\n```\n\n8. ファイル変更の差分検出\n```typescript\n// core/DiffDetector.ts\nexport class FileDiffDetector {\n  detectChanges(original: any, modified: any): DiffResult {\n    const diff = deepDiff(original, modified);\n    return {\n      hasChanges: diff.length > 0,\n      changes: diff,\n      conflictingChanges: this.findConflicts(diff)\n    };\n  }\n}\n```",
         "testStrategy": "1. VSCodeファイルシステム統合テスト\n   - FileSystemWatcherのイベント発火テスト\n   - ファイル作成・変更・削除の正確な検出\n   - 複数ファイル同時変更の処理\n   - エラーハンドリングとリトライロジック\n\n2. ビュー自動切り替えテスト\n   - 各ファイル拡張子での正しいビュー選択\n   - JSON構造解析による適切なビュー判定\n   - 不明なファイル形式でのフォールバック動作\n   - ビュー切り替え時の状態保持\n\n3. 自動保存機能テスト\n   - デバウンス動作の検証（2秒後の保存実行）\n   - 連続変更時の適切なバッチ処理\n   - 保存失敗時のリトライメカニズム\n   - 同時編集時のコンフリクト検出\n\n4. ファイル同期テスト\n   - ローカル・リモート状態の正確な比較\n   - コンフリクト検出と解決フローの検証\n   - 大容量ファイルの同期パフォーマンス\n   - ネットワーク断絶時の動作",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           10,
           23,
@@ -2317,7 +2317,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-14T16:31:21.641Z",
+      "updated": "2025-09-15T02:34:43.481Z",
       "description": "Tasks for master context"
     }
   }
