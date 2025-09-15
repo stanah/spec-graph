@@ -1,0 +1,469 @@
+/* ガントチャート基本スタイル */
+.gantt-chart {
+  background-color: var(--bg-color, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+.gantt-chart--compact {
+  padding: 1rem;
+}
+
+.gantt-chart--full {
+  min-height: 400px;
+}
+
+/* ヘッダー部分 */
+.gantt-chart__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--header-bg-color, #f8f9fa);
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.gantt-chart__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color, #333333);
+}
+
+.gantt-chart__controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.gantt-chart__time-scale-selector {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  background-color: var(--bg-color, #ffffff);
+  color: var(--text-color, #333333);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.gantt-chart__today-button {
+  padding: 0.375rem 0.75rem;
+  background-color: var(--primary-color, #007acc);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.gantt-chart__today-button:hover {
+  background-color: var(--primary-hover-color, #005a9e);
+}
+
+/* コンパクトモード */
+.gantt-chart__compact-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gantt-chart__compact-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: var(--card-bg-color, #f5f5f5);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.gantt-chart__compact-stat span:first-child {
+  color: var(--text-muted-color, #666666);
+}
+
+.gantt-chart__compact-stat span:last-child {
+  font-weight: 600;
+  color: var(--text-color, #333333);
+}
+
+/* メインコンテンツ */
+.gantt-chart__content {
+  position: relative;
+  background-color: var(--bg-color, #ffffff);
+}
+
+/* タイムラインヘッダー */
+.gantt-chart__timeline-header {
+  display: flex;
+  background-color: var(--header-bg-color, #f8f9fa);
+  border-bottom: 2px solid var(--border-color, #e0e0e0);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.gantt-chart__task-column-header {
+  width: 250px;
+  min-width: 250px;
+  padding: 1rem;
+  font-weight: 600;
+  color: var(--text-color, #333333);
+  border-right: 1px solid var(--border-color, #e0e0e0);
+  background-color: var(--header-bg-color, #f8f9fa);
+}
+
+.gantt-chart__timeline-dates {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.gantt-chart__timeline-dates::-webkit-scrollbar {
+  display: none;
+}
+
+.gantt-chart__timeline-date {
+  min-width: 80px;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted-color, #666666);
+  border-right: 1px solid var(--border-light-color, #f0f0f0);
+  white-space: nowrap;
+}
+
+/* タイムライン */
+.gantt-chart__timeline {
+  position: relative;
+  max-height: 600px;
+  overflow: auto;
+  background-color: var(--bg-color, #ffffff);
+}
+
+.gantt-chart__tasks {
+  position: relative;
+}
+
+/* タスク行 */
+.gantt-chart__task-row {
+  display: flex;
+  min-height: 40px;
+  border-bottom: 1px solid var(--border-light-color, #f0f0f0);
+  position: relative;
+}
+
+.gantt-chart__task-row:hover {
+  background-color: var(--hover-bg-color, #f5f5f5);
+}
+
+.gantt-chart__task-info {
+  width: 250px;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-right: 1px solid var(--border-color, #e0e0e0);
+  background-color: var(--bg-color, #ffffff);
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+
+.gantt-chart__task-title {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-color, #333333);
+  cursor: pointer;
+  margin-right: 0.5rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-chart__task-title:hover {
+  color: var(--primary-color, #007acc);
+  text-decoration: underline;
+}
+
+.gantt-chart__task-progress {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted-color, #666666);
+  min-width: 35px;
+  text-align: right;
+}
+
+/* タイムラインセル */
+.gantt-chart__timeline-cell {
+  flex: 1;
+  position: relative;
+  height: 40px;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent 79px,
+    var(--border-light-color, #f0f0f0) 79px,
+    var(--border-light-color, #f0f0f0) 80px
+  );
+}
+
+/* タスクバー */
+.gantt-chart__task-bar {
+  position: absolute;
+  top: 8px;
+  height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.gantt-chart__task-bar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.gantt-chart__task-bar-progress {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.3s ease;
+}
+
+/* 今日のライン */
+.gantt-chart__today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--danger-color, #f44336);
+  z-index: 8;
+  opacity: 0.8;
+  box-shadow: 0 0 4px rgba(244, 67, 54, 0.5);
+}
+
+.gantt-chart__today-line::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--danger-color, #f44336);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(244, 67, 54, 0.5);
+}
+
+/* フッター */
+.gantt-chart__footer {
+  padding: 1rem 1.5rem;
+  background-color: var(--header-bg-color, #f8f9fa);
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.gantt-chart__legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.gantt-chart__legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-muted-color, #666666);
+}
+
+.gantt-chart__legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  margin-right: 0.5rem;
+}
+
+/* ダークモード対応 */
+[data-theme="dark"] .gantt-chart {
+  --bg-color: #1e1e1e;
+  --header-bg-color: #2d2d2d;
+  --card-bg-color: #2d2d2d;
+  --text-color: #ffffff;
+  --text-muted-color: #cccccc;
+  --border-color: #404040;
+  --border-light-color: #353535;
+  --hover-bg-color: #353535;
+  --primary-color: #0078d4;
+  --primary-hover-color: #106ebe;
+  --danger-color: #ff6b6b;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .gantt-chart__header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .gantt-chart__controls {
+    justify-content: center;
+  }
+  
+  .gantt-chart__task-column-header,
+  .gantt-chart__task-info {
+    width: 200px;
+    min-width: 200px;
+  }
+  
+  .gantt-chart__timeline-date {
+    min-width: 60px;
+    padding: 0.75rem 0.25rem;
+  }
+  
+  .gantt-chart__task-title {
+    font-size: 0.8rem;
+  }
+  
+  .gantt-chart__legend {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .gantt-chart__task-column-header,
+  .gantt-chart__task-info {
+    width: 150px;
+    min-width: 150px;
+  }
+  
+  .gantt-chart__timeline-date {
+    min-width: 50px;
+    font-size: 0.7rem;
+  }
+  
+  .gantt-chart__task-info {
+    padding: 0.5rem;
+  }
+  
+  .gantt-chart__compact-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 印刷対応 */
+@media print {
+  .gantt-chart__controls {
+    display: none;
+  }
+  
+  .gantt-chart {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .gantt-chart__timeline {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .gantt-chart__today-line {
+    display: none;
+  }
+}
+
+/* アクセシビリティ */
+@media (prefers-reduced-motion: reduce) {
+  .gantt-chart__task-bar,
+  .gantt-chart__task-bar-progress {
+    transition: none;
+  }
+}
+
+/* スクロールバーカスタマイズ */
+.gantt-chart__timeline::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gantt-chart__timeline::-webkit-scrollbar-track {
+  background-color: var(--border-light-color, #f0f0f0);
+}
+
+.gantt-chart__timeline::-webkit-scrollbar-thumb {
+  background-color: var(--border-color, #e0e0e0);
+  border-radius: 4px;
+}
+
+.gantt-chart__timeline::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted-color, #666666);
+}
+
+/* 依存関係の矢印（将来の拡張用） */
+.gantt-chart__dependency-arrow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.gantt-chart__dependency-line {
+  stroke: var(--primary-color, #007acc);
+  stroke-width: 2;
+  fill: none;
+  marker-end: url(#arrowhead);
+  opacity: 0.6;
+}
+
+/* ローディング状態 */
+.gantt-chart--loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.gantt-chart__loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* アニメーション */
+@keyframes taskBarSlide {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.gantt-chart__task-bar {
+  animation: taskBarSlide 0.3s ease-out;
+}
+
+/* ズーム機能（将来の拡張用） */
+.gantt-chart--zoomed-in .gantt-chart__timeline-date {
+  min-width: 120px;
+}
+
+.gantt-chart--zoomed-out .gantt-chart__timeline-date {
+  min-width: 40px;
+  font-size: 0.7rem;
+}
