@@ -218,27 +218,25 @@ describe('useRealtimeSync', () => {
   });
 
   describe('パフォーマンス最適化', () => {
-    it('同じ内容の場合は同期をスキップする', () => {
+    it('同じ内容の場合は同期をスキップする', async () => {
       const { result } = renderHook(() => useRealtimeSync());
 
       const content = '{"title": "test"}';
 
       // デバウンス版を使用（immediate版は常に実行される）
-      act(() => {
+      await act(async () => {
         result.current.syncContent(content);
       });
 
       // デバウンス期間完了まで待機
-      act(() => {
+      await act(async () => {
         vi.advanceTimersByTime(300);
       });
 
-      act(() => {
-        vi.clearAllMocks();
-      });
+      vi.clearAllMocks();
 
       // 同じ内容で再度同期
-      act(() => {
+      await act(async () => {
         result.current.syncContent(content);
       });
 
@@ -350,9 +348,7 @@ describe('useRealtimeSync', () => {
       });
       
       // 既存のタイマーをクリア
-      act(() => {
-        vi.clearAllMocks();
-      });
+      vi.clearAllMocks();
 
       // 新しい設定で再度同期を開始
       act(() => {

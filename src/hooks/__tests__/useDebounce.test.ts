@@ -26,7 +26,7 @@ describe('useDebounce', () => {
     expect(result.current).toBe('initial');
   });
 
-  it('デバウンス期間中は古い値を保持する', () => {
+  it('デバウンス期間中は古い値を保持する', async () => {
     const { result, rerender } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
       {
@@ -37,7 +37,7 @@ describe('useDebounce', () => {
     expect(result.current).toBe('initial');
 
     // 値を更新
-    act(() => {
+    await act(async () => {
       rerender({ value: 'updated', delay: 500 });
     });
 
@@ -45,7 +45,7 @@ describe('useDebounce', () => {
     expect(result.current).toBe('initial');
 
     // デバウンス期間の半分経過
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(250);
     });
 

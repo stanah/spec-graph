@@ -140,7 +140,12 @@ describe('Mindmap Library Exports', () => {
         'rafThrottle',
         'BatchProcessor',
         'VirtualizationManager',
-        'SpatialIndex'
+        'SpatialIndex',
+
+        // Table view components
+        'TableView',
+        'buildMindmapColumns',
+        'TableViewConnected'
       ];
 
       const actualExports = Object.keys(MindmapLibrary);
