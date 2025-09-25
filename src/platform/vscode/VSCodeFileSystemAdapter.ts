@@ -5,13 +5,17 @@ import type { VSCodeApi } from './VSCodeApiSingleton';
 /**
  * VSCode拡張環境でのファイルシステム操作実装
  * VSCode Extension API との実際の統合を提供
+ * FileSystemWatcherとRelativePatternを使用した監視機能を提供
  */
 export class VSCodeFileSystemAdapter implements FileSystemAdapter {
   private vscode: VSCodeApi | null = null;
   private messageHandlers = new Map<string, (data: unknown) => void>();
   private fileWatchers = new Map<string, { callback: (content: string) => void; watcherId: string }>();
+  private fileSystemWatchers = new Map<string, { callback: (uri: string, changeType: 'created' | 'changed' | 'deleted') => void; watcherId: string }>();
   private requestId = 0;
   private initialized = false;
+  private readonly MAX_RETRY_ATTEMPTS = 3;
+  private readonly RETRY_DELAY_MS = 1000;
 
   constructor() {
     this.initialize();
@@ -43,6 +47,7 @@ export class VSCodeFileSystemAdapter implements FileSystemAdapter {
 
         // ファイル監視イベントの処理
         this.handleFileWatchEvent(message);
+        this.handleFileSystemWatchEvent(message);
       });
 
       // VSCode拡張に初期化完了を通知
@@ -55,71 +60,123 @@ export class VSCodeFileSystemAdapter implements FileSystemAdapter {
     }
   }
 
-  private handleFileWatchEvent(message: { 
-    command: string; 
-    watcherId?: string; 
-    path?: string; 
-    content?: string; 
+  private handleFileWatchEvent(message: {
+    command: string;
+    watcherId?: string;
+    path?: string;
+    content?: string;
   }): void {
     switch (message.command) {
       case 'fileChanged':
         if (message.watcherId && message.content !== undefined) {
           // ウォッチャーIDに対応するコールバックを実行
-          for (const [_path, watcher] of this.fileWatchers.entries()) {
+          Array.from(this.fileWatchers.entries()).forEach(([_path, watcher]) => {
             if (watcher.watcherId === message.watcherId) {
               watcher.callback(message.content);
-              break;
             }
-          }
+          });
         }
         break;
       case 'fileDeleted':
         if (message.watcherId) {
           // ファイルが削除された場合、ウォッチャーを削除
-          for (const [path, watcher] of this.fileWatchers.entries()) {
+          Array.from(this.fileWatchers.entries()).forEach(([path, watcher]) => {
             if (watcher.watcherId === message.watcherId) {
               this.fileWatchers.delete(path);
-              break;
             }
-          }
+          });
+        }
+        break;
+    }
+  }
+
+  private handleFileSystemWatchEvent(message: {
+    command: string;
+    watcherId?: string;
+    uri?: string;
+    changeType?: 'created' | 'changed' | 'deleted';
+  }): void {
+    switch (message.command) {
+      case 'fileSystemChanged':
+        if (message.watcherId && message.uri && message.changeType) {
+          // ウォッチャーIDに対応するコールバックを実行
+          Array.from(this.fileSystemWatchers.entries()).forEach(([_patterns, watcher]) => {
+            if (watcher.watcherId === message.watcherId) {
+              watcher.callback(message.uri, message.changeType);
+            }
+          });
+        }
+        break;
+      case 'fileSystemWatcherDisposed':
+        if (message.watcherId) {
+          // FileSystemWatcherが破棄された場合、ウォッチャーを削除
+          Array.from(this.fileSystemWatchers.entries()).forEach(([patterns, watcher]) => {
+            if (watcher.watcherId === message.watcherId) {
+              this.fileSystemWatchers.delete(patterns);
+            }
+          });
         }
         break;
     }
   }
 
   private async sendMessage<T>(command: string, payload?: Record<string, unknown>): Promise<T> {
+    return this.sendMessageWithRetry<T>(command, payload, this.MAX_RETRY_ATTEMPTS);
+  }
+
+  private async sendMessageWithRetry<T>(command: string, payload?: Record<string, unknown>, attempts: number = 1): Promise<T> {
     if (!this.vscode) {
       throw new Error('VSCode API が利用できません');
     }
 
-    return new Promise((resolve, reject) => {
-      const requestId = `${++this.requestId}`;
-      
-      // レスポンスハンドラーを登録
-      this.messageHandlers.set(requestId, (data: unknown) => {
-        const response = data as { error?: string; result?: T };
-        if (response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response.result as T);
-        }
-      });
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        return await new Promise<T>((resolve, reject) => {
+          const requestId = `${++this.requestId}`;
 
-      // メッセージを送信
-      this.vscode!.postMessage({
-        command,
-        requestId,
-        ...payload
-      });
+          // レスポンスハンドラーを登録
+          this.messageHandlers.set(requestId, (data: unknown) => {
+            const response = data as { error?: string; result?: T };
+            if (response.error) {
+              reject(new Error(response.error));
+            } else {
+              resolve(response.result as T);
+            }
+          });
 
-      // タイムアウト処理
-      setTimeout(() => {
-        if (this.messageHandlers.has(requestId)) {
-          this.messageHandlers.delete(requestId);
-          reject(new Error(`操作がタイムアウトしました: ${command}`));
+          // メッセージを送信
+          this.vscode!.postMessage({
+            command,
+            requestId,
+            ...payload
+          });
+
+          // タイムアウト処理
+          setTimeout(() => {
+            if (this.messageHandlers.has(requestId)) {
+              this.messageHandlers.delete(requestId);
+              reject(new Error(`操作がタイムアウトしました: ${command}`));
+            }
+          }, 10000);
+        });
+      } catch (error) {
+        const isLastAttempt = attempt === attempts;
+
+        if (isLastAttempt) {
+          throw new Error(`操作が失敗しました (${attempt}回試行): ${command} - ${error instanceof Error ? error.message : String(error)}`);
         }
-      }, 10000);
-    });
+
+        // 次の試行まで待機
+        await this.delay(this.RETRY_DELAY_MS * attempt);
+        console.warn(`${command} の試行 ${attempt} が失敗しました。再試行中...`);
+      }
+    }
+
+    throw new Error(`予期しないエラー: ${command}`);
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async readFile(path: string): Promise<string> {
@@ -148,10 +205,10 @@ export class VSCodeFileSystemAdapter implements FileSystemAdapter {
     }
 
     const watcherId = `watcher_${++this.requestId}`;
-    
+
     // ウォッチャーを登録
     this.fileWatchers.set(path, { callback, watcherId });
-    
+
     // VSCode拡張にファイル監視を要求
     this.vscode.postMessage({
       command: 'watchFile',
@@ -166,6 +223,37 @@ export class VSCodeFileSystemAdapter implements FileSystemAdapter {
         this.vscode.postMessage({
           command: 'unwatchFile',
           path,
+          watcherId
+        });
+      }
+    };
+  }
+
+  watchFiles(patterns: string[], callback: (uri: string, changeType: 'created' | 'changed' | 'deleted') => void): () => void {
+    if (!this.vscode) {
+      throw new Error('VSCode API が利用できません');
+    }
+
+    const watcherId = `fs_watcher_${++this.requestId}`;
+    const patternsKey = patterns.join(',');
+
+    // FileSystemWatcherを登録
+    this.fileSystemWatchers.set(patternsKey, { callback, watcherId });
+
+    // VSCode拡張にFileSystemWatcher監視を要求
+    // サポートする拡張子: .mindmap, .mm, .json, .md, .csv, .tsv
+    this.vscode.postMessage({
+      command: 'watchFileSystem',
+      patterns,
+      watcherId
+    });
+
+    // ウォッチャーを停止する関数を返す
+    return () => {
+      this.fileSystemWatchers.delete(patternsKey);
+      if (this.vscode) {
+        this.vscode.postMessage({
+          command: 'unwatchFileSystem',
           watcherId
         });
       }
@@ -231,7 +319,7 @@ export class VSCodeFileSystemAdapter implements FileSystemAdapter {
    */
   dispose(): void {
     // すべてのファイルウォッチャーを停止
-    for (const [path, watcher] of this.fileWatchers.entries()) {
+    Array.from(this.fileWatchers.entries()).forEach(([path, watcher]) => {
       if (this.vscode) {
         this.vscode.postMessage({
           command: 'unwatchFile',
@@ -239,10 +327,21 @@ export class VSCodeFileSystemAdapter implements FileSystemAdapter {
           watcherId: watcher.watcherId
         });
       }
-    }
-    
+    });
+
+    // すべてのFileSystemWatcherを停止
+    Array.from(this.fileSystemWatchers.entries()).forEach(([_patterns, watcher]) => {
+      if (this.vscode) {
+        this.vscode.postMessage({
+          command: 'unwatchFileSystem',
+          watcherId: watcher.watcherId
+        });
+      }
+    });
+
     this.messageHandlers.clear();
     this.fileWatchers.clear();
+    this.fileSystemWatchers.clear();
     this.initialized = false;
   }
 }
