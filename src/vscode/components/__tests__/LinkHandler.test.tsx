@@ -8,7 +8,7 @@ describe('linkHandler', () => {
     document.body.innerHTML = '';
   });
 
-  it('data-link-id クリックで選択とスクロールを行う', () => {
+  it('data-link-id クリックでdata-node-id要素への選択とスクロールを行う', () => {
     // アンカー（スクロール先）
     const anchor = document.createElement('div');
     anchor.dataset.nodeId = 'A-1';
