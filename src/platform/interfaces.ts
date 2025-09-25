@@ -47,6 +47,14 @@ export interface FileSystemAdapter {
    * @returns 監視を停止する関数
    */
   watchFile(path: string, callback: (content: string) => void): () => void;
+
+  /**
+   * 複数のファイル形式を監視（RelativePatternを使用）
+   * @param patterns 監視するファイルパターンの配列
+   * @param callback 変更時のコールバック
+   * @returns 監視を停止する関数
+   */
+  watchFiles(patterns: string[], callback: (uri: string, changeType: 'created' | 'changed' | 'deleted') => void): () => void;
 }
 
 // エディタ操作の抽象化
@@ -234,4 +242,150 @@ export interface EditorError {
 
 export interface ProgressReporter {
   report(value: { message?: string; increment?: number }): void;
+}
+
+// ファイル同期関連の型定義
+export interface FileState {
+  /** ファイルのバージョン番号 */
+  version: number;
+  /** 最終更新時刻 */
+  lastModified: Date;
+  /** ファイルサイズ */
+  size: number;
+  /** ハッシュ値（内容の検証用） */
+  hash: string;
+  /** ファイルパス */
+  path: string;
+}
+
+export interface SyncResult {
+  /** 同期が成功したか */
+  success: boolean;
+  /** 競合が発生したか */
+  hasConflict: boolean;
+  /** 同期されたファイルの状態 */
+  finalState?: FileState;
+  /** エラーメッセージ */
+  error?: string;
+  /** 競合解決の結果 */
+  conflictResolution?: 'local' | 'remote' | 'merged' | 'user_choice';
+}
+
+export interface ConflictData {
+  /** ローカルファイルの状態 */
+  localState: FileState;
+  /** リモートファイルの状態 */
+  remoteState: FileState;
+  /** ベース状態（共通の祖先） */
+  baseState?: FileState;
+  /** ローカルファイルの内容 */
+  localContent: string;
+  /** リモートファイルの内容 */
+  remoteContent: string;
+  /** ベース内容 */
+  baseContent?: string;
+}
+
+export interface MergeResult {
+  /** マージが成功したか */
+  success: boolean;
+  /** マージされた内容 */
+  content?: string;
+  /** 自動マージできない競合箇所 */
+  conflicts?: Array<{
+    startLine: number;
+    endLine: number;
+    localContent: string;
+    remoteContent: string;
+  }>;
+  /** エラーメッセージ */
+  error?: string;
+}
+
+// ファイル状態同期インターフェース
+export interface FileSyncManager {
+  /**
+   * ファイル状態を同期する
+   * @param uri ファイルURI
+   * @returns 同期結果
+   */
+  syncFileState(uri: string): Promise<SyncResult>;
+
+  /**
+   * ローカルとリモートで競合があるかチェック
+   * @param localState ローカルファイルの状態
+   * @param remoteState リモートファイルの状態
+   * @returns 競合があるかどうか
+   */
+  hasConflict(localState: FileState | undefined, remoteState: FileState | undefined): boolean;
+
+  /**
+   * ファイル状態をマップに保存
+   * @param uri ファイルURI
+   * @param state ファイル状態
+   */
+  setFileState(uri: string, state: FileState): void;
+
+  /**
+   * ファイル状態をマップから取得
+   * @param uri ファイルURI
+   * @returns ファイル状態
+   */
+  getFileState(uri: string): FileState | undefined;
+
+  /**
+   * リモートファイル状態を取得
+   * @param uri ファイルURI
+   * @returns リモートファイル状態
+   */
+  fetchRemoteState(uri: string): Promise<FileState>;
+
+  /**
+   * ローカルとリモートの状態をマージ
+   * @param localState ローカル状態
+   * @param remoteState リモート状態
+   * @returns マージ結果
+   */
+  mergeStates(localState: FileState | undefined, remoteState: FileState): SyncResult;
+}
+
+// 競合解決インターフェース
+export interface ConflictResolver {
+  /**
+   * 競合を解決する
+   * @param conflictData 競合データ
+   * @returns 解決結果
+   */
+  resolve(conflictData: ConflictData): Promise<SyncResult>;
+
+  /**
+   * 3-wayマージを実行
+   * @param baseContent ベース内容
+   * @param localContent ローカル内容
+   * @param remoteContent リモート内容
+   * @returns マージ結果
+   */
+  threeWayMerge(baseContent: string, localContent: string, remoteContent: string): Promise<MergeResult>;
+
+  /**
+   * ユーザーに競合解決の選択肢を提示
+   * @param conflictData 競合データ
+   * @returns ユーザーの選択結果
+   */
+  promptUserChoice(conflictData: ConflictData): Promise<'local' | 'remote' | 'merge'>;
+
+  /**
+   * JSON構造の差分を検出
+   * @param base ベース内容
+   * @param local ローカル内容
+   * @param remote リモート内容
+   * @returns 差分情報
+   */
+  detectJsonDiff(base: unknown, local: unknown, remote: unknown): Array<{
+    path: string;
+    type: 'added' | 'removed' | 'modified';
+    baseValue?: unknown;
+    localValue?: unknown;
+    remoteValue?: unknown;
+  }>;
 }

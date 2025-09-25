@@ -2285,7 +2285,7 @@
               "36.1"
             ],
             "details": "AutoSaveManagerクラスにscheduleAutoSaveメソッドを実装し、変更イベントを受信してpendingChangesマップに保存する。setTimeoutを使用した2秒のデバウンスタイマーを設定し、executePendingSavesメソッドでバッチ保存を実行する。Promise.allSettledを使用して複数ファイルの同時保存に対応する",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "デバウンスタイマーの正確な動作検証、連続変更時のバッチ処理テスト、複数ファイル同時保存の成功確認、保存失敗時のリトライ動作テスト"
           },
           {
@@ -2297,7 +2297,7 @@
               "36.3"
             ],
             "details": "FileSyncManagerクラスにfileStatesマップを実装してファイルのバージョンと最終更新時刻を管理する。syncFileStateメソッドでローカルとリモートの状態を比較し、hasConflictメソッドでバージョンと更新時刻の不一致を検出する。ConflictResolverクラスで3-wayマージアルゴリズムまたはユーザー選択による解決を提供する",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "状態同期の正確性テスト、コンフリクト検出の精度検証、マージアルゴリズムの動作確認、ユーザー選択UIの統合テスト"
           },
           {
@@ -2317,7 +2317,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-25T15:28:40.556Z",
+      "updated": "2025-09-25T16:40:55.126Z",
       "description": "Tasks for master context"
     }
   }
