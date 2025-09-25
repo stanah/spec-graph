@@ -3,7 +3,7 @@
  * ファイル拡張子とコンテンツ構造を解析し、適切なビュータイプを自動判定する
  */
 
-import * as path from 'path';
+// Browser環境では path モジュールは使用せず、独自の実装を使用
 
 /**
  * ビュータイプの定義
@@ -336,7 +336,11 @@ export class ViewSwitcher {
    * @returns ファイル拡張子
    */
   private getFileExtension(filePath: string): string {
-    return path.extname(filePath).toLowerCase();
+    const lastDotIndex = filePath.lastIndexOf('.');
+    if (lastDotIndex === -1 || lastDotIndex === filePath.length - 1) {
+      return '';
+    }
+    return filePath.substring(lastDotIndex).toLowerCase();
   }
 
   /**
