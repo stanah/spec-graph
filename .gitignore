@@ -31,10 +31,6 @@ node_modules/
 .vscode
 # OS specific
 
-# Task files
-# tasks.json
-# tasks/ 
-
 tsconfig.app.tsbuildinfo
 # VSCode Extension build artifacts
 extension/out/
@@ -46,3 +42,7 @@ extension/package-lock.json
 coverage/
 
 .tmp/
+
+# Task files
+# tasks.json
+# tasks/ 
