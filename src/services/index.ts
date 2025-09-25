@@ -5,3 +5,4 @@ export * from './schemaManager';
 export * from './documentTypes';
 export * from './documentTypes.builtins';
 export * from './linkResolver';
+export * from './AutoSaveManager';
