@@ -9,6 +9,7 @@ export * from './types';
 // 統合コア機能をエクスポート
 export { MindmapCore } from './MindmapCore';
 export { MindmapParser } from './parser/MindmapParser';
+export { ViewSwitcher, type ViewType, type FileUri } from './ViewSwitcher';
 
 // 分離されたコンポーネントもエクスポート（上級者向け）
 export { MindmapCoreLogic } from './logic/MindmapCoreLogic';

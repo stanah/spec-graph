@@ -2265,7 +2265,7 @@
             "description": "VSCodeのworkspace APIとFileSystemWatcherを統合し、ファイル操作の基盤となるアダプタークラスを実装する",
             "dependencies": [],
             "details": "VSCodeFileSystemAdapterクラスを実装し、ファイルの読み取り、書き込み、削除、作成のメソッドを提供する。FileSystemWatcherを初期化してファイルシステムイベントを監視し、RelativePatternを使用して.mindmap, .mm, .json, .md, .csv, .tsvファイルの変更を検出する。エラーハンドリングとリトライロジックも実装する",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "MockしたVSCode APIを使用してファイル操作の単体テスト、FileSystemWatcherのイベント発火テスト、エラー時のリトライ動作の検証"
           },
           {
@@ -2274,7 +2274,7 @@
             "description": "ファイル拡張子とコンテンツ構造を解析し、適切なビュータイプ（マインドマップ、テーブル、ドキュメント）を自動判定するViewSwitcherクラスを実装する",
             "dependencies": [],
             "details": "ViewSwitcherクラスにdetectViewTypeメソッドを実装し、ファイル拡張子マッピング（.mindmap→mindmap、.csv→table、.md→document）を定義する。JSONファイルの場合はanalyzeJsonStructureメソッドでコンテンツ構造を解析し、マインドマップ構造（階層的ノード）、テーブル構造（配列データ）、ドキュメント構造（セクション）を判定する",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "各ファイル拡張子での正しいビュー判定テスト、JSON構造解析の精度テスト、不明な形式でのフォールバック動作検証"
           },
           {
@@ -2317,7 +2317,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-15T12:32:22.536Z",
+      "updated": "2025-09-25T15:26:48.111Z",
       "description": "Tasks for master context"
     }
   }
