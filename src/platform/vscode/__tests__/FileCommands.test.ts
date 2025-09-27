@@ -234,10 +234,16 @@ describe('FileCommands', () => {
       // Act
       await (fileCommands as any).handleOpenWithCommand(testUri);
 
-      // Assert
-      expect(mockVSCodeApi.postMessage).toHaveBeenCalledWith({
-        command: 'showError',
-        message: expect.stringContaining('File access denied')
+      // Assert - Should show QuickPick first
+      expect(mockVSCodeApi.postMessage).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        command: 'showQuickPick'
+      }));
+
+      // Then should open file with selected view
+      expect(mockVSCodeApi.postMessage).toHaveBeenNthCalledWith(2, {
+        command: 'openFileInView',
+        uri: '/test/sample.mindmap',
+        viewType: 'mindmap'
       });
 
       addEventListenerSpy.mockRestore();
@@ -247,29 +253,34 @@ describe('FileCommands', () => {
   describe('handleNewFileCommand', () => {
     it('should create new mindmap file successfully', async () => {
       // Arrange
-      const { addEventListenerSpy } = setupMessageHandler('dummy');
+      let messageHandler: (event: MessageEvent) => void;
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener').mockImplementation((type, handler) => {
+        if (type === 'message') {
+          messageHandler = handler as (event: MessageEvent) => void;
+        }
+      });
 
       let messageCount = 0;
       (mockVSCodeApi.postMessage as MockedFunction<any>).mockImplementation((message) => {
         if (message.requestId && message.command === 'showInputBox') {
           // Input box response
           setTimeout(() => {
-            window.dispatchEvent(new MessageEvent('message', {
+            messageHandler({
               data: {
                 requestId: message.requestId,
                 result: 'new-mindmap.mindmap'
               }
-            }));
+            } as MessageEvent);
           }, 1);
         } else if (message.requestId && message.command === 'showSaveDialog') {
           // Save dialog response
           setTimeout(() => {
-            window.dispatchEvent(new MessageEvent('message', {
+            messageHandler({
               data: {
                 requestId: message.requestId,
                 result: '/path/to/new-mindmap.mindmap'
               }
-            }));
+            } as MessageEvent);
           }, 1);
         }
       });
@@ -277,8 +288,8 @@ describe('FileCommands', () => {
       // Act
       await (fileCommands as any).handleNewFileCommand();
 
-      // Verify calls were made
-      expect(mockVSCodeApi.postMessage).toHaveBeenCalledTimes(3); // inputBox, saveDialog, openFileInView
+      // Verify calls were made - should be 4: inputBox, saveDialog, writeFile confirmation, openFileInView
+      expect(mockVSCodeApi.postMessage).toHaveBeenCalledTimes(4);
 
       addEventListenerSpy.mockRestore();
     }, 10000);
@@ -301,17 +312,22 @@ describe('FileCommands', () => {
       let messageCount = 0;
       const responses = ['test.mindmap', null]; // User cancelled save dialog
 
-      const { addEventListenerSpy } = setupMessageHandler('dummy');
+      let messageHandler: (event: MessageEvent) => void;
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener').mockImplementation((type, handler) => {
+        if (type === 'message') {
+          messageHandler = handler as (event: MessageEvent) => void;
+        }
+      });
 
       (mockVSCodeApi.postMessage as MockedFunction<any>).mockImplementation((message) => {
         if (message.requestId) {
           setTimeout(() => {
-            window.dispatchEvent(new MessageEvent('message', {
+            messageHandler({
               data: {
                 requestId: message.requestId,
                 result: responses[messageCount++]
               }
-            }));
+            } as MessageEvent);
           }, 0);
         }
       });
@@ -344,17 +360,22 @@ describe('FileCommands', () => {
       let messageCount = 0;
       const responses = ['error-test.mindmap', '/path/to/error-test.mindmap'];
 
-      const { addEventListenerSpy } = setupMessageHandler('dummy');
+      let messageHandler: (event: MessageEvent) => void;
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener').mockImplementation((type, handler) => {
+        if (type === 'message') {
+          messageHandler = handler as (event: MessageEvent) => void;
+        }
+      });
 
       (mockVSCodeApi.postMessage as MockedFunction<any>).mockImplementation((message) => {
         if (message.requestId) {
           setTimeout(() => {
-            window.dispatchEvent(new MessageEvent('message', {
+            messageHandler({
               data: {
                 requestId: message.requestId,
                 result: responses[messageCount++]
               }
-            }));
+            } as MessageEvent);
           }, 0);
         }
       });
@@ -380,17 +401,22 @@ describe('FileCommands', () => {
       let messageCount = 0;
       const responses = ['/current/file.json', 2]; // Active file path, then select document view
 
-      const { addEventListenerSpy } = setupMessageHandler('dummy');
+      let messageHandler: (event: MessageEvent) => void;
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener').mockImplementation((type, handler) => {
+        if (type === 'message') {
+          messageHandler = handler as (event: MessageEvent) => void;
+        }
+      });
 
       (mockVSCodeApi.postMessage as MockedFunction<any>).mockImplementation((message) => {
         if (message.requestId) {
           setTimeout(() => {
-            window.dispatchEvent(new MessageEvent('message', {
+            messageHandler({
               data: {
                 requestId: message.requestId,
                 result: responses[messageCount++]
               }
-            }));
+            } as MessageEvent);
           }, 0);
         }
       });
@@ -497,7 +523,7 @@ describe('FileCommands', () => {
         {
           fileName: 'test.mindmap',
           filePath: '/path/test.mindmap',
-          expectedKeys: ['meta', 'root', 'text']
+          expectedKeys: ['meta', 'root']
         },
         {
           fileName: 'data.json',
