@@ -208,7 +208,7 @@ describe('TagSystem', () => {
       
       expect(stats.totalTags).toBeGreaterThan(0);
       expect(stats.usedTags).toBeGreaterThan(0);
-      expect(stats.tagUsageCounts.get('work')).toBe(3); // Node 1, 3, 4
+      expect(stats.tagUsageCounts.get('work')).toBe(4); // Node 1, 3, 4, 4-1
       expect(stats.mostUsedTag).toBe('work');
     });
 

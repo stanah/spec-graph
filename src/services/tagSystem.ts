@@ -66,13 +66,20 @@ export class TagSystem {
    */
   removeTag(tagName: string): void {
     this.tags.delete(tagName);
-    
-    // ノードからも該当タグを削除
-    this.nodes.forEach(node => {
-      if (node.tags) {
-        node.tags = node.tags.filter(tag => tag !== tagName);
-      }
-    });
+
+    // 階層構造を再帰的に処理してタグを削除
+    const removeTagFromNodes = (nodes: MindmapNode[]): void => {
+      nodes.forEach(node => {
+        if (node.tags) {
+          node.tags = node.tags.filter(tag => tag !== tagName);
+        }
+        if (node.children) {
+          removeTagFromNodes(node.children);
+        }
+      });
+    };
+
+    removeTagFromNodes(this.nodes);
   }
 
   /**
@@ -87,20 +94,27 @@ export class TagSystem {
 
     // 古いタグを削除
     this.tags.delete(oldTagName);
-    
+
     // 新しいタグを追加
     this.tags.set(newTagDefinition.name, newTagDefinition);
-    
-    // タグ名が変更された場合、ノードのタグも更新
+
+    // タグ名が変更された場合、階層構造を再帰的に処理してノードのタグも更新
     if (oldTagName !== newTagDefinition.name) {
-      this.nodes.forEach(node => {
-        if (node.tags) {
-          const tagIndex = node.tags.indexOf(oldTagName);
-          if (tagIndex !== -1) {
-            node.tags[tagIndex] = newTagDefinition.name;
+      const updateTagInNodes = (nodes: MindmapNode[]): void => {
+        nodes.forEach(node => {
+          if (node.tags) {
+            const tagIndex = node.tags.indexOf(oldTagName);
+            if (tagIndex !== -1) {
+              node.tags[tagIndex] = newTagDefinition.name;
+            }
           }
-        }
-      });
+          if (node.children) {
+            updateTagInNodes(node.children);
+          }
+        });
+      };
+
+      updateTagInNodes(this.nodes);
     }
   }
 
@@ -188,15 +202,22 @@ export class TagSystem {
    */
   getTagStats(): TagStatistics {
     const tagUsageCounts = new Map<string, number>();
-    
-    // 各ノードのタグをカウント
-    this.nodes.forEach(node => {
-      if (node.tags) {
-        node.tags.forEach(tag => {
-          tagUsageCounts.set(tag, (tagUsageCounts.get(tag) || 0) + 1);
-        });
-      }
-    });
+
+    // 階層構造を再帰的に処理して各ノードのタグをカウント
+    const countTags = (nodes: MindmapNode[]): void => {
+      nodes.forEach(node => {
+        if (node.tags) {
+          node.tags.forEach(tag => {
+            tagUsageCounts.set(tag, (tagUsageCounts.get(tag) || 0) + 1);
+          });
+        }
+        if (node.children) {
+          countTags(node.children);
+        }
+      });
+    };
+
+    countTags(this.nodes);
 
     // 最も/最も使用頻度の低いタグを特定
     let mostUsedTag: string | null = null;
@@ -266,12 +287,20 @@ export class TagSystem {
    */
   private syncTagsFromNodes(): void {
     const usedTags = new Set<string>();
-    
-    this.nodes.forEach(node => {
-      if (node.tags) {
-        node.tags.forEach(tag => usedTags.add(tag));
-      }
-    });
+
+    // 階層構造を再帰的に処理してすべてのタグを収集
+    const collectTags = (nodes: MindmapNode[]): void => {
+      nodes.forEach(node => {
+        if (node.tags) {
+          node.tags.forEach(tag => usedTags.add(tag));
+        }
+        if (node.children) {
+          collectTags(node.children);
+        }
+      });
+    };
+
+    collectTags(this.nodes);
 
     // 使用されているが定義されていないタグを自動追加
     usedTags.forEach(tagName => {
