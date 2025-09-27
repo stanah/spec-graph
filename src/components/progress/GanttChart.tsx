@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ProgressSystem } from '../../services/progressSystem';
 import type { MindmapNode } from '../../schemas/mindmap.zod';
 
@@ -222,7 +222,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   onDateChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const [_scrollPosition, setScrollPosition] = useState(0);
 
   // ガントタスクを生成
   const ganttTasks = useMemo(() => {

@@ -22,6 +22,8 @@ export function installLinkHandler(root: HTMLElement) {
       if (anchor && typeof anchor.scrollIntoView === 'function') {
         anchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    } catch {}
+    } catch {
+      // スクロール操作中のエラーを無視
+    }
   });
 }

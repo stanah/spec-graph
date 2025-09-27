@@ -148,10 +148,11 @@ const NodeProgressList: React.FC<NodeProgressListProps> = ({
           return b.progress - a.progress;
         case 'name':
           return a.node.title.localeCompare(b.node.title);
-        case 'updated':
+        case 'updated': {
           const aTime = a.progressInfo?.updatedAt ? new Date(a.progressInfo.updatedAt).getTime() : 0;
           const bTime = b.progressInfo?.updatedAt ? new Date(b.progressInfo.updatedAt).getTime() : 0;
           return bTime - aTime;
+        }
         default:
           return 0;
       }
