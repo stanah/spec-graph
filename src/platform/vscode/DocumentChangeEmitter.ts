@@ -52,8 +52,8 @@ export class DocumentChangeEmitter {
       return;
     }
 
+    // VSCode環境での処理
     try {
-      // VSCode環境での処理
       if (this.vscode) {
         this.vscode.postMessage({
           command: 'fireDocumentChange',
@@ -61,20 +61,20 @@ export class DocumentChangeEmitter {
           uri: uri.fsPath
         });
       }
-
-      // ローカルリスナーに通知
-      this.listeners.forEach(listener => {
-        try {
-          listener(uri);
-        } catch (error) {
-          console.error('DocumentChangeListener execution failed:', error);
-        }
-      });
-
-      console.log(`Document change fired for: ${uri.fsPath}`);
     } catch (error) {
       console.error('Failed to fire document change event:', error);
     }
+
+    // ローカルリスナーに通知（VSCodeエラーに関係なく実行）
+    this.listeners.forEach(listener => {
+      try {
+        listener(uri);
+      } catch (error) {
+        console.error('DocumentChangeListener execution failed:', error);
+      }
+    });
+
+    console.log(`Document change fired for: ${uri.fsPath}`);
   }
 
   /**
