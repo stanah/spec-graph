@@ -5,7 +5,7 @@
  * 構造分析機能を提供する
  */
 
-import type { MindmapData, MindmapNode, NodePriority, NodeStatus } from '../types';
+import type { MindmapData, MindmapNode } from '../types';
 
 /**
  * マインドマップ統計情報
@@ -375,7 +375,7 @@ export class RealTimeCircularReferenceDetector {
     this.nodeCache.delete(nodeId);
     
     // 他のノードのキャッシュからも削除
-    for (const [parentId, children] of this.nodeCache.entries()) {
+    for (const [_parentId, children] of this.nodeCache.entries()) {
       if (children.has(nodeId)) {
         children.delete(nodeId);
       }
@@ -411,7 +411,7 @@ export class ParallelCircularReferenceDetector {
       timeout?: number;
     } = {}
   ): Promise<StructureIssue[]> {
-    const { concurrency = 4, timeout = 5000 } = options;
+    const { concurrency: _concurrency = 4, timeout = 5000 } = options;
     
     if (!mindmapData.root) {
       return [];

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
-import { DocumentChangeEmitter, DocumentChangeEmitterFactory, type DocumentChangeListener } from '../DocumentChangeEmitter';
+import { DocumentChangeEmitter, DocumentChangeEmitterFactory } from '../DocumentChangeEmitter';
 import type { FileUri } from '../../../core/ViewSwitcher';
 
 // VSCode APIのモック

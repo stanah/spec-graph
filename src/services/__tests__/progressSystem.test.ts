@@ -4,7 +4,6 @@ import {
   createProgressSystem,
   type NodeProgress,
   type ProgressSummary,
-  type ProgressChangeEvent,
   type ProgressCalculationOptions
 } from '../progressSystem';
 import type { MindmapNode } from '../../schemas/mindmap.zod';

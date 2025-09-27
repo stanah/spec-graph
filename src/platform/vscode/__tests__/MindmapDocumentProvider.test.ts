@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
 import { MindmapDocumentProvider, type DocumentChangeEmitter } from '../MindmapDocumentProvider';
-import { ViewSwitcher, type ViewType, type FileUri } from '../../../core/ViewSwitcher';
+import { type FileUri } from '../../../core/ViewSwitcher';
 import { VSCodeFileSystemAdapter } from '../VSCodeFileSystemAdapter';
 
 // VSCode APIのモック

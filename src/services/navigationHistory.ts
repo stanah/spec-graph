@@ -29,7 +29,9 @@ export class NavigationHistory {
       if (typeof history !== 'undefined' && typeof history.pushState === 'function') {
         history.pushState({ nodeId }, '', `#${encodeURIComponent(nodeId)}`);
       }
-    } catch {}
+    } catch {
+      // ブラウザ履歴の操作エラーを無視
+    }
   }
 
   back() {
@@ -41,7 +43,9 @@ export class NavigationHistory {
       if (typeof history !== 'undefined' && typeof history.pushState === 'function') {
         history.pushState({ nodeId: prev }, '', `#${encodeURIComponent(prev)}`);
       }
-    } catch {}
+    } catch {
+      // ブラウザ履歴の操作エラーを無視
+    }
   }
 
   forward() {
@@ -53,7 +57,9 @@ export class NavigationHistory {
       if (typeof history !== 'undefined' && typeof history.pushState === 'function') {
         history.pushState({ nodeId: next }, '', `#${encodeURIComponent(next)}`);
       }
-    } catch {}
+    } catch {
+      // ブラウザ履歴の操作エラーを無視
+    }
   }
 }
 

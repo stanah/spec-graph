@@ -13,7 +13,7 @@ const createMockFileSystemAdapter = (): FileSystemAdapter => {
       return file.content;
     }),
     writeFile: vi.fn(async (path: string, content: string) => {
-      const existing = mockFiles.get(path);
+      const _existing = mockFiles.get(path);
       mockFiles.set(path, {
         content,
         info: {

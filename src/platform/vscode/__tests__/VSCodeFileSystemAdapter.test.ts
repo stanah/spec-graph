@@ -435,8 +435,8 @@ describe('VSCodeFileSystemAdapter', () => {
 
     it('disposeで全てのウォッチャーが停止される', () => {
       // 複数のウォッチャーを設定
-      const unwatchFile = adapter.watchFile('/test/file.txt', vi.fn());
-      const unwatchFiles = adapter.watchFiles(['**/*.test'], vi.fn());
+      const _unwatchFile = adapter.watchFile('/test/file.txt', vi.fn());
+      const _unwatchFiles = adapter.watchFiles(['**/*.test'], vi.fn());
 
       adapter.dispose();
 

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
-import { FileCommands, type QuickPickItem } from '../commands/FileCommands';
+import { FileCommands } from '../commands/FileCommands';
 import { MindmapDocumentProvider } from '../MindmapDocumentProvider';
 import { VSCodeFileSystemAdapter } from '../VSCodeFileSystemAdapter';
-import type { FileUri, ViewType } from '../../../core/ViewSwitcher';
+import type { FileUri } from '../../../core/ViewSwitcher';
 
 // VSCode APIのモック
 const mockVSCodeApi = {
@@ -260,7 +260,7 @@ describe('FileCommands', () => {
         }
       });
 
-      let messageCount = 0;
+      const _messageCount = 0;
       (mockVSCodeApi.postMessage as MockedFunction<any>).mockImplementation((message) => {
         if (message.requestId && message.command === 'showInputBox') {
           // Input box response
@@ -507,7 +507,7 @@ describe('FileCommands', () => {
 
     it('should clear disposables after disposal', () => {
       // Arrange
-      const initialDisposablesCount = (fileCommands as any).disposables.length;
+      const _initialDisposablesCount = (fileCommands as any).disposables.length;
 
       // Act
       fileCommands.dispose();
