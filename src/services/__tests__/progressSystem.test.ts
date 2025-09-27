@@ -200,11 +200,11 @@ describe('ProgressSystem', () => {
 
   describe('進捗履歴', () => {
     it('進捗変更履歴が記録される', () => {
-      progressSystem.setProgress('1', 50, 'Initial progress');
-      progressSystem.setProgress('1', 75, 'Updated progress');
-      
+      progressSystem.setProgress('1', 50, 'Initial progress', false);
+      progressSystem.setProgress('1', 75, 'Updated progress', false);
+
       const history = progressSystem.getProgressHistory('1');
-      
+
       expect(history).toHaveLength(2);
       expect(history[0].newProgress).toBe(75); // 最新が先頭
       expect(history[0].oldProgress).toBe(50);
@@ -213,14 +213,14 @@ describe('ProgressSystem', () => {
     });
 
     it('履歴の制限数が機能する', () => {
-      // 複数回更新
+      // 複数回更新（カスケード更新を無効にして履歴をシンプルに保つ）
       for (let i = 1; i <= 5; i++) {
-        progressSystem.setProgress('1', i * 10, `Update ${i}`);
+        progressSystem.setProgress('1', i * 10, `Update ${i}`, false);
       }
-      
+
       const limitedHistory = progressSystem.getProgressHistory('1', 3);
       expect(limitedHistory).toHaveLength(3);
-      
+
       // 最新3件が取得されることを確認
       expect(limitedHistory[0].newProgress).toBe(50);
       expect(limitedHistory[1].newProgress).toBe(40);
@@ -228,9 +228,9 @@ describe('ProgressSystem', () => {
     });
 
     it('全ノードの履歴を取得できる', () => {
-      progressSystem.setProgress('1', 50);
-      progressSystem.setProgress('2', 75);
-      
+      progressSystem.setProgress('1', 50, undefined, false);
+      progressSystem.setProgress('2', 75, undefined, false);
+
       const allHistory = progressSystem.getProgressHistory();
       expect(allHistory).toHaveLength(2);
     });
@@ -256,16 +256,27 @@ describe('ProgressSystem', () => {
     it('カスケード更新でもイベントが発火される', () => {
       const listener = vi.fn();
       progressSystem.addProgressChangeListener(listener);
-      
+
       progressSystem.setProgress('1-1-1', 100);
-      
-      // 子ノードの更新と親ノードの自動更新の2つのイベントが発火
-      expect(listener).toHaveBeenCalledTimes(2);
-      
+
+      // 子ノードの更新と親ノードの自動更新の3つのイベントが発火
+      // 1. '1-1-1' ノード自体の更新
+      // 2. '1-1' 親ノードの自動更新
+      // 3. '1' 祖父母ノードの自動更新
+      expect(listener).toHaveBeenCalledTimes(3);
+
       // 2番目の呼び出し（親ノードの自動更新）を確認
       expect(listener).toHaveBeenNthCalledWith(2,
         expect.objectContaining({
           nodeId: '1-1',
+          isCascadeUpdate: true
+        })
+      );
+
+      // 3番目の呼び出し（祖父母ノードの自動更新）を確認
+      expect(listener).toHaveBeenNthCalledWith(3,
+        expect.objectContaining({
+          nodeId: '1',
           isCascadeUpdate: true
         })
       );
@@ -329,15 +340,15 @@ describe('ProgressSystem', () => {
     });
 
     it('上書きしないインポートが機能する', () => {
-      progressSystem.setProgress('1', 50);
-      
+      progressSystem.setProgress('1', 50, undefined, false);
+
       const importData: NodeProgress[] = [
         createSampleProgress('1', 80),
         createSampleProgress('2', 90)
       ];
-      
+
       progressSystem.importProgressData(importData, false);
-      
+
       expect(progressSystem.getProgress('1')).toBe(50); // 上書きされない
       expect(progressSystem.getProgress('2')).toBe(90); // 新しいデータは追加
     });

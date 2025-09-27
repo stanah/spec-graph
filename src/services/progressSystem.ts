@@ -53,6 +53,8 @@ export interface ProgressHistoryEntry {
   timestamp: string;
   /** 変更理由・メモ */
   reason?: string;
+  /** 順序保持用ID */
+  sequenceId: number;
 }
 
 /**
@@ -92,6 +94,7 @@ export class ProgressSystem {
   private nodes: MindmapNode[];
   private progressHistory: ProgressHistoryEntry[];
   private eventListeners: ((event: ProgressChangeEvent) => void)[];
+  private sequenceCounter: number;
 
   /**
    * コンストラクタ
@@ -103,6 +106,7 @@ export class ProgressSystem {
     this.progressData = new Map();
     this.progressHistory = [];
     this.eventListeners = [];
+    this.sequenceCounter = 0;
 
     // 初期進捗データを設定
     initialProgressData.forEach(progress => {
@@ -154,7 +158,8 @@ export class ProgressSystem {
       oldProgress,
       newProgress: progress,
       timestamp,
-      reason: note
+      reason: note,
+      sequenceId: ++this.sequenceCounter
     });
 
     // イベントを発火
@@ -168,7 +173,10 @@ export class ProgressSystem {
 
     // カスケード更新
     if (cascadeUpdate) {
-      this.updateParentProgress(nodeId);
+      const parent = this.findParentNode(nodeId);
+      if (parent) {
+        this.updateParentProgress(parent.id);
+      }
     }
   }
 
@@ -195,14 +203,16 @@ export class ProgressSystem {
    * 子ノードの進捗から親ノードの進捗を自動計算
    * @param parentId - 親ノードID
    * @param options - 計算オプション
+   * @param cascadeUp - 親の親ノードも更新するか（デフォルト: true）
    */
   updateParentProgress(
-    parentId: string, 
+    parentId: string,
     options: ProgressCalculationOptions = {
       useWeighting: false,
       includeEmptyNodes: true,
       minimumProgressThreshold: 0
-    }
+    },
+    cascadeUp: boolean = true
   ): void {
     const parentNode = this.findNodeById(parentId);
     if (!parentNode || !parentNode.children || parentNode.children.length === 0) {
@@ -211,7 +221,13 @@ export class ProgressSystem {
 
     const childProgresses = parentNode.children
       .map(child => this.getProgress(child.id))
-      .filter(progress => options.includeEmptyNodes || progress > options.minimumProgressThreshold);
+      .filter(progress => {
+        if (options.includeEmptyNodes) {
+          return progress >= options.minimumProgressThreshold;
+        } else {
+          return progress > 0 && progress >= options.minimumProgressThreshold;
+        }
+      });
 
     if (childProgresses.length === 0) {
       return;
@@ -239,7 +255,8 @@ export class ProgressSystem {
       oldProgress,
       newProgress: roundedProgress,
       timestamp,
-      reason: 'Auto-calculated from child nodes'
+      reason: 'Auto-calculated from child nodes',
+      sequenceId: ++this.sequenceCounter
     });
 
     // イベントを発火
@@ -251,10 +268,12 @@ export class ProgressSystem {
       timestamp
     });
 
-    // 親の親も更新
-    const grandParent = this.findParentNode(parentId);
-    if (grandParent) {
-      this.updateParentProgress(grandParent.id, options);
+    // 親の親も更新（cascadeUpがtrueの場合のみ）
+    if (cascadeUp) {
+      const grandParent = this.findParentNode(parentId);
+      if (grandParent) {
+        this.updateParentProgress(grandParent.id, options, true);
+      }
     }
   }
 
@@ -340,8 +359,15 @@ export class ProgressSystem {
       ? this.progressHistory.filter(entry => entry.nodeId === nodeId)
       : this.progressHistory;
 
-    // 最新順にソート
-    history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // 最新順にソート（sequenceIdも考慮）
+    history.sort((a, b) => {
+      const timeCompare = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      if (timeCompare !== 0) {
+        return timeCompare;
+      }
+      // タイムスタンプが同じ場合はsequenceIdで比較
+      return b.sequenceId - a.sequenceId;
+    });
 
     if (limit) {
       history = history.slice(0, limit);
@@ -394,9 +420,19 @@ export class ProgressSystem {
   importProgressData(progressData: NodeProgress[], overwrite: boolean = true): void {
     if (overwrite) {
       this.progressData.clear();
+      // 全ノードを0%で初期化
+      this.initializeNodeProgress();
     }
 
     progressData.forEach(progress => {
+      // overwriteがfalseの場合、手動設定されたデータがあれば上書きしない
+      if (!overwrite && this.progressData.has(progress.nodeId)) {
+        const existing = this.progressData.get(progress.nodeId);
+        if (existing && existing.isManuallySet) {
+          return;
+        }
+      }
+      // ノードが存在するかチェック（存在しないノードにも設定できるように）
       this.progressData.set(progress.nodeId, progress);
     });
   }
