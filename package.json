@@ -34,7 +34,8 @@
     "test:coverage": "vitest run --coverage",
     "test:vscode": "cd extension && pnpm test",
     "test:vscode:run": "cd extension && pnpm test:run",
-    "test:vscode:ui": "cd extension && pnpm test:ui"
+    "test:vscode:ui": "cd extension && pnpm test:ui",
+    "test:failed-files": "node scripts/list-failed-tests.mjs"
   },
   "dependencies": {
     "d3-hierarchy": "^3.1.2",

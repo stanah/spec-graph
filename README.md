@@ -147,6 +147,9 @@ pnpm test:coverage
 
 # VSCode拡張テスト実行
 pnpm test:vscode
+
+# 失敗したテストファイルのみを一覧表示（Vitest 引数も付与可能）
+pnpm test:failed-files
 ```
 
 ---

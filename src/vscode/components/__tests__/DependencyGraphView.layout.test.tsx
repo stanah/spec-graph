@@ -25,9 +25,9 @@ describe('DependencyGraphView - layout toolbar', () => {
     expect(select).toBeInTheDocument();
     expect(select.value).toBe('cose');
     // 代表的な選択肢が存在する
-    expect(screen.getByRole('option', { name: /cose/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /grid/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /dagre/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'cose' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'grid' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'dagre' })).toBeInTheDocument();
   });
 
   it('選択変更で選択値が更新される（フォールバック時も）', () => {
