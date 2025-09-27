@@ -3,7 +3,12 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MindmapAnalyzer, OptimizedMindmapAnalyzer } from '../mindmapAnalyzer';
+import { 
+  MindmapAnalyzer, 
+  OptimizedMindmapAnalyzer,
+  RealTimeCircularReferenceDetector,
+  ParallelCircularReferenceDetector
+} from '../mindmapAnalyzer';
 import type { MindmapData, MindmapNode } from '../../types';
 
 describe('MindmapAnalyzer', () => {
@@ -403,5 +408,300 @@ describe('統計情報の精度テスト', () => {
     expect(wideStats.structure.leafNodes).toBe(10);
     expect(wideStats.structure.branchNodes).toBe(1);
     expect(wideStats.averageBranching).toBe(10); // 10 children / 1 branch node = 10
+  });
+});
+
+describe('RealTimeCircularReferenceDetector', () => {
+  let detector: RealTimeCircularReferenceDetector;
+
+  beforeEach(() => {
+    detector = new RealTimeCircularReferenceDetector();
+  });
+
+  describe('checkNodeAddition', () => {
+    it('循環参照のない追加を正しく処理する', () => {
+      const issue1 = detector.checkNodeAddition('child1', 'root');
+      expect(issue1).toBeNull();
+
+      const issue2 = detector.checkNodeAddition('grandchild1', 'child1');
+      expect(issue2).toBeNull();
+    });
+
+    it('直接的な循環参照を検出する', () => {
+      detector.checkNodeAddition('child1', 'root');
+      
+      // child1の子として自分自身（root）を追加しようとする
+      const issue = detector.checkNodeAddition('root', 'child1');
+      
+      expect(issue).not.toBeNull();
+      expect(issue!.type).toBe('circular_reference');
+      expect(issue!.nodeId).toBe('root');
+      expect(issue!.path).toEqual(['root', 'child1', 'root']);
+    });
+
+    it('間接的な循環参照を検出する', () => {
+      detector.checkNodeAddition('child1', 'root');
+      detector.checkNodeAddition('child2', 'child1');
+      detector.checkNodeAddition('child3', 'child2');
+      
+      // child3の子としてrootを追加しようとする（4段階の循環）
+      const issue = detector.checkNodeAddition('root', 'child3');
+      
+      expect(issue).not.toBeNull();
+      expect(issue!.type).toBe('circular_reference');
+      expect(issue!.nodeId).toBe('root');
+      expect(issue!.path).toEqual(['root', 'child1', 'child2', 'child3', 'root']);
+    });
+
+    it('自己参照を検出する', () => {
+      const issue = detector.checkNodeAddition('node1', 'node1');
+      
+      expect(issue).not.toBeNull();
+      expect(issue!.type).toBe('circular_reference');
+      expect(issue!.nodeId).toBe('node1');
+    });
+  });
+
+  describe('cleanupNode', () => {
+    it('ノード削除時にキャッシュを正しくクリーンアップする', () => {
+      detector.checkNodeAddition('child1', 'root');
+      detector.checkNodeAddition('child2', 'child1');
+      
+      // child1を削除
+      detector.cleanupNode('child1');
+      
+      // child1の再追加が可能になることを確認
+      const issue = detector.checkNodeAddition('child1', 'root');
+      expect(issue).toBeNull();
+    });
+  });
+
+  describe('clearCache', () => {
+    it('全キャッシュをクリアする', () => {
+      detector.checkNodeAddition('child1', 'root');
+      detector.checkNodeAddition('child2', 'child1');
+      
+      detector.clearCache();
+      
+      // キャッシュクリア後は以前の関係が忘れられる
+      const issue = detector.checkNodeAddition('root', 'child2');
+      expect(issue).toBeNull();
+    });
+  });
+});
+
+describe('ParallelCircularReferenceDetector', () => {
+  let largeMindmapForParallel: MindmapData;
+
+  beforeEach(() => {
+    // 並列処理テスト用の大規模データ
+    largeMindmapForParallel = {
+      root: {
+        id: 'parallel-root',
+        title: '並列ルート',
+        children: Array.from({ length: 8 }, (_, i) => ({
+          id: `branch-${i}`,
+          title: `ブランチ ${i}`,
+          children: Array.from({ length: 10 }, (_, j) => ({
+            id: `branch-${i}-child-${j}`,
+            title: `子 ${i}-${j}`,
+            children: Array.from({ length: 5 }, (_, k) => ({
+              id: `branch-${i}-child-${j}-grandchild-${k}`,
+              title: `孫 ${i}-${j}-${k}`
+            }))
+          }))
+        }))
+      },
+      metadata: {}
+    };
+  });
+
+  describe('detectCircularReferencesParallel', () => {
+    it('並列処理で循環参照のないデータを正しく処理する', async () => {
+      const issues = await ParallelCircularReferenceDetector.detectCircularReferencesParallel(
+        largeMindmapForParallel,
+        { concurrency: 4 }
+      );
+      
+      expect(issues).toHaveLength(0);
+    });
+
+    it('並列処理で循環参照を検出する', async () => {
+      // 通常の検出方法で確実に循環参照があることを確認してからテスト
+      const circularData: MindmapData = {
+        root: {
+          id: 'root',
+          title: 'ルート',
+          children: [
+            {
+              id: 'branch1',
+              title: 'ブランチ1',
+              children: [
+                { id: 'child1', title: '子1' },
+                { id: 'child2', title: '子2' }
+              ]
+            },
+            {
+              id: 'branch2', 
+              title: 'ブランチ2',
+              children: [
+                { id: 'child3', title: '子3' },
+                { id: 'root', title: 'ルート（循環）' } // 循環参照
+              ]
+            }
+          ]
+        },
+        metadata: {}
+      };
+
+      // まず通常の方法で循環参照があることを確認
+      const normalIssues = MindmapAnalyzer.detectCircularReferences(circularData);
+      expect(normalIssues.length).toBeGreaterThan(0);
+
+      const issues = await ParallelCircularReferenceDetector.detectCircularReferencesParallel(
+        circularData,
+        { concurrency: 2 }
+      );
+      
+      expect(issues.length).toBeGreaterThan(0);
+      expect(issues.some(issue => issue.type === 'circular_reference')).toBe(true);
+    });
+
+    it('タイムアウトが発生した場合にフォールバックする', async () => {
+      const issues = await ParallelCircularReferenceDetector.detectCircularReferencesParallel(
+        largeMindmapForParallel,
+        { timeout: 1 } // 極端に短いタイムアウト
+      );
+      
+      // フォールバックが動作して結果が返される
+      expect(Array.isArray(issues)).toBe(true);
+    });
+  });
+
+  describe('detectCircularReferencesWithProgress', () => {
+    it('プログレス報告付きで循環参照検出を実行する', async () => {
+      const progressReports: Array<{ current: number; total: number; percentage: number }> = [];
+      
+      const issues = await ParallelCircularReferenceDetector.detectCircularReferencesWithProgress(
+        largeMindmapForParallel,
+        (progress) => {
+          progressReports.push({ ...progress });
+        }
+      );
+      
+      expect(issues).toHaveLength(0);
+      expect(progressReports.length).toBeGreaterThan(0);
+      
+      // プログレスが増加していることを確認
+      expect(progressReports[0].current).toBeLessThan(progressReports[progressReports.length - 1].current);
+      
+      // 最後のプログレスが100%であることを確認
+      const lastProgress = progressReports[progressReports.length - 1];
+      expect(lastProgress.percentage).toBe(100);
+    });
+
+    it('空のデータでも正しく動作する', async () => {
+      const emptyData: MindmapData = { metadata: {} };
+      const progressReports: any[] = [];
+      
+      const issues = await ParallelCircularReferenceDetector.detectCircularReferencesWithProgress(
+        emptyData,
+        (progress) => progressReports.push(progress)
+      );
+      
+      expect(issues).toHaveLength(0);
+      expect(progressReports).toHaveLength(0);
+    });
+  });
+
+  describe('エラーハンドリング', () => {
+    it('不正なデータ構造でもエラーを発生させない', async () => {
+      const invalidData = {
+        root: null,
+        metadata: {}
+      } as any;
+      
+      const issues = await ParallelCircularReferenceDetector.detectCircularReferencesParallel(invalidData);
+      expect(issues).toHaveLength(0);
+    });
+  });
+});
+
+describe('拡張循環参照検出テスト', () => {
+  describe('複雑な循環パターン', () => {
+    it('多段階循環参照を検出する', () => {
+      const complexCircularData: MindmapData = {
+        root: {
+          id: 'A',
+          title: 'ノードA',
+          children: [{
+            id: 'B',
+            title: 'ノードB',
+            children: [{
+              id: 'C',
+              title: 'ノードC',
+              children: [{
+                id: 'D',
+                title: 'ノードD',
+                children: [{
+                  id: 'B', // B->C->D->B の循環
+                  title: 'ノードB（循環）'
+                }]
+              }]
+            }]
+          }]
+        },
+        metadata: {}
+      };
+
+      const issues = MindmapAnalyzer.detectCircularReferences(complexCircularData);
+      
+      expect(issues).toHaveLength(1);
+      expect(issues[0].nodeId).toBe('B');
+      expect(issues[0].path).toEqual(['B', 'C', 'D', 'B']);
+    });
+
+    it('複数の独立した循環参照を検出する', () => {
+      const multipleCircularData: MindmapData = {
+        root: {
+          id: 'root',
+          title: 'ルート',
+          children: [
+            {
+              id: 'branch1',
+              title: 'ブランチ1',
+              children: [{
+                id: 'loop1',
+                title: 'ループ1',
+                children: [{
+                  id: 'branch1', // 第1の循環
+                  title: 'ブランチ1（循環）'
+                }]
+              }]
+            },
+            {
+              id: 'branch2',
+              title: 'ブランチ2',
+              children: [{
+                id: 'loop2',
+                title: 'ループ2',
+                children: [{
+                  id: 'branch2', // 第2の循環
+                  title: 'ブランチ2（循環）'
+                }]
+              }]
+            }
+          ]
+        },
+        metadata: {}
+      };
+
+      const issues = MindmapAnalyzer.detectCircularReferences(multipleCircularData);
+      
+      expect(issues.length).toBeGreaterThanOrEqual(2);
+      const nodeIds = issues.map(issue => issue.nodeId);
+      expect(nodeIds).toContain('branch1');
+      expect(nodeIds).toContain('branch2');
+    });
   });
 });
