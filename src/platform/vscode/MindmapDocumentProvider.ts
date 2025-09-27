@@ -281,7 +281,7 @@ ${JSON.stringify(data, null, 2)}
 
 ### ノード
 ${data.nodes.map((node: any, index: number) =>
-  `${index + 1}. ${node.id || node.name || `ノード${index + 1}`}`
+  `${index + 1}. ${node.name || node.id || `ノード${index + 1}`}`
 ).join('\n')}
 
 ### エッジ（依存関係）
