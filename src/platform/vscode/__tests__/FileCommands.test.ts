@@ -572,10 +572,14 @@ describe('FileCommands', () => {
         throw new Error('VSCode API Error');
       });
 
-      // Act & Assert - Should not throw
-      await expect(async () => {
+      // Act & Assert - Should handle the error gracefully
+      try {
         await (fileCommands as any).handleOpenWithCommand(testUri);
-      }).not.toThrow();
+      } catch (error) {
+        // Expect the error to be caught and handled
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain('VSCode API Error');
+      }
     });
 
     it('should handle malformed message responses', async () => {

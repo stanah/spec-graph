@@ -582,13 +582,19 @@ export class FileCommands {
    * エラーメッセージを表示
    */
   private async showError(message: string): Promise<void> {
-    if (this.vscode) {
-      this.vscode.postMessage({
-        command: 'showError',
-        message
-      });
-    } else {
-      console.error(message);
+    try {
+      if (this.vscode) {
+        this.vscode.postMessage({
+          command: 'showError',
+          message
+        });
+      } else {
+        console.error(message);
+      }
+    } catch (error) {
+      // VSCode API自体でエラーが発生した場合はコンソールにフォールバック
+      console.error('Error showing error message:', error);
+      console.error('Original message:', message);
     }
   }
 
