@@ -264,6 +264,50 @@ describe('MindmapAnalyzer', () => {
       expect(issues[0].message).toContain('dangling-node');
       expect(issues[0].message).toContain('missing-parent');
     });
+
+    it('親が到達可能な孤立ノードには再接続提案を提示する', () => {
+      const detachedNode: MindmapNode = {
+        id: 'detached-node',
+        title: '切り離されたノード',
+        metadata: {
+          parentId: 'child1'
+        }
+      };
+
+      const issues = MindmapAnalyzer.detectOrphanedNodes(simpleMindmapData, {
+        additionalNodes: [detachedNode]
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].cause).toBe('detached_from_parent');
+      expect(issues[0].relatedNodeIds).toContain('child1');
+      expect(issues[0].suggestedFixes).toBeDefined();
+      expect(issues[0].suggestedFixes![0]).toMatchObject({
+        type: 'attach',
+        targetParentId: 'child1',
+        confidence: 'high'
+      });
+    });
+
+    it('親ノードが存在しない孤立ノードには原因とルート直下への接続提案を返す', () => {
+      const ghostNode: MindmapNode = {
+        id: 'ghost-node',
+        title: '親不明ノード'
+      };
+
+      const issues = MindmapAnalyzer.detectOrphanedNodes(simpleMindmapData, {
+        additionalNodes: [ghostNode]
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].cause).toBe('missing_parent_reference');
+      expect(issues[0].suggestedFixes).toBeDefined();
+      expect(issues[0].suggestedFixes![0]).toMatchObject({
+        type: 'attach',
+        targetParentId: 'root',
+        confidence: 'low'
+      });
+    });
   });
 
   describe('analyzeStructure', () => {

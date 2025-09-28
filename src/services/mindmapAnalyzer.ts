@@ -53,6 +53,26 @@ export interface MindmapStatistics {
 /**
  * 構造分析の問題報告
  */
+export type SuggestedFixConfidence = 'low' | 'medium' | 'high';
+
+export type SuggestedFixType = 'attach' | 'detach' | 'remove' | 'flag';
+
+export interface SuggestedFix {
+  /** 提示される修正アクションの種類 */
+  type: SuggestedFixType;
+  /** 接続先など、修正対象の親ノードID */
+  targetParentId?: string;
+  /** 修正内容の説明 */
+  description?: string;
+  /** 修正案の信頼度 */
+  confidence: SuggestedFixConfidence;
+}
+
+export type OrphanIssueCause =
+  | 'detached_from_parent'
+  | 'missing_parent_reference'
+  | 'parent_also_orphaned';
+
 export interface StructureIssue {
   /** 問題の種類 */
   type: 'circular_reference' | 'orphaned_node' | 'invalid_reference';
@@ -64,6 +84,12 @@ export interface StructureIssue {
   path?: string[];
   /** 重要度 */
   severity: 'error' | 'warning' | 'info';
+  /** 問題発生の直接的な原因 */
+  cause?: OrphanIssueCause;
+  /** 関連するノードIDの一覧 */
+  relatedNodeIds?: string[];
+  /** 提案される修正案 */
+  suggestedFixes?: SuggestedFix[];
 }
 
 /**
@@ -255,6 +281,8 @@ export class MindmapAnalyzer {
       addCandidate(node, parentId);
     }
 
+    const rootId = mindmapData.root?.id;
+
     for (const [nodeId, info] of candidateNodes.entries()) {
       if (reachableNodes.has(nodeId)) {
         continue;
@@ -269,15 +297,65 @@ export class MindmapAnalyzer {
 
       let severity: StructureIssue['severity'] = 'warning';
       let message = `孤立ノードが検出されました: ${nodeId}`;
+      let cause: StructureIssue['cause'];
+      const relatedNodeIds = new Set<string>();
+      const suggestedFixes: SuggestedFix[] = [];
 
       if (typeof parentId === 'string' && parentId.length > 0) {
+        relatedNodeIds.add(parentId);
+
         if (!candidateNodes.has(parentId)) {
           severity = 'error';
+          cause = 'missing_parent_reference';
           message = `親ノード(${parentId})が見つからない孤立ノードです: ${nodeId}`;
+
+          if (rootId && rootId !== nodeId) {
+            relatedNodeIds.add(rootId);
+            suggestedFixes.push({
+              type: 'attach',
+              targetParentId: rootId,
+              confidence: 'low',
+              description: '親ノードが欠落しているため、暫定的にルートノードへ接続します。',
+            });
+          }
         } else if (!reachableNodes.has(parentId)) {
+          cause = 'parent_also_orphaned';
           message = `親ノード(${parentId})も孤立しているため、ノードが切り離されています: ${nodeId}`;
+
+          suggestedFixes.push({
+            type: 'attach',
+            targetParentId: parentId,
+            confidence: 'medium',
+            description: '親ノードを先に再接続し、その後このノードを再接続してください。',
+          });
         } else {
+          cause = 'detached_from_parent';
           message = `親ノード(${parentId})から到達できないノードです: ${nodeId}`;
+
+          suggestedFixes.push({
+            type: 'attach',
+            targetParentId: parentId,
+            confidence: 'high',
+            description: '親ノードは到達可能なため、再接続することで解消できます。',
+          });
+        }
+      } else {
+        cause = 'missing_parent_reference';
+
+        if (parentId === null) {
+          message = `親が null として記録されている孤立ノードです: ${nodeId}`;
+        } else {
+          message = `親情報が不明な孤立ノードです: ${nodeId}`;
+        }
+
+        if (rootId && rootId !== nodeId) {
+          relatedNodeIds.add(rootId);
+          suggestedFixes.push({
+            type: 'attach',
+            targetParentId: rootId,
+            confidence: 'low',
+            description: '親情報がないため、まずはルート直下への仮接続を提案します。',
+          });
         }
       }
 
@@ -286,6 +364,9 @@ export class MindmapAnalyzer {
         nodeId,
         message,
         severity,
+        cause,
+        relatedNodeIds: relatedNodeIds.size > 0 ? Array.from(relatedNodeIds) : undefined,
+        suggestedFixes: suggestedFixes.length > 0 ? suggestedFixes : undefined,
       });
     }
 
@@ -776,6 +857,7 @@ export class OptimizedMindmapAnalyzer {
       includeDistribution = true,
       samplingRate = 1.0,
     } = options;
+    const safeSamplingRate = Math.min(Math.max(samplingRate, 0), 1);
 
     const stats: MindmapStatistics = {
       totalNodes: 0,
@@ -809,18 +891,35 @@ export class OptimizedMindmapAnalyzer {
       { node: mindmapData.root, depth: 0 }
     ];
 
+    let processedNodes = 0;
+    let processedNonRoot = false;
+
     while (stack.length > 0) {
       const { node, depth } = stack.pop()!;
 
       // 深度制限チェック
       if (depth > maxDepth) continue;
 
-      // サンプリング
-      if (Math.random() > samplingRate) continue;
+      const isRootNode = depth === 0;
+      const shouldProcess =
+        isRootNode || safeSamplingRate >= 1 || Math.random() <= safeSamplingRate;
+
+      if (!shouldProcess) {
+        if (node.children) {
+          for (const child of node.children) {
+            stack.push({ node: child, depth: depth + 1 });
+          }
+        }
+        continue;
+      }
 
       // 統計収集
       stats.totalNodes++;
       stats.maxDepth = Math.max(stats.maxDepth, depth);
+      processedNodes++;
+      if (depth > 0) {
+        processedNonRoot = true;
+      }
 
       const hasChildren = node.children && node.children.length > 0;
       if (hasChildren) {
@@ -871,6 +970,17 @@ export class OptimizedMindmapAnalyzer {
     if (stats.structure.branchNodes > 0) {
       const totalChildren = stats.totalNodes - 1;
       stats.averageBranching = totalChildren / stats.structure.branchNodes;
+    }
+
+    if (
+      processedNodes === 0 ||
+      (!processedNonRoot && safeSamplingRate < 1 && mindmapData.root?.children && mindmapData.root.children.length > 0)
+    ) {
+      // サンプリングの結果が全て除外された場合、統計の信頼性を確保するためフルスキャンにフォールバック
+      return this.collectStatisticsOptimized(mindmapData, {
+        ...options,
+        samplingRate: 1,
+      });
     }
 
     return stats;
