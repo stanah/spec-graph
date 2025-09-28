@@ -17,7 +17,7 @@ import {
   RPGNodeLevel,
   RPGNodeType,
   RPGEdgeType,
-  _RPGNodeStatus
+  RPGNodeStatus
 } from './types';
 import { IRPGCoreEngine } from './interfaces';
 
@@ -774,20 +774,289 @@ export class RPGCoreEngine implements IRPGCoreEngine {
   // Stub implementations for interfaces that will be implemented in subsequent tasks
   // ============================================================================
 
-  async buildFromProposal(): Promise<RPGNode[]> {
-    throw new Error('buildFromProposal: Implementation pending for Task 37.3');
+  async buildFromProposal(
+    specification: {
+      title: string;
+      description: string;
+      requirements?: string[];
+      constraints?: string[];
+    }
+  ): Promise<RPGNode[]> {
+    this.ensureInitialized();
+
+    const proposalNodes: RPGNode[] = [];
+
+    // Create main feature node from specification
+    const mainFeatureNode = await this.addNode({
+      name: specification.title,
+      description: specification.description,
+      level: RPGNodeLevel.PROPOSAL,
+      type: RPGNodeType.FEATURE,
+      status: RPGNodeStatus.PENDING,
+      metadata: {
+        source: 'proposal',
+        specification: specification
+      }
+    });
+
+    proposalNodes.push(mainFeatureNode);
+
+    // Parse requirements into sub-feature nodes
+    if (specification.requirements && specification.requirements.length > 0) {
+      for (const requirement of specification.requirements) {
+        // Extract key features from requirement text
+        const featureName = this.extractFeatureName(requirement);
+        const featureDescription = requirement;
+
+        const requirementNode = await this.addNode({
+          name: featureName,
+          description: featureDescription,
+          level: RPGNodeLevel.PROPOSAL,
+          type: RPGNodeType.FEATURE,
+          status: RPGNodeStatus.PENDING,
+          parentId: mainFeatureNode.id,
+          metadata: {
+            source: 'requirement',
+            originalText: requirement
+          }
+        });
+
+        proposalNodes.push(requirementNode);
+
+        // Create hierarchy edge
+        await this.addEdge({
+          name: `${mainFeatureNode.name} contains ${requirementNode.name}`,
+          fromId: mainFeatureNode.id,
+          toId: requirementNode.id,
+          type: RPGEdgeType.HIERARCHY,
+          description: 'Parent-child feature relationship'
+        });
+      }
+    }
+
+    // Add constraint metadata to nodes
+    if (specification.constraints && specification.constraints.length > 0) {
+      for (const node of proposalNodes) {
+        const updatedNode = await this.updateNode(node.id, {
+          metadata: {
+            ...node.metadata,
+            constraints: specification.constraints
+          }
+        });
+        // Update the node in our result array
+        const index = proposalNodes.findIndex(n => n.id === node.id);
+        if (index >= 0) {
+          proposalNodes[index] = updatedNode;
+        }
+      }
+    }
+
+    return proposalNodes;
   }
 
-  async refineToImplementation(): Promise<{ newNodes: RPGNode[]; newEdges: RPGEdge[] }> {
-    throw new Error('refineToImplementation: Implementation pending for Task 37.3');
+  async refineToImplementation(
+    proposalNodeIds: string[],
+    options?: {
+      targetLanguage?: string;
+      architecturePattern?: string;
+      frameworkPreferences?: string[];
+    }
+  ): Promise<{ newNodes: RPGNode[]; newEdges: RPGEdge[] }> {
+    this.ensureInitialized();
+
+    const newNodes: RPGNode[] = [];
+    const newEdges: RPGEdge[] = [];
+    const language = options?.targetLanguage || 'typescript';
+    const architecture = options?.architecturePattern || 'layered';
+
+    for (const proposalNodeId of proposalNodeIds) {
+      const proposalNode = await this.getNode(proposalNodeId);
+      if (!proposalNode) {
+        throw new Error(`Proposal node ${proposalNodeId} not found`);
+      }
+
+      // Only refine proposal-level nodes
+      if (proposalNode.level !== RPGNodeLevel.PROPOSAL) {
+        continue;
+      }
+
+      // Generate module-level nodes based on feature
+      const moduleNodes = await this.generateModuleNodes(proposalNode, language, architecture);
+      newNodes.push(...moduleNodes);
+
+      // Generate implementation-level nodes for each module
+      for (const moduleNode of moduleNodes) {
+        const implementationNodes = await this.generateImplementationNodes(moduleNode, language);
+        newNodes.push(...implementationNodes);
+
+        // Create hierarchy edges from module to implementation
+        for (const implNode of implementationNodes) {
+          const hierarchyEdge = await this.addEdge({
+            name: `${moduleNode.name} contains ${implNode.name}`,
+            fromId: moduleNode.id,
+            toId: implNode.id,
+            type: RPGEdgeType.HIERARCHY,
+            description: 'Module contains implementation'
+          });
+          newEdges.push(hierarchyEdge);
+        }
+      }
+
+      // Create hierarchy edges from proposal to modules
+      for (const moduleNode of moduleNodes) {
+        const hierarchyEdge = await this.addEdge({
+          name: `${proposalNode.name} implemented by ${moduleNode.name}`,
+          fromId: proposalNode.id,
+          toId: moduleNode.id,
+          type: RPGEdgeType.HIERARCHY,
+          description: 'Feature implemented by module'
+        });
+        newEdges.push(hierarchyEdge);
+      }
+    }
+
+    return { newNodes, newEdges };
   }
 
-  async generateFileStructure(): Promise<{ fileNodes: RPGNode[]; directoryNodes: RPGNode[]; structureEdges: RPGEdge[] }> {
-    throw new Error('generateFileStructure: Implementation pending for Task 37.3');
+  async generateFileStructure(
+    implementationNodeIds: string[],
+    baseDirectory?: string
+  ): Promise<{ fileNodes: RPGNode[]; directoryNodes: RPGNode[]; structureEdges: RPGEdge[] }> {
+    this.ensureInitialized();
+
+    const fileNodes: RPGNode[] = [];
+    const directoryNodes: RPGNode[] = [];
+    const structureEdges: RPGEdge[] = [];
+    const basePath = baseDirectory || './src';
+
+    // Create base directory structure
+    const srcDirNode = await this.addNode({
+      name: 'src',
+      description: 'Source code directory',
+      level: RPGNodeLevel.FILE_SYSTEM,
+      type: RPGNodeType.DIRECTORY,
+      status: RPGNodeStatus.PENDING,
+      filePath: basePath
+    });
+    directoryNodes.push(srcDirNode);
+
+    // Group implementation nodes by their logical modules
+    const moduleGroups = await this.groupNodesByModule(implementationNodeIds);
+
+    for (const [moduleName, nodeIds] of moduleGroups) {
+      // Create module directory
+      const moduleDir = await this.addNode({
+        name: moduleName,
+        description: `${moduleName} module directory`,
+        level: RPGNodeLevel.FILE_SYSTEM,
+        type: RPGNodeType.DIRECTORY,
+        status: RPGNodeStatus.PENDING,
+        filePath: `${basePath}/${moduleName}`,
+        parentId: srcDirNode.id
+      });
+      directoryNodes.push(moduleDir);
+
+      // Create directory structure edge
+      const dirEdge = await this.addEdge({
+        name: `src contains ${moduleName}`,
+        fromId: srcDirNode.id,
+        toId: moduleDir.id,
+        type: RPGEdgeType.FILE_ORDER,
+        description: 'Directory containment'
+      });
+      structureEdges.push(dirEdge);
+
+      // Create files for each implementation node
+      for (const nodeId of nodeIds) {
+        const implNode = await this.getNode(nodeId);
+        if (!implNode) continue;
+
+        const fileName = this.generateFileName(implNode);
+        const fileNode = await this.addNode({
+          name: fileName,
+          description: `${implNode.name} implementation file`,
+          level: RPGNodeLevel.FILE_SYSTEM,
+          type: RPGNodeType.FILE,
+          status: RPGNodeStatus.PENDING,
+          filePath: `${basePath}/${moduleName}/${fileName}`,
+          parentId: moduleDir.id,
+          metadata: {
+            implementationNodeId: nodeId,
+            language: 'typescript'
+          }
+        });
+        fileNodes.push(fileNode);
+
+        // Create file structure edge
+        const fileEdge = await this.addEdge({
+          name: `${moduleName} contains ${fileName}`,
+          fromId: moduleDir.id,
+          toId: fileNode.id,
+          type: RPGEdgeType.FILE_ORDER,
+          description: 'File containment'
+        });
+        structureEdges.push(fileEdge);
+
+        // Create implementation edge
+        const implEdge = await this.addEdge({
+          name: `${implNode.name} implemented in ${fileName}`,
+          fromId: nodeId,
+          toId: fileNode.id,
+          type: RPGEdgeType.IMPLEMENTATION,
+          description: 'Implementation relationship'
+        });
+        structureEdges.push(implEdge);
+      }
+    }
+
+    return { fileNodes, directoryNodes, structureEdges };
   }
 
-  async inferDependencies(): Promise<RPGEdge[]> {
-    throw new Error('inferDependencies: Implementation pending for Task 37.3');
+  async inferDependencies(
+    nodeIds: string[],
+    options?: {
+      includeDataFlow?: boolean;
+      includeHierarchy?: boolean;
+      includeFileOrder?: boolean;
+    }
+  ): Promise<RPGEdge[]> {
+    this.ensureInitialized();
+
+    const opts = {
+      includeDataFlow: options?.includeDataFlow ?? true,
+      includeHierarchy: options?.includeHierarchy ?? true,
+      includeFileOrder: options?.includeFileOrder ?? true
+    };
+
+    const dependencyEdges: RPGEdge[] = [];
+
+    for (const nodeId of nodeIds) {
+      const node = await this.getNode(nodeId);
+      if (!node) continue;
+
+      // Infer data flow dependencies based on node types and names
+      if (opts.includeDataFlow) {
+        const dataFlowEdges = await this.inferDataFlowDependencies(node, nodeIds);
+        dependencyEdges.push(...dataFlowEdges);
+      }
+
+      // Infer hierarchy dependencies
+      if (opts.includeHierarchy) {
+        const hierarchyEdges = await this.inferHierarchyDependencies(node, nodeIds);
+        dependencyEdges.push(...hierarchyEdges);
+      }
+
+      // Infer file order dependencies
+      if (opts.includeFileOrder) {
+        const fileOrderEdges = await this.inferFileOrderDependencies(node, nodeIds);
+        dependencyEdges.push(...fileOrderEdges);
+      }
+    }
+
+    // Remove duplicate edges
+    const uniqueEdges = this.removeDuplicateEdges(dependencyEdges);
+
+    return uniqueEdges;
   }
 
   async serialize(): Promise<RPGSerializationFormat> {
@@ -903,5 +1172,424 @@ export class RPGCoreEngine implements IRPGCoreEngine {
     }
 
     return true;
+  }
+
+  // ============================================================================
+  // Helper Methods for RPG Construction Algorithms
+  // ============================================================================
+
+  private extractFeatureName(requirement: string): string {
+    // Simple extraction - take first few words or capitalize key terms
+    const words = requirement.trim().split(/\s+/);
+    if (words.length === 0) return 'Feature';
+
+    // Look for action words and nouns
+    const actionWords = ['implement', 'create', 'add', 'build', 'develop', 'support'];
+    let featureName = '';
+
+    for (let i = 0; i < Math.min(words.length, 6); i++) {
+      const word = words[i];
+      if (actionWords.includes(word.toLowerCase())) {
+        // Take next 2-3 words as feature name
+        const nameWords = words.slice(i + 1, i + 4);
+        featureName = nameWords.join(' ');
+        break;
+      }
+    }
+
+    if (!featureName) {
+      // Fallback: take first 3 words
+      featureName = words.slice(0, 3).join(' ');
+    }
+
+    // Capitalize first letter
+    return featureName.charAt(0).toUpperCase() + featureName.slice(1);
+  }
+
+  private async generateModuleNodes(
+    proposalNode: RPGNode,
+    language: string,
+    architecture: string
+  ): Promise<RPGNode[]> {
+    const moduleNodes: RPGNode[] = [];
+    const featureName = proposalNode.name;
+
+    // Generate common modules based on architecture pattern
+    const moduleTemplates = this.getModuleTemplates(architecture, language);
+
+    for (const template of moduleTemplates) {
+      const moduleName = template.name.replace('{feature}', featureName);
+
+      const moduleNode = await this.addNode({
+        name: moduleName,
+        description: template.description.replace('{feature}', featureName),
+        level: RPGNodeLevel.MODULE,
+        type: RPGNodeType.MODULE,
+        status: RPGNodeStatus.PENDING,
+        parentId: proposalNode.id,
+        metadata: {
+          architecture,
+          language,
+          template: template.name
+        }
+      });
+
+      moduleNodes.push(moduleNode);
+    }
+
+    return moduleNodes;
+  }
+
+  private async generateImplementationNodes(
+    moduleNode: RPGNode,
+    language: string
+  ): Promise<RPGNode[]> {
+    const implementationNodes: RPGNode[] = [];
+    const moduleName = moduleNode.name;
+
+    // Generate typical implementation components
+    const implementations = this.getImplementationTemplates(language);
+
+    for (const impl of implementations) {
+      const implName = impl.name.replace('{module}', moduleName);
+
+      const implNode = await this.addNode({
+        name: implName,
+        description: impl.description.replace('{module}', moduleName),
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: impl.type,
+        status: RPGNodeStatus.PENDING,
+        parentId: moduleNode.id,
+        metadata: {
+          language,
+          template: impl.name
+        }
+      });
+
+      implementationNodes.push(implNode);
+    }
+
+    return implementationNodes;
+  }
+
+  private async groupNodesByModule(nodeIds: string[]): Promise<Map<string, string[]>> {
+    const groups = new Map<string, string[]>();
+
+    for (const nodeId of nodeIds) {
+      const node = await this.getNode(nodeId);
+      if (!node) continue;
+
+      // Determine module name from node name, parent, or metadata
+      let moduleName = 'core';
+
+      // Try to extract feature name from node name first
+      const featureName = this.extractFeatureNameFromNode(node);
+      if (featureName) {
+        moduleName = featureName;
+      } else if (node.parentId) {
+        const parent = await this.getNode(node.parentId);
+        if (parent && parent.level === RPGNodeLevel.MODULE) {
+          moduleName = parent.name.toLowerCase().replace(/\s+/g, '-');
+        }
+      } else if (node.metadata?.template) {
+        moduleName = this.extractModuleNameFromTemplate(node.metadata.template);
+      }
+
+      if (!groups.has(moduleName)) {
+        groups.set(moduleName, []);
+      }
+      groups.get(moduleName)!.push(nodeId);
+    }
+
+    return groups;
+  }
+
+  private generateFileName(node: RPGNode): string {
+    const baseName = node.name.toLowerCase().replace(/\s+/g, '-');
+
+    switch (node.type) {
+      case RPGNodeType.CLASS:
+        return `${baseName}.ts`;
+      case RPGNodeType.INTERFACE:
+        return `${baseName}.interface.ts`;
+      case RPGNodeType.FUNCTION:
+        return `${baseName}.ts`;
+      case RPGNodeType.TEST:
+        return `${baseName}.test.ts`;
+      case RPGNodeType.CONFIGURATION:
+        return `${baseName}.config.ts`;
+      default:
+        return `${baseName}.ts`;
+    }
+  }
+
+  private async inferDataFlowDependencies(node: RPGNode, candidateNodeIds: string[]): Promise<RPGEdge[]> {
+    const edges: RPGEdge[] = [];
+
+    for (const candidateId of candidateNodeIds) {
+      if (candidateId === node.id) continue;
+
+      const candidate = await this.getNode(candidateId);
+      if (!candidate) continue;
+
+      // Infer data flow based on naming patterns and types
+      if (this.hasDataFlowRelationship(node, candidate)) {
+        const edge = await this.addEdge({
+          name: `${node.name} uses ${candidate.name}`,
+          fromId: node.id,
+          toId: candidateId,
+          type: RPGEdgeType.DATA_FLOW,
+          description: 'Inferred data flow dependency',
+          weight: 0.7
+        });
+        edges.push(edge);
+      }
+    }
+
+    return edges;
+  }
+
+  private async inferHierarchyDependencies(node: RPGNode, candidateNodeIds: string[]): Promise<RPGEdge[]> {
+    const edges: RPGEdge[] = [];
+
+    // Create hierarchy dependency edges (different from structural parent-child relationships)
+    // These represent logical dependencies between hierarchy levels
+
+    for (const candidateId of candidateNodeIds) {
+      if (candidateId === node.id) continue;
+
+      const candidate = await this.getNode(candidateId);
+      if (!candidate) continue;
+
+      // Infer hierarchy based on levels and naming
+      if (this.hasHierarchyRelationship(node, candidate)) {
+        const edge = await this.addEdge({
+          name: `${candidate.name} contains ${node.name}`,
+          fromId: candidateId,
+          toId: node.id,
+          type: RPGEdgeType.HIERARCHY,
+          description: 'Inferred hierarchy relationship',
+          weight: 0.8
+        });
+        edges.push(edge);
+      }
+    }
+
+    return edges;
+  }
+
+  private async inferFileOrderDependencies(node: RPGNode, candidateNodeIds: string[]): Promise<RPGEdge[]> {
+    const edges: RPGEdge[] = [];
+
+    if (node.level !== RPGNodeLevel.FILE_SYSTEM) return edges;
+
+    for (const candidateId of candidateNodeIds) {
+      if (candidateId === node.id) continue;
+
+      const candidate = await this.getNode(candidateId);
+      if (!candidate || candidate.level !== RPGNodeLevel.FILE_SYSTEM) continue;
+
+      // Infer file order based on dependencies and file types
+      if (this.hasFileOrderRelationship(node, candidate)) {
+        const edge = await this.addEdge({
+          name: `${candidate.name} before ${node.name}`,
+          fromId: candidateId,
+          toId: node.id,
+          type: RPGEdgeType.FILE_ORDER,
+          description: 'Inferred file order dependency',
+          weight: 0.6
+        });
+        edges.push(edge);
+      }
+    }
+
+    return edges;
+  }
+
+  private removeDuplicateEdges(edges: RPGEdge[]): RPGEdge[] {
+    const seen = new Set<string>();
+    const unique: RPGEdge[] = [];
+
+    for (const edge of edges) {
+      const key = `${edge.fromId}-${edge.toId}-${edge.type}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(edge);
+      }
+    }
+
+    return unique;
+  }
+
+  private getModuleTemplates(architecture: string, language: string): Array<{
+    name: string;
+    description: string;
+  }> {
+    const templates = [
+      {
+        name: '{feature} Controller',
+        description: 'Handle {feature} HTTP requests and responses'
+      },
+      {
+        name: '{feature} Service',
+        description: 'Business logic for {feature} operations'
+      },
+      {
+        name: '{feature} Repository',
+        description: 'Data access layer for {feature}'
+      },
+      {
+        name: '{feature} Model',
+        description: 'Data model for {feature} entities'
+      }
+    ];
+
+    if (architecture === 'layered') {
+      templates.push({
+        name: '{feature} Validator',
+        description: 'Input validation for {feature} operations'
+      });
+    }
+
+    return templates;
+  }
+
+  private getImplementationTemplates(language: string): Array<{
+    name: string;
+    description: string;
+    type: RPGNodeType;
+  }> {
+    const templates = [
+      {
+        name: '{module} Interface',
+        description: 'Interface definition for {module}',
+        type: RPGNodeType.INTERFACE
+      },
+      {
+        name: '{module} Implementation',
+        description: 'Main implementation class for {module}',
+        type: RPGNodeType.CLASS
+      },
+      {
+        name: '{module} Utils',
+        description: 'Utility functions for {module}',
+        type: RPGNodeType.FUNCTION
+      }
+    ];
+
+    if (language === 'typescript') {
+      templates.push({
+        name: '{module} Types',
+        description: 'Type definitions for {module}',
+        type: RPGNodeType.INTERFACE
+      });
+    }
+
+    return templates;
+  }
+
+  private extractFeatureNameFromNode(node: RPGNode): string | null {
+    const nodeName = node.name.toLowerCase();
+
+    // Extract feature name from common patterns
+    // Examples:
+    // "product-catalog-with-controller-interface" → "product-catalog"
+    // "shopping-cart-functionality-controller-interface" → "shopping-cart"
+    // "user-authentication-service-implementation" → "user-authentication"
+
+    // Remove common suffixes
+    const suffixes = [
+      '-controller-interface', '-controller-implementation', '-controller-utils', '-controller-types',
+      '-service-interface', '-service-implementation', '-service-utils', '-service-types',
+      '-repository-interface', '-repository-implementation', '-repository-utils', '-repository-types',
+      '-model-interface', '-model-implementation', '-model-utils', '-model-types',
+      '-validator-interface', '-validator-implementation', '-validator-utils', '-validator-types',
+      '-with-controller', '-with-service', '-with-repository', '-with-model', '-with-validator',
+      '-functionality', '-system', '-management'
+    ];
+
+    let featureName = nodeName;
+    for (const suffix of suffixes) {
+      if (featureName.endsWith(suffix)) {
+        featureName = featureName.slice(0, -suffix.length);
+        break;
+      }
+    }
+
+    // If we extracted something meaningful and it's not too short
+    if (featureName && featureName.length > 3 && featureName !== nodeName) {
+      return featureName;
+    }
+
+    return null;
+  }
+
+  private extractModuleNameFromTemplate(template: string): string {
+    // Extract module name from template strings
+    if (template.includes('Controller')) return 'controllers';
+    if (template.includes('Service')) return 'services';
+    if (template.includes('Repository')) return 'repositories';
+    if (template.includes('Model')) return 'models';
+    if (template.includes('Validator')) return 'validators';
+    return 'core';
+  }
+
+  private hasDataFlowRelationship(node: RPGNode, candidate: RPGNode): boolean {
+    // Simple heuristics for data flow relationships
+    const nodeNameLower = node.name.toLowerCase();
+    const candidateNameLower = candidate.name.toLowerCase();
+
+    // Service -> Repository pattern
+    if (nodeNameLower.includes('service') && candidateNameLower.includes('repository')) {
+      return true;
+    }
+
+    // Controller -> Service pattern
+    if (nodeNameLower.includes('controller') && candidateNameLower.includes('service')) {
+      return true;
+    }
+
+    // Any -> Model pattern
+    if (candidateNameLower.includes('model')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private hasHierarchyRelationship(node: RPGNode, candidate: RPGNode): boolean {
+    // Hierarchy based on levels
+    if (candidate.level === RPGNodeLevel.PROPOSAL && node.level === RPGNodeLevel.MODULE) {
+      return true;
+    }
+
+    if (candidate.level === RPGNodeLevel.MODULE && node.level === RPGNodeLevel.IMPLEMENTATION) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private hasFileOrderRelationship(node: RPGNode, candidate: RPGNode): boolean {
+    // File order based on file types
+    const nodeFileName = node.name.toLowerCase();
+    const candidateFileName = candidate.name.toLowerCase();
+
+    // Interface files come before implementation files
+    if (candidateFileName.includes('.interface.') && !nodeFileName.includes('.interface.')) {
+      return true;
+    }
+
+    // Type files come before implementation files
+    if (candidateFileName.includes('.types.') && !nodeFileName.includes('.types.')) {
+      return true;
+    }
+
+    // Model files come before service files
+    if (candidateFileName.includes('model') && nodeFileName.includes('service')) {
+      return true;
+    }
+
+    return false;
   }
 }
