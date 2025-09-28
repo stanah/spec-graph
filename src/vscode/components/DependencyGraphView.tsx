@@ -33,15 +33,21 @@ export const DependencyGraphView: React.FC = () => {
         try {
           const dagre = await import('cytoscape-dagre').catch(() => null);
           if (dagre && (dagre as any).default) cytoscape.use((dagre as any).default);
-        } catch {}
+        } catch {
+          // プラグインが利用できない場合は無視
+        }
         try {
           const cola = await import('cytoscape-cola').catch(() => null);
           if (cola && (cola as any).default) cytoscape.use((cola as any).default);
-        } catch {}
+        } catch {
+          // プラグインが利用できない場合は無視
+        }
         try {
           const fcose = await import('cytoscape-fcose').catch(() => null);
           if (fcose && (fcose as any).default) cytoscape.use((fcose as any).default);
-        } catch {}
+        } catch {
+          // プラグインが利用できない場合は無視
+        }
 
         const { elements, counts } = buildElementsFromMindmap(parsed);
         setStats(counts);
@@ -63,7 +69,9 @@ export const DependencyGraphView: React.FC = () => {
         });
         try {
           cyRef.current.zoom(zoom);
-        } catch {}
+        } catch {
+          // プラグインが利用できない場合は無視
+        }
       } catch (e) {
         // ライブラリ未導入でも壊れないようにフォールバック
         console.warn('[DependencyGraphView] Cytoscape unavailable, showing placeholder.', e);
@@ -74,7 +82,9 @@ export const DependencyGraphView: React.FC = () => {
       canceled = true;
       try {
         cyRef.current?.destroy?.();
-      } catch {}
+      } catch {
+        // Cytoscape操作エラーは無視
+      }
       cyRef.current = null;
     };
   }, [parsed, layout, perfMode]);
@@ -82,7 +92,9 @@ export const DependencyGraphView: React.FC = () => {
   // ズームの反映（Cytoscapeが無い場合はCSS transformで代替）
   useEffect(() => {
     if (cyRef.current) {
-      try { cyRef.current.zoom(zoom); } catch {}
+      try { cyRef.current.zoom(zoom); } catch {
+        // Cytoscape zoom操作エラーは無視
+      }
     } else if (containerRef.current) {
       const el = containerRef.current;
       el.style.transformOrigin = '0 0';
@@ -95,7 +107,9 @@ export const DependencyGraphView: React.FC = () => {
   const handleZoomReset = () => setZoom(1);
   const handleFit = () => {
     if (cyRef.current) {
-      try { cyRef.current.fit(); } catch {}
+      try { cyRef.current.fit(); } catch {
+        // Cytoscape fit操作エラーは無視
+      }
     } else {
       setZoom(1);
     }
@@ -108,7 +122,9 @@ export const DependencyGraphView: React.FC = () => {
       try {
         const svgTxt = cyRef.current.svg({ scale: 1, full: true });
         dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgTxt);
-      } catch {}
+      } catch {
+        // Cytoscape操作エラーは無視
+      }
     }
     if (!dataUrl) {
       const svgTxt = buildFallbackSVG(parsed);
@@ -123,7 +139,9 @@ export const DependencyGraphView: React.FC = () => {
     if (cyRef.current && typeof cyRef.current.png === 'function') {
       try {
         dataUrl = cyRef.current.png({ full: true, scale: 2, bg: '#fff' });
-      } catch {}
+      } catch {
+        // Cytoscape操作エラーは無視
+      }
     }
     if (!dataUrl) {
       // フォールバック: SVGを生成してそのままデータURLを返す（PNG等価ではないが最低限）
@@ -143,7 +161,9 @@ export const DependencyGraphView: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } catch {}
+    } catch {
+      // ダウンロード処理エラーは無視
+    }
   }
 
   function buildFallbackSVG(data: MindmapData | null): string {
@@ -209,7 +229,9 @@ export const DependencyGraphView: React.FC = () => {
         cyRef.current.nodes().removeClass('highlight');
         const node = cyRef.current.getElementById(selectedNodeId);
         if (node) node.addClass('highlight');
-      } catch {}
+      } catch {
+        // Cytoscape操作エラーは無視
+      }
     }
   }, [selectedNodeId]);
 
