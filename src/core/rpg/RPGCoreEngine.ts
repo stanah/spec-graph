@@ -4,7 +4,7 @@
  */
 
 import { DependencyGraph } from '../deps/DependencyGraph';
-import { IDManager, IDManagerOptions } from '../id/IDManager';
+import { IDManager } from '../id/IDManager';
 import {
   RPGNode,
   RPGEdge,
@@ -17,7 +17,7 @@ import {
   RPGNodeLevel,
   RPGNodeType,
   RPGEdgeType,
-  RPGNodeStatus
+  _RPGNodeStatus
 } from './types';
 import { IRPGCoreEngine } from './interfaces';
 
@@ -452,7 +452,7 @@ export class RPGCoreEngine implements IRPGCoreEngine {
           nodeIds: cycles.flat()
         });
       }
-    } catch (e) {
+    } catch (_e) {
       errors.push({
         type: 'cycle',
         message: 'Error checking for cycles',

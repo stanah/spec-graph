@@ -13,7 +13,7 @@ import {
   RPGEdgeType,
   RPGNodeStatus,
   type RPGNode,
-  type RPGEdge
+  type _RPGEdge
 } from '../types';
 
 describe('RPGCoreEngine', () => {
