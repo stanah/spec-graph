@@ -3,11 +3,56 @@
  */
 
 /**
+ * エラー情報の型定義
+ */
+export interface ErrorInfo {
+  message: string;
+  stack?: string;
+  componentStack?: string;
+}
+
+/**
+ * ファイル保存データの型定義
+ */
+export interface SaveFileData {
+  content?: string;
+  path?: string;
+  format?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * 設定データの型定義
+ */
+export interface ConfigData {
+  key: string;
+  value: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * VSCodeメッセージのデータ型
+ */
+export type VSCodeMessageData =
+  | string
+  | number
+  | boolean
+  | null
+  | SaveFileData
+  | ErrorInfo
+  | ConfigData
+  | Record<string, unknown>
+  | Array<unknown>;
+
+/**
  * VSCode WebViewからの基本メッセージ型
  */
 export interface VSCodeMessage {
   command: string;
-  [key: string]: any;
+  data?: VSCodeMessageData;
+  error?: ErrorInfo;
+  timestamp?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -15,8 +60,8 @@ export interface VSCodeMessage {
  */
 export interface VSCodeWebViewMessage {
   command: string;
-  data?: any;
-  error?: any;
+  data?: VSCodeMessageData;
+  error?: ErrorInfo;
 }
 
 /**
@@ -70,7 +115,7 @@ export class VSCodeMessageValidator {
   /**
    * 拡張機能からWebViewへの受信メッセージを検証
    */
-  static validateIncoming(message: any): message is VSCodeWebViewMessage {
+  static validateIncoming(message: unknown): message is VSCodeWebViewMessage {
     if (!message || typeof message !== 'object') {
       // console.warn('[VSCode] Invalid message format: not an object');
       return false;
@@ -82,7 +127,7 @@ export class VSCodeMessageValidator {
     }
 
     const allowedCommands = Object.values(ALLOWED_VSCODE_COMMANDS.OUT);
-    if (!allowedCommands.includes(message.command as any)) {
+    if (!allowedCommands.includes(message.command)) {
       // console.warn('[VSCode] Invalid message: command not allowed:', message.command);
       return false;
     }
@@ -93,7 +138,7 @@ export class VSCodeMessageValidator {
   /**
    * WebViewから拡張機能への送信メッセージを検証
    */
-  static validateOutgoing(message: any): message is VSCodeMessage {
+  static validateOutgoing(message: unknown): message is VSCodeMessage {
     if (!message || typeof message !== 'object') {
       // console.warn('[VSCode] Invalid message format: not an object');
       return false;
@@ -105,7 +150,7 @@ export class VSCodeMessageValidator {
     }
 
     const allowedCommands = Object.values(ALLOWED_VSCODE_COMMANDS.IN);
-    if (!allowedCommands.includes(message.command as any)) {
+    if (!allowedCommands.includes(message.command)) {
       // console.warn('[VSCode] Invalid message: command not allowed:', message.command);
       return false;
     }
@@ -139,7 +184,7 @@ export class VSCodeMessageValidator {
   /**
    * 文字列をサニタイズ
    */
-  private static sanitizeString(str: any): string {
+  private static sanitizeString(str: unknown): string {
     if (typeof str !== 'string') {
       return String(str);
     }
@@ -157,7 +202,7 @@ export class VSCodeMessageValidator {
   /**
    * データをサニタイズ
    */
-  private static sanitizeData(data: any): any {
+  private static sanitizeData(data: unknown): unknown {
     if (typeof data === 'string') {
       return this.sanitizeString(data);
     }
@@ -167,7 +212,7 @@ export class VSCodeMessageValidator {
     }
 
     if (data && typeof data === 'object') {
-      const sanitized: any = {};
+      const sanitized: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(data)) {
         sanitized[this.sanitizeString(key)] = this.sanitizeData(value);
       }

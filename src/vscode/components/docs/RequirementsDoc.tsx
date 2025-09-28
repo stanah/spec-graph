@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBadge, PriorityBadge } from '../../../components/table/Badges';
-import type { RequirementsDoc } from '../../../services/docTypes';
+import type { RequirementsDoc, RequirementItem } from '../../../services/docTypes';
 
 export const RequirementsDocView: React.FC<{ doc: RequirementsDoc }> = ({ doc }) => {
   const Section: React.FC<{ title: string }>=({ title, children })=> (
@@ -22,7 +22,7 @@ export const RequirementsDocView: React.FC<{ doc: RequirementsDoc }> = ({ doc })
 
   const metaRow: React.CSSProperties = { marginTop: 4, fontSize: 12, opacity: 0.8 };
 
-  const ReqList: React.FC<{ items?: any[] }>=({ items }) => {
+  const ReqList: React.FC<{ items?: RequirementItem[] }>=({ items }) => {
     if (!items || items.length === 0) return <div style={{ opacity: 0.7 }}>なし</div>;
     return (
       <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -58,7 +58,7 @@ export const RequirementsDocView: React.FC<{ doc: RequirementsDoc }> = ({ doc })
               <div style={metaRow}>依存: {r.dependsOn.join(', ')}</div>
             )}
             {Array.isArray(r.relatesTo) && r.relatesTo.length > 0 && (
-              <div style={metaRow}>関連: {r.relatesTo.map((rel: any) => `${rel.type}:${rel.id}`).join(', ')}</div>
+              <div style={metaRow}>関連: {r.relatesTo.map((rel) => `${rel.type}:${rel.id}`).join(', ')}</div>
             )}
             {/* タグ */}
             {Array.isArray(r.tags) && r.tags.length > 0 && (
@@ -113,7 +113,7 @@ export const RequirementsDocView: React.FC<{ doc: RequirementsDoc }> = ({ doc })
               </tr>
             </thead>
             <tbody>
-              {doc.glossary.map((g: any, i: number) => (
+              {doc.glossary.map((g, i: number) => (
                 <tr key={i}>
                   <td style={{ verticalAlign: 'top' }}>{g.term}</td>
                   <td style={{ whiteSpace: 'pre-wrap' }}>{g.definition}</td>

@@ -2,33 +2,98 @@ import * as yaml from 'js-yaml';
 
 export type DetectedDocType = 'requirements' | 'stakeholders' | 'design' | 'tasks' | 'unknown';
 
+export interface RequirementItem {
+  id?: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  relatesTo?: Array<{ type: string; id: string }>;
+  tags?: string[];
+  notes?: string;
+}
+
+export interface GlossaryItem {
+  id?: string;
+  term: string;
+  definition: string;
+  relatedTerms?: string[];
+}
+
+export interface TraceabilityItem {
+  id: string;
+  type: string;
+  relatedItems: Array<{ type: string; id: string }>;
+}
+
 export interface RequirementsDoc {
   title: string;
   version: string;
   goals?: string[];
-  userRequirements?: any[];
-  systemRequirements: any[];
-  nonFunctionalRequirements?: any[];
-  glossary?: any[];
-  traceability?: any[];
+  userRequirements?: RequirementItem[];
+  systemRequirements: RequirementItem[];
+  nonFunctionalRequirements?: RequirementItem[];
+  glossary?: GlossaryItem[];
+  traceability?: TraceabilityItem[];
+}
+
+export interface StakeholderItem {
+  id?: string;
+  name: string;
+  role?: string;
+  contact?: string;
+  availability?: string;
+  responsibilities?: string;
+  components?: string[];
+  notes?: string;
 }
 
 export interface StakeholdersDoc {
   title: string;
   version: string;
-  stakeholders: any[];
+  stakeholders: StakeholderItem[];
+}
+
+export interface ComponentItem {
+  id?: string;
+  name: string;
+  type?: string;
+  description?: string;
+  responsibilities?: string;
+  interfaces?: string[];
+  dependencies?: string[];
+  dataModels?: string[];
+  techStack?: string[];
+  criticality?: string;
+  risks?: string[];
+  children?: ComponentItem[];
+  notes?: string;
 }
 
 export interface DesignDoc {
   title: string;
   version: string;
-  components: any[];
+  components: ComponentItem[];
+}
+
+export interface TaskItem {
+  id?: string;
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  estimate?: string;
+  dueDate?: string | Date;
+  relatesTo?: Array<{ type: string; id: string }>;
+  tags?: string[];
+  notes?: string;
+  children?: TaskItem[];
 }
 
 export interface TasksDoc {
   title: string;
   version: string;
-  epics: any[];
+  epics: TaskItem[];
 }
 
 export type AnyDoc = RequirementsDoc | StakeholdersDoc | DesignDoc | TasksDoc | Record<string, unknown>;

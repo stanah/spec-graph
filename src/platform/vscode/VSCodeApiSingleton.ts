@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { VSCodeMessageValidator } from '../../types/vscode';
-import type { VSCodeMessage } from '../../types/vscode';
+import type { VSCodeMessage, VSCodeMessageData } from '../../types/vscode';
 
 export interface VSCodeApi {
   postMessage: (message: unknown) => void;
@@ -236,7 +236,7 @@ class VSCodeApiSingleton {
   /**
    * セキュアなメッセージ送信（型安全性チェック付き）
    */
-  postSecureMessage(command: string, data?: any): boolean {
+  postSecureMessage(command: string, data?: VSCodeMessageData): boolean {
     return this.postMessage({
       command,
       data,
@@ -248,7 +248,7 @@ class VSCodeApiSingleton {
 /**
  * VSCodeメッセージハンドリング用のヘルパーフック
  */
-export function useVSCodeMessageHandler(command: string, handler: (data: any) => void) {
+export function useVSCodeMessageHandler(command: string, handler: (data: VSCodeMessageData) => void) {
   const vscodeApi = VSCodeApiSingleton.getInstance();
   
   React.useEffect(() => {

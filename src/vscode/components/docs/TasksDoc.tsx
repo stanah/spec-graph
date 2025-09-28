@@ -1,10 +1,10 @@
 import React from 'react';
 import { StatusBadge, PriorityBadge } from '../../../components/table/Badges';
-import type { TasksDoc } from '../../../services/docTypes';
+import type { TasksDoc, TaskItem } from '../../../services/docTypes';
 
 const chipStyle: React.CSSProperties = { display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 };
 
-function TaskTree({ item }: { item: any }) {
+function TaskTree({ item }: { item: TaskItem }) {
   return (
     <li>
       <strong>{item.id || '(no id)'}: {item.title || '(no title)'}</strong>
@@ -23,7 +23,7 @@ function TaskTree({ item }: { item: any }) {
         <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>期限: {String(item.dueDate)}</span>
       )}
       {item.relatesTo && item.relatesTo.length > 0 && (
-        <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8 }}>関連: {item.relatesTo.map((r: any)=>`${r.type}:${r.id}`).join(', ')}</div>
+        <div style={{ marginTop: 4, fontSize: 12, opacity: 0.8 }}>関連: {item.relatesTo.map((r)=>`${r.type}:${r.id}`).join(', ')}</div>
       )}
       {Array.isArray(item.tags) && item.tags.length > 0 && (
         <div style={{ marginTop: 6 }}>
@@ -38,7 +38,7 @@ function TaskTree({ item }: { item: any }) {
       )}
       {Array.isArray(item.children) && item.children.length > 0 && (
         <ul style={{ marginTop: 6, paddingLeft: 16 }}>
-          {item.children.map((c: any, idx: number) => <TaskTree key={c.id || idx} item={c} />)}
+          {item.children.map((c, idx: number) => <TaskTree key={c.id || idx} item={c} />)}
         </ul>
       )}
     </li>

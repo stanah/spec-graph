@@ -1,9 +1,9 @@
 import React from 'react';
-import type { DesignDoc } from '../../../services/docTypes';
+import type { DesignDoc, ComponentItem } from '../../../services/docTypes';
 
 const chipStyle: React.CSSProperties = { display: 'inline-block', border: '1px solid var(--vscode-panel-border)', borderRadius: 4, padding: '2px 6px', marginRight: 6, fontSize: 12 };
 
-function ComponentTree({ node }: { node: any }) {
+function ComponentTree({ node }: { node: ComponentItem }) {
   return (
     <li>
       <strong>{node.id || '(no id)'}: {node.name || '(no name)'} </strong>
@@ -15,7 +15,7 @@ function ComponentTree({ node }: { node: any }) {
       {(node.interfaces && node.interfaces.length > 0) && (
         <div style={{ marginTop: 4, fontSize: 12 }}>
           <span style={{ fontWeight: 600, opacity: 0.8 }}>インターフェース:</span>{' '}
-          {node.interfaces.map((itf: string, i: number) => (
+          {node.interfaces.map((itf, i: number) => (
             <span key={i} style={{ display: 'inline-block', marginRight: 8 }}>{itf}</span>
           ))}
         </div>
@@ -23,7 +23,7 @@ function ComponentTree({ node }: { node: any }) {
       {(node.dataModels && node.dataModels.length > 0) && (
         <div style={{ marginTop: 4, fontSize: 12 }}>
           <span style={{ fontWeight: 600, opacity: 0.8 }}>データモデル:</span>{' '}
-          {node.dataModels.map((m: string, i: number) => (
+          {node.dataModels.map((m, i: number) => (
             <span key={i} style={{ display: 'inline-block', marginRight: 8 }}>{m}</span>
           ))}
         </div>
@@ -31,7 +31,7 @@ function ComponentTree({ node }: { node: any }) {
       {(node.techStack && node.techStack.length > 0) && (
         <div style={{ marginTop: 4 }}>
           <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.8, marginRight: 6 }}>Tech</span>
-          {node.techStack.map((t: string, i: number) => (
+          {node.techStack.map((t, i: number) => (
             <span key={i} style={chipStyle}>{t}</span>
           ))}
         </div>
@@ -45,12 +45,12 @@ function ComponentTree({ node }: { node: any }) {
       {(node.risks && node.risks.length > 0) && (
         <div style={{ marginTop: 4, fontSize: 12 }}>
           <span style={{ fontWeight: 600, opacity: 0.8 }}>リスク:</span>{' '}
-          {node.risks.map((r: string, i: number) => <span key={i} style={{ marginRight: 8 }}>{r}</span>)}
+          {node.risks.map((r, i: number) => <span key={i} style={{ marginRight: 8 }}>{r}</span>)}
         </div>
       )}
       {Array.isArray(node.children) && node.children.length > 0 && (
         <ul style={{ marginTop: 6, paddingLeft: 16 }}>
-          {node.children.map((c: any, idx: number) => <ComponentTree key={c.id || idx} node={c} />)}
+          {node.children.map((c, idx: number) => <ComponentTree key={c.id || idx} node={c} />)}
         </ul>
       )}
     </li>
