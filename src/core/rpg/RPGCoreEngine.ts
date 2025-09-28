@@ -3,6 +3,8 @@
  * Integrates with existing DependencyGraph and IDManager
  */
 
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { DependencyGraph } from '../deps/DependencyGraph';
 import { IDManager } from '../id/IDManager';
 import {
@@ -30,6 +32,7 @@ export class RPGCoreEngine implements IRPGCoreEngine {
   private nodeParents: Map<string, string>;
   private initialized: boolean = false;
   private options?: RPGConstructionOptions;
+  private snapshots: Map<string, { data: RPGSerializationFormat; label?: string; createdAt: Date }> = new Map();
 
   constructor(
     dependencyGraph?: DependencyGraph,
@@ -1059,37 +1062,396 @@ export class RPGCoreEngine implements IRPGCoreEngine {
     return uniqueEdges;
   }
 
-  async serialize(): Promise<RPGSerializationFormat> {
-    throw new Error('serialize: Implementation pending for Task 37.4');
+  async serialize(format: 'json' | 'graphml' | 'custom' = 'json'): Promise<RPGSerializationFormat> {
+    this.ensureInitialized();
+
+    // Convert Maps to Arrays for serialization
+    const nodes = Array.from(this.nodes.values());
+    const edges = Array.from(this.edges.values());
+    const rootNodeIds = await this.getRootNodeIds();
+
+    // Get current graph metadata
+    const currentGraph = await this.getGraph();
+
+    const serializedFormat: RPGSerializationFormat = {
+      format: {
+        version: '1.0.0',
+        timestamp: new Date(),
+        compression: format === 'json' ? undefined : format
+      },
+      graph: {
+        metadata: currentGraph.metadata,
+        nodes,
+        edges,
+        rootNodeIds
+      }
+    };
+
+    return serializedFormat;
   }
 
-  async deserialize(): Promise<void> {
-    throw new Error('deserialize: Implementation pending for Task 37.4');
+  async deserialize(data: RPGSerializationFormat): Promise<void> {
+    this.ensureInitialized();
+
+    // Clear current graph state
+    await this.clear();
+
+    // Validate serialization format
+    if (!data.format || !data.graph) {
+      throw new Error('Invalid serialization format: missing required fields');
+    }
+
+    // Load nodes
+    for (const nodeData of data.graph.nodes) {
+      this.nodes.set(nodeData.id, nodeData);
+
+      // Rebuild hierarchy structures
+      if (nodeData.parentId) {
+        this.nodeParents.set(nodeData.id, nodeData.parentId);
+      }
+      if (nodeData.childIds) {
+        this.nodeChildren.set(nodeData.id, new Set(nodeData.childIds));
+      }
+    }
+
+    // Load edges
+    for (const edgeData of data.graph.edges) {
+      this.edges.set(edgeData.id, edgeData);
+
+      // Add to dependency graph if it's a dependency edge
+      if (edgeData.type === RPGEdgeType.DATA_FLOW ||
+          edgeData.type === RPGEdgeType.IMPLEMENTATION ||
+          edgeData.type === RPGEdgeType.INTER_MODULE ||
+          edgeData.type === RPGEdgeType.INTRA_MODULE) {
+        this.dependencyGraph.addNode(edgeData.fromId);
+        this.dependencyGraph.addNode(edgeData.toId);
+        this.dependencyGraph.addEdge(edgeData.fromId, edgeData.toId);
+      }
+    }
+
+    // Update graph metadata if provided
+    if (data.graph.metadata) {
+      // Note: Graph metadata will be updated when getGraph() is called
+    }
   }
 
-  async saveToFile(): Promise<void> {
-    throw new Error('saveToFile: Implementation pending for Task 37.4');
+  async saveToFile(filePath: string, format: 'json' | 'graphml' | 'custom' = 'json'): Promise<void> {
+    this.ensureInitialized();
+
+    try {
+      // Ensure directory exists
+      const directory = path.dirname(filePath);
+      await fs.mkdir(directory, { recursive: true });
+
+      // Serialize the graph
+      const serializedData = await this.serialize(format);
+
+      // Convert to appropriate file format
+      let fileContent: string;
+      switch (format) {
+        case 'json':
+          fileContent = JSON.stringify(serializedData, null, 2);
+          break;
+        case 'graphml':
+          fileContent = this.convertToGraphML(serializedData);
+          break;
+        case 'custom':
+          // Custom binary or compressed format could be implemented here
+          fileContent = JSON.stringify(serializedData);
+          break;
+        default:
+          throw new Error(`Unsupported format: ${format}`);
+      }
+
+      // Write to file
+      await fs.writeFile(filePath, fileContent, 'utf-8');
+
+    } catch (error) {
+      throw new Error(`Failed to save RPG to file: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
-  async loadFromFile(): Promise<void> {
-    throw new Error('loadFromFile: Implementation pending for Task 37.4');
+  async loadFromFile(filePath: string): Promise<void> {
+    this.ensureInitialized();
+
+    try {
+      // Check if file exists
+      await fs.access(filePath);
+
+      // Read file content
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+
+      // Determine format from file extension
+      const extension = path.extname(filePath).toLowerCase();
+      let serializedData: RPGSerializationFormat;
+
+      switch (extension) {
+        case '.json':
+          serializedData = JSON.parse(fileContent);
+          break;
+        case '.graphml':
+        case '.xml':
+          serializedData = this.parseGraphML(fileContent);
+          break;
+        default:
+          // Try to parse as JSON by default
+          try {
+            serializedData = JSON.parse(fileContent);
+          } catch {
+            throw new Error(`Unsupported file format: ${extension}`);
+          }
+      }
+
+      // Validate and load the data
+      if (!serializedData.format || !serializedData.graph) {
+        throw new Error('Invalid file format: missing required RPG data structure');
+      }
+
+      // Deserialize the loaded data
+      await this.deserialize(serializedData);
+
+    } catch (error) {
+      throw new Error(`Failed to load RPG from file: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
-  async createSnapshot(): Promise<string> {
-    throw new Error('createSnapshot: Implementation pending for Task 37.4');
+  async createSnapshot(label?: string): Promise<string> {
+    this.ensureInitialized();
+
+    // Generate unique snapshot ID
+    const snapshotId = this.idManager.generate();
+    const timestamp = new Date();
+
+    // Serialize current graph state
+    const serializedData = await this.serialize();
+
+    // Store snapshot
+    this.snapshots.set(snapshotId, {
+      data: serializedData,
+      label: label || `Snapshot ${timestamp.toISOString()}`,
+      createdAt: timestamp
+    });
+
+    return snapshotId;
   }
 
-  async restoreSnapshot(): Promise<void> {
-    throw new Error('restoreSnapshot: Implementation pending for Task 37.4');
+  async restoreSnapshot(snapshotId: string): Promise<void> {
+    this.ensureInitialized();
+
+    // Find the snapshot
+    const snapshot = this.snapshots.get(snapshotId);
+    if (!snapshot) {
+      throw new Error(`Snapshot with ID ${snapshotId} not found`);
+    }
+
+    // Restore graph state from snapshot
+    await this.deserialize(snapshot.data);
   }
 
-  async getDiff(): Promise<any> {
-    throw new Error('getDiff: Implementation pending for Task 37.4');
+  async getDiff(
+    fromSnapshotId: string,
+    toSnapshotId: string
+  ): Promise<{
+    addedNodes: RPGNode[];
+    removedNodes: RPGNode[];
+    modifiedNodes: Array<{
+      before: RPGNode;
+      after: RPGNode;
+    }>;
+    addedEdges: RPGEdge[];
+    removedEdges: RPGEdge[];
+    modifiedEdges: Array<{
+      before: RPGEdge;
+      after: RPGEdge;
+    }>;
+  }> {
+    this.ensureInitialized();
+
+    // Get snapshots
+    const fromSnapshot = this.snapshots.get(fromSnapshotId);
+    const toSnapshot = this.snapshots.get(toSnapshotId);
+
+    if (!fromSnapshot) {
+      throw new Error(`From snapshot with ID ${fromSnapshotId} not found`);
+    }
+    if (!toSnapshot) {
+      throw new Error(`To snapshot with ID ${toSnapshotId} not found`);
+    }
+
+    // Convert arrays to Maps for efficient comparison
+    const fromNodes = new Map(fromSnapshot.data.graph.nodes.map(n => [n.id, n]));
+    const toNodes = new Map(toSnapshot.data.graph.nodes.map(n => [n.id, n]));
+    const fromEdges = new Map(fromSnapshot.data.graph.edges.map(e => [e.id, e]));
+    const toEdges = new Map(toSnapshot.data.graph.edges.map(e => [e.id, e]));
+
+    // Calculate node differences
+    const addedNodes: RPGNode[] = [];
+    const removedNodes: RPGNode[] = [];
+    const modifiedNodes: Array<{ before: RPGNode; after: RPGNode }> = [];
+
+    // Find added and modified nodes
+    for (const [nodeId, toNode] of toNodes) {
+      const fromNode = fromNodes.get(nodeId);
+      if (!fromNode) {
+        addedNodes.push(toNode);
+      } else if (!this.areNodesEqual(fromNode, toNode)) {
+        modifiedNodes.push({ before: fromNode, after: toNode });
+      }
+    }
+
+    // Find removed nodes
+    for (const [nodeId, fromNode] of fromNodes) {
+      if (!toNodes.has(nodeId)) {
+        removedNodes.push(fromNode);
+      }
+    }
+
+    // Calculate edge differences
+    const addedEdges: RPGEdge[] = [];
+    const removedEdges: RPGEdge[] = [];
+    const modifiedEdges: Array<{ before: RPGEdge; after: RPGEdge }> = [];
+
+    // Find added and modified edges
+    for (const [edgeId, toEdge] of toEdges) {
+      const fromEdge = fromEdges.get(edgeId);
+      if (!fromEdge) {
+        addedEdges.push(toEdge);
+      } else if (!this.areEdgesEqual(fromEdge, toEdge)) {
+        modifiedEdges.push({ before: fromEdge, after: toEdge });
+      }
+    }
+
+    // Find removed edges
+    for (const [edgeId, fromEdge] of fromEdges) {
+      if (!toEdges.has(edgeId)) {
+        removedEdges.push(fromEdge);
+      }
+    }
+
+    return {
+      addedNodes,
+      removedNodes,
+      modifiedNodes,
+      addedEdges,
+      removedEdges,
+      modifiedEdges
+    };
   }
 
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
+
+  /**
+   * Compare two nodes for equality (excluding timestamps)
+   */
+  private areNodesEqual(node1: RPGNode, node2: RPGNode): boolean {
+    return (
+      node1.id === node2.id &&
+      node1.name === node2.name &&
+      node1.description === node2.description &&
+      node1.level === node2.level &&
+      node1.type === node2.type &&
+      node1.status === node2.status &&
+      node1.filePath === node2.filePath &&
+      node1.parentId === node2.parentId &&
+      JSON.stringify(node1.childIds) === JSON.stringify(node2.childIds) &&
+      node1.codeSnippet === node2.codeSnippet &&
+      JSON.stringify(node1.dependencies) === JSON.stringify(node2.dependencies) &&
+      JSON.stringify(node1.interfaces) === JSON.stringify(node2.interfaces) &&
+      node1.priority === node2.priority &&
+      node1.estimatedEffort === node2.estimatedEffort &&
+      node1.assignee === node2.assignee &&
+      JSON.stringify(node1.tags) === JSON.stringify(node2.tags)
+    );
+  }
+
+  /**
+   * Compare two edges for equality (excluding timestamps)
+   */
+  private areEdgesEqual(edge1: RPGEdge, edge2: RPGEdge): boolean {
+    return (
+      edge1.id === edge2.id &&
+      edge1.fromId === edge2.fromId &&
+      edge1.toId === edge2.toId &&
+      edge1.type === edge2.type &&
+      edge1.weight === edge2.weight &&
+      edge1.description === edge2.description &&
+      JSON.stringify(edge1.metadata) === JSON.stringify(edge2.metadata) &&
+      edge1.executionOrder === edge2.executionOrder &&
+      edge1.isOptional === edge2.isOptional
+    );
+  }
+
+  /**
+   * Convert RPG data to GraphML format
+   */
+  private convertToGraphML(data: RPGSerializationFormat): string {
+    let graphml = `<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
+        http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+
+  <!-- Node attribute definitions -->
+  <key id="name" for="node" attr.name="name" attr.type="string"/>
+  <key id="level" for="node" attr.name="level" attr.type="string"/>
+  <key id="type" for="node" attr.name="type" attr.type="string"/>
+  <key id="status" for="node" attr.name="status" attr.type="string"/>
+
+  <!-- Edge attribute definitions -->
+  <key id="edgeType" for="edge" attr.name="type" attr.type="string"/>
+  <key id="weight" for="edge" attr.name="weight" attr.type="double"/>
+
+  <graph id="RPG" edgedefault="directed">
+`;
+
+    // Add nodes
+    for (const node of data.graph.nodes) {
+      graphml += `    <node id="${node.id}">
+      <data key="name">${this.escapeXML(node.name)}</data>
+      <data key="level">${node.level}</data>
+      <data key="type">${node.type}</data>
+      <data key="status">${node.status}</data>
+    </node>
+`;
+    }
+
+    // Add edges
+    for (const edge of data.graph.edges) {
+      graphml += `    <edge source="${edge.fromId}" target="${edge.toId}">
+      <data key="edgeType">${edge.type}</data>
+      ${edge.weight !== undefined ? `<data key="weight">${edge.weight}</data>` : ''}
+    </edge>
+`;
+    }
+
+    graphml += `  </graph>
+</graphml>`;
+
+    return graphml;
+  }
+
+  /**
+   * Parse GraphML format to RPG data
+   */
+  private parseGraphML(graphmlContent: string): RPGSerializationFormat {
+    // This is a simplified parser - in production, you'd use a proper XML parser
+    // For now, we'll throw an error indicating full GraphML support is not implemented
+    throw new Error('Full GraphML parsing not implemented yet. Use JSON format instead.');
+  }
+
+  /**
+   * Escape XML special characters
+   */
+  private escapeXML(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
 
   private ensureInitialized(): void {
     if (!this.initialized) {
