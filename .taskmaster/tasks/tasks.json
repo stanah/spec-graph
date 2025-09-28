@@ -2313,11 +2313,315 @@
             "testStrategy": "TextDocumentProviderの動作検証、コマンド実行の統合テスト、ビュー切り替え時の状態保持確認、イベント通知の正確性テスト"
           }
         ]
+      },
+      {
+        "id": 37,
+        "title": "RPGコアエンジンの実装（リポジトリプランニンググラフ基盤）",
+        "description": "arXiv論文『RPG: A Repository Planning Graph for Unified and Scalable Codebase Generation』のアルゴリズムを実装し、spec-graphのDependencyGraphおよびIDManagerを活用したリポジトリプランニンググラフ（RPG）基盤システムのコアエンジンを開発する。",
+        "details": "1. RPGのノード・エッジ構造設計：論文に基づき、ノードは機能階層（高レベル機能→中間モジュール→具体的関数/クラス）とリポジトリ構造（ファイル/ディレクトリ/関数）を統合して表現する。エッジはデータフロー（モジュール間依存）とファイルレベル順序（intra/inter-module）を明示的に持つ。\n\n2. 既存spec-graphのDependencyGraph・IDManager統合：ノード・エッジのID一意性管理、依存関係のトポロジカルソート、循環検出・修正（Task33参照）を活用し、RPGの構築・更新・永続化APIを設計する。\n\n3. RPG構築アルゴリズム実装：\n   - 提案レベル（proposal-level）プランニング：自然言語仕様や要件から高レベル機能ノードを生成。\n   - 実装レベル（implementation-level）リファインメント：機能ノードをファイル・関数単位に分解し、依存エッジを付与。\n   - ノード・エッジの属性（説明、型、ファイルパス、実装状態など）を管理。\n\n4. RPG永続化・ロード機能：グラフ全体をJSON/GraphML等でシリアライズ・デシリアライズし、バージョン管理や差分更新も考慮。\n\n5. API設計：ノード・エッジの追加/削除/更新、依存関係の動的変更、グラフ全体の検証・可視化用APIを提供。\n\n6. 拡張性・スケーラビリティ：大規模リポジトリや複雑な依存関係にも対応できるよう、グラフ操作の効率化（インデックス、キャッシュ、バッチ処理）を実装。\n\n7. テスト容易性：ユニットテスト・統合テスト用のモックデータ生成、異常系（循環・孤立ノード等）への堅牢性を重視。\n\n【技術選定・ベストプラクティス】\n- TypeScript/Node.jsでの実装を推奨。\n- グラフ操作には既存のgraphlibやcustom実装を組み合わせる。\n- 型安全性・テスト容易性を重視し、JestやPlaywright等で自動テストを整備。\n- ドキュメント自動生成（OpenAPI/TypeDoc）も推奨。",
+        "testStrategy": "1. RPGノード・エッジ操作APIのユニットテスト（追加・削除・更新・属性管理）\n2. 依存関係のトポロジカルソート・循環検出の正確性テスト（Task33のケースも流用）\n3. 提案レベル→実装レベルへの分解アルゴリズムのE2Eテスト（サンプル仕様→RPG構造の自動生成）\n4. 永続化・ロードの整合性テスト（シリアライズ→デシリアライズ後の完全一致）\n5. 大規模グラフ（1,000ノード超）でのパフォーマンステスト\n6. エラー・異常系（不正ID、循環、孤立ノード等）への堅牢性テスト\n7. APIドキュメントの自動生成・整合性チェック",
+        "status": "pending",
+        "dependencies": [
+          33
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "RPGコアインターフェース設計とノード・エッジ構造定義",
+            "description": "arXiv論文のRPGアルゴリズムに基づき、機能階層（高レベル機能→中間モジュール→具体的関数/クラス）とリポジトリ構造（ファイル/ディレクトリ/関数）を統合したノード・エッジの型・属性・階層構造をTypeScriptで設計する。",
+            "dependencies": [],
+            "details": "ノードは機能的意味と構造的意味を持ち、エッジはデータフロー（モジュール間依存）とファイルレベル順序（intra/inter-module）を明示的に表現する。属性には説明、型、ファイルパス、実装状態などを含める。",
+            "status": "pending",
+            "testStrategy": "ノード・エッジ構造の型安全性テスト、属性のバリデーション、階層構造の整合性検証ユニットテストを実施。"
+          },
+          {
+            "id": 2,
+            "title": "DependencyGraph・IDManager統合基盤クラス実装",
+            "description": "既存spec-graphのDependencyGraphおよびIDManagerを活用し、ノード・エッジのID一意性管理、依存関係のトポロジカルソート、循環検出・修正機能を備えたRPG基盤クラスを実装する。",
+            "dependencies": [
+              "37.1"
+            ],
+            "details": "IDManagerによるノード・エッジIDの一意性保証、DependencyGraphによる依存関係管理・循環検出・トポロジカルソートAPIを統合し、RPGの構築・更新・永続化APIの基盤とする。",
+            "status": "pending",
+            "testStrategy": "ID一意性・循環検出・トポロジカルソートの正確性をユニットテストし、異常系（循環・孤立ノード等）への堅牢性も検証。"
+          },
+          {
+            "id": 3,
+            "title": "RPG構築アルゴリズム（提案・実装レベル分解）実装",
+            "description": "自然言語仕様や要件から高レベル機能ノードを生成する提案レベルプランニング、および機能ノードをファイル・関数単位に分解し依存エッジを付与する実装レベルリファインメントのアルゴリズムを実装する。",
+            "dependencies": [
+              "37.2"
+            ],
+            "details": "ノード・エッジの属性管理、階層的分解、依存関係の自動付与を含む。論文のZeroRepoパイプライン（提案→分解→依存付与）に準拠し、API経由で段階的にRPGを構築可能とする。",
+            "status": "pending",
+            "testStrategy": "サンプル仕様→RPG構造自動生成のE2Eテスト、分解・依存付与の正確性・属性伝播の検証を行う。"
+          },
+          {
+            "id": 4,
+            "title": "RPG永続化・ロード・バージョン管理機能実装",
+            "description": "RPG全体をJSON/GraphML等でシリアライズ・デシリアライズし、バージョン管理や差分更新にも対応する永続化・ロード機能を実装する。",
+            "dependencies": [
+              "37.3"
+            ],
+            "details": "グラフ全体の保存・復元、バージョンごとの差分比較・マージ、永続化APIの設計。大規模グラフでも効率的な入出力を考慮する。",
+            "status": "pending",
+            "testStrategy": "シリアライズ→デシリアライズ後の完全一致テスト、バージョン差分・マージの整合性テストを実施。"
+          },
+          {
+            "id": 5,
+            "title": "RPG操作・検証・可視化API設計とパフォーマンス最適化",
+            "description": "ノード・エッジの追加/削除/更新、依存関係の動的変更、グラフ全体の検証・可視化用APIを設計し、大規模リポジトリや複雑な依存関係にも対応できるようパフォーマンス最適化（インデックス・キャッシュ・バッチ処理）を実装する。",
+            "dependencies": [
+              "37.4"
+            ],
+            "details": "APIは型安全性・拡張性を重視し、グラフ操作の効率化や大規模データ対応のための最適化を行う。可視化用データ出力や検証ロジックも含む。",
+            "status": "pending",
+            "testStrategy": "APIのユニットテスト、1,000ノード超の大規模グラフでのパフォーマンステスト、異常系・エラー処理の堅牢性テストを実施。"
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "title": "DependencyGraphクラスのRPGアルゴリズム対応拡張と高度依存管理機能の実装",
+        "description": "既存のDependencyGraphクラスを拡張し、RPG（Repository Planning Graph）アルゴリズムをサポートする。最適なビルド順序生成、高度な循環依存検出、リファクタリング提案機能を統合し、RPGアプローチに適合した依存関係管理システムを構築する。",
+        "details": "1. RPGアルゴリズム統合: 既存DependencyGraphクラスの設計を見直し、RPGコアエンジン（Task37）で定義されたノード・エッジ構造や属性（機能階層、ファイル/関数粒度、依存種別）を完全サポートする。ノード・エッジの属性拡張、型安全なAPI設計、IDManagerとの連携強化を行う。\n\n2. 最適ビルド順序生成: トポロジカルソートの高度化（複数依存種別・優先度考慮、部分グラフ単位の順序生成）、並列ビルド可能性の判定、ビルドグループ分割アルゴリズムを実装。GoのMVS（最小バージョン選択）や再現性のあるビルド戦略[1]も参考にする。\n\n3. 高度な循環依存検出: Tarjanアルゴリズムの最適化、循環依存の詳細レポート生成、循環解消のためのリファクタリング候補（ノード分割・依存エッジ再構成・インターフェース抽出[3][4]）を自動提案する。循環検出結果をRPG構造にフィードバックし、修正案のプレビュー・適用APIを提供。\n\n4. リファクタリング提案機能: 依存性逆転原則（DIP）やインターフェース分離原則[3][4]に基づき、依存方向の見直し・抽象化・責務分割などのリファクタリング案を自動生成。提案内容は説明付きで提示し、ユーザーが選択・適用できるUI/APIを設計。\n\n5. 拡張性・テスト容易性: DI（依存性注入）パターン[2]を活用し、アルゴリズムや依存関係管理ロジックの差し替え・テスト容易性を確保。既存のIDManager・DataIntegrityChecker（Task33）との連携も強化。\n\n6. ドキュメント・API設計: 拡張されたDependencyGraphのAPI仕様・利用例・設計思想を詳細にドキュメント化し、RPGエンジンとの統合ガイドも整備する。",
+        "testStrategy": "1. 単体テスト: 拡張DependencyGraphの各API（ノード・エッジ追加/削除/更新、属性管理、トポロジカルソート、循環検出・修正提案）のユニットテストを作成。\n2. 統合テスト: RPGコアエンジン（Task37）との連携動作検証。複雑な依存構造・循環パターン・大規模グラフ（1,000ノード超）での正確性・パフォーマンステスト。\n3. E2Eテスト: 仕様→RPG→DependencyGraph→ビルド順序生成→リファクタリング提案までの一連フローを自動化テスト。\n4. リファクタリング提案の妥当性検証: 提案内容がDIPやインターフェース分離原則に沿っているか、循環解消・責務分割が正しく行われるかをケースベースで検証。\n5. ドキュメント・API整合性: 自動生成ドキュメントと実装の差分チェック、サンプルコードの動作確認。",
+        "status": "pending",
+        "dependencies": [
+          30,
+          33,
+          37
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "RPGアルゴリズム統合インターフェースの設計・実装",
+            "description": "既存DependencyGraphクラスの設計を見直し、RPGコアエンジン（Task37）で定義されたノード・エッジ構造や属性（機能階層、ファイル/関数粒度、依存種別）を完全サポートする拡張インターフェースを設計・実装する。",
+            "dependencies": [],
+            "details": "ノード・エッジの属性拡張、型安全なAPI設計、IDManagerとの連携強化を行い、RPGアプローチに適合した依存関係管理基盤を構築する。",
+            "status": "pending",
+            "testStrategy": "ノード・エッジ追加/削除/更新、属性管理APIの単体テスト。RPGコアエンジンとの連携動作検証。"
+          },
+          {
+            "id": 2,
+            "title": "最適ビルド順序生成アルゴリズムの実装",
+            "description": "複数依存種別・優先度を考慮したトポロジカルソートの高度化、並列ビルド可能性判定、ビルドグループ分割アルゴリズムを実装する。",
+            "dependencies": [
+              "38.1"
+            ],
+            "details": "GoのMVS（最小バージョン選択）や再現性のあるビルド戦略を参考に、部分グラフ単位で最適なビルド順序を生成する機能を追加する[1]。",
+            "status": "pending",
+            "testStrategy": "部分グラフ単位の順序生成・並列ビルド判定のユニットテスト。大規模グラフでのパフォーマンステスト。"
+          },
+          {
+            "id": 3,
+            "title": "高度な循環依存検出・解消提案エンジンの実装",
+            "description": "Tarjanアルゴリズムの最適化による循環依存検出、詳細レポート生成、循環解消のためのリファクタリング候補（ノード分割・依存エッジ再構成・インターフェース抽出）の自動提案機能を実装する。",
+            "dependencies": [
+              "38.1"
+            ],
+            "details": "循環検出結果をRPG構造にフィードバックし、修正案のプレビュー・適用APIを提供する。インターフェース分離・責務分割の設計原則も考慮する[3][4]。",
+            "status": "pending",
+            "testStrategy": "循環検出・詳細レポート生成・修正案プレビューAPIの単体テスト。循環解消提案の妥当性検証。"
+          },
+          {
+            "id": 4,
+            "title": "リファクタリング提案機能・UI/API設計",
+            "description": "依存性逆転原則（DIP）やインターフェース分離原則に基づき、依存方向の見直し・抽象化・責務分割などのリファクタリング案を自動生成し、ユーザーが選択・適用できるUI/APIを設計・実装する。",
+            "dependencies": [
+              "38.3"
+            ],
+            "details": "提案内容は説明付きで提示し、選択・適用操作を可能にする。DIパターンを活用し、拡張性・テスト容易性も確保する[2][4]。",
+            "status": "pending",
+            "testStrategy": "リファクタリング提案の自動生成・選択・適用APIの単体テスト。UI操作のE2Eテスト。"
+          }
+        ]
+      },
+      {
+        "id": 39,
+        "title": "spec-graphにRepository Planning Viewを追加し、RPGアルゴリズムによるリポジトリ構造可視化・コード生成プレビュー・依存関係フローチャートを表示するReactコンポーネントの実装",
+        "description": "spec-graphに新しいViewMode 'repository-planning' を追加し、RPGアルゴリズムで生成された最適なリポジトリ構造のビジュアライゼーション、コード生成プレビュー、依存関係フローチャートを統合表示するReactコンポーネント群を実装する。",
+        "details": "1. ViewMode拡張: ViewMode型に'repository-planning'を追加し、ViewSwitcher・ViewContext・zustandストアの対応を拡張する。\n\n2. RepositoryPlanningViewコンポーネント設計:\n  - RPGコアエンジン(Task37)および拡張DependencyGraph(Task38)からリポジトリ構造・依存関係データを取得。\n  - 3ペイン構成（a. リポジトリ構造グラフ b. コード生成プレビュー c. 依存関係フローチャート）を設計。\n  - グラフ表示にはCytoscape.js v3.30を活用し、ファイル・ディレクトリ・関数粒度のノードを階層表示。compound nodes・カスタムレイアウト（dagre/fcose）を利用。\n  - コード生成プレビューはRPGノードから生成されるコード断片を表示。差分ハイライト・ファイル単位切替・編集不可ビューを実装。\n  - 依存関係フローチャートはDependencyGraphのエッジ情報を可視化し、循環・ビルド順序・リファクタリング提案（Task38）をインライン表示。\n\n3. UI/UX設計:\n  - ペイン間の同期（ノード選択→コードプレビュー・依存関係ハイライト）\n  - パフォーマンス最適化（React.lazy, Suspense, 仮想化, Web Workerによるデータ処理オフロード: Task35参照）\n  - レスポンシブデザイン・アクセシビリティ対応\n\n4. 技術選定・ベストプラクティス:\n  - 型安全なAPI設計（TypeScript, RPG/DependencyGraph型定義）\n  - 状態管理はzustand、非同期データ取得はReact Query\n  - テスト容易性を考慮したコンポーネント分割\n  - RPG論文[1][2][3]の実装レベル構造・データフロー・インターフェース設計を参考にする\n\n5. 拡張性:\n  - 他ViewModeとの統合（Mindmap/Table/Document）を考慮したViewContainer設計\n  - グラフエクスポート（SVG/PNG/JSON）機能の追加余地\n  - RPGノード・エッジの属性拡張に柔軟対応",
+        "testStrategy": "1. ViewMode切り替えテスト: ViewSwitcherから'repository-planning'選択時の正しいレンダリング・状態遷移を確認。\n2. グラフ表示テスト: RPG構造・依存関係フローチャートのノード・エッジ・レイアウト・インタラクション（選択・ズーム・パン・ハイライト）のE2Eテスト。\n3. コード生成プレビューテスト: RPGノードから生成されるコード断片の正確性・差分ハイライト・ファイル切替動作。\n4. ペイン同期テスト: ノード選択時のコードプレビュー・依存関係ハイライト連動。\n5. パフォーマンステスト: 1,000ノード超の大規模グラフでの描画・操作レスポンス（Task35基準）。\n6. アクセシビリティ・レスポンシブテスト: キーボード操作・スクリーンリーダー対応・各画面サイズでの表示確認。\n7. APIモックテスト: RPG/DependencyGraphからのデータ取得APIのエラー・異常系・遅延時のUI挙動。\n8. 統合テスト: Mindmap/Table/Document各ViewModeとの切り替え・状態保持の整合性。",
+        "status": "pending",
+        "dependencies": [
+          24,
+          31,
+          35,
+          37,
+          38
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ViewMode型への'repository-planning'追加とルーティング拡張",
+            "description": "spec-graphのViewMode型に'repository-planning'を追加し、ViewSwitcher・ViewContext・zustandストアの対応を拡張する。新ViewModeのルーティングと状態管理を実装する。",
+            "dependencies": [],
+            "details": "ViewMode型定義の修正、zustandストアの状態遷移ロジック追加、ViewSwitcherで'repository-planning'選択時のレンダリング分岐を実装する。",
+            "status": "pending",
+            "testStrategy": "ViewSwitcherから'repository-planning'選択時に正しく状態遷移・レンダリングされることをE2Eテストで確認する。"
+          },
+          {
+            "id": 2,
+            "title": "RPG構造グラフビジュアライゼーションReactコンポーネントの実装",
+            "description": "RPGコアエンジンおよびDependencyGraphから取得したリポジトリ構造データをCytoscape.js v3.30で階層グラフ表示するReactコンポーネントを設計・実装する。",
+            "dependencies": [
+              "39.1"
+            ],
+            "details": "ファイル・ディレクトリ・関数粒度のノードをcompound nodes・カスタムレイアウト（dagre/fcose）で階層表示。react-cytoscapejsを活用し、ノード選択・ズーム・パン・ハイライト等のインタラクションを実装する。",
+            "status": "pending",
+            "testStrategy": "RPG構造グラフのノード・エッジ・レイアウト・インタラクション（選択・ズーム・パン・ハイライト）のE2Eテストを実施する。"
+          },
+          {
+            "id": 3,
+            "title": "依存関係フローチャートReactコンポーネントの設計・実装",
+            "description": "DependencyGraphのエッジ情報を可視化し、循環・ビルド順序・リファクタリング提案をインライン表示する依存関係フローチャートReactコンポーネントを設計・実装する。",
+            "dependencies": [
+              "39.1"
+            ],
+            "details": "DependencyGraph拡張APIから取得した依存関係データをCytoscape.jsでフローチャート表示。循環検出・ビルド順序・リファクタリング提案をノード・エッジ属性としてインライン表示する。",
+            "status": "pending",
+            "testStrategy": "依存関係フローチャートのノード・エッジ・循環検出・ビルド順序・リファクタリング提案表示の正確性をE2Eテストで検証する。"
+          },
+          {
+            "id": 4,
+            "title": "コード生成プレビューReactコンポーネントの設計・実装",
+            "description": "RPGノードから生成されるコード断片を表示し、差分ハイライト・ファイル単位切替・編集不可ビューを備えたコード生成プレビューReactコンポーネントを設計・実装する。",
+            "dependencies": [
+              "39.1"
+            ],
+            "details": "RPGコアエンジンから取得したコード断片をファイル単位で表示し、差分ハイライト・編集不可ビュー・ペイン同期（ノード選択→コードプレビュー連動）を実装する。",
+            "status": "pending",
+            "testStrategy": "コード生成プレビューの表示内容・差分ハイライト・ファイル切替・編集不可ビュー・ペイン同期動作をE2Eテストで確認する。"
+          }
+        ]
+      },
+      {
+        "id": 40,
+        "title": "MindmapDataから自動コードベース生成を行うCodebaseGenerationServiceの実装とVSCodeリアルタイム統合",
+        "description": "MindmapDataと要件仕様、コードテンプレートをもとに、実際のソースファイルを自動生成し、VSCode拡張と連携してリアルタイムでコード生成・更新を行うサービスを開発する。",
+        "details": "1. サービス設計:\n   - MindmapData（RPGコアエンジン/DependencyGraph経由）と要件仕様を入力とし、コードテンプレート（言語・フレームワーク別）を組み合わせてファイル構造・ソースコードを自動生成するCodebaseGenerationServiceクラスを設計。\n   - テンプレートエンジン（Handlebars.js, EJS, Liquid等）を活用し、柔軟なテンプレート差し替え・拡張性を確保。\n   - RPGノード属性（ファイルパス、型、説明、依存関係）をテンプレートにバインドし、階層的なディレクトリ・ファイル生成を実現。\n\n2. VSCode拡張との統合:\n   - VSCodeのファイルシステムAPIを利用し、生成されたコードをワークスペースに即時反映。\n   - ファイル変更イベントを監視し、Mindmapや要件仕様の更新時に差分のみを再生成・適用（インクリメンタル生成）。\n   - コマンドパレット/サイドバーUIから「コード生成」「再生成」「テンプレート選択」等の操作を提供。\n   - 生成結果のプレビュー、差分ハイライト、エラー通知（テンプレート不整合・依存未解決等）を実装。\n\n3. 拡張性・保守性:\n   - 新規言語・フレームワーク対応のためのテンプレート追加手順・API設計。\n   - RPG/DependencyGraphの構造変化に追従できるアダプター層を設計。\n   - テスト容易性のため、テンプレート・生成ロジック・VSCode統合を疎結合に分離。\n\n4. セキュリティ・パフォーマンス:\n   - ファイル上書き時の安全確認（バックアップ/差分適用/ユーザー承認）。\n   - 大規模プロジェクト対応のための非同期生成・バッチ処理・進捗通知。\n\n5. ベストプラクティス:\n   - VSCode拡張開発の標準構成（yo code, TypeScript, context.subscriptions管理）[3]。\n   - AIコード生成プロジェクトの環境構築・依存管理（venv, requirements.txt, OpenAI/Langchain等）[2]。\n   - テンプレート駆動開発・プロンプト駆動開発の知見を活用し、ユーザーによるカスタマイズ性・再現性を重視[1]。",
+        "testStrategy": "1. 単体テスト:\n   - MindmapData→ファイル構造・コード生成ロジックのユニットテスト（テンプレートごとに正常系・異常系を網羅）。\n   - テンプレート差し替え・パラメータバインディングの検証。\n2. 統合テスト:\n   - RPG/DependencyGraphからのデータ取得→コード生成→VSCodeファイル反映までの一連フローを自動化テスト。\n   - ファイル変更イベント発火時のインクリメンタル生成・差分適用の正確性。\n3. E2Eテスト:\n   - VSCode上でのコマンド実行、生成プレビュー、差分ハイライト、エラー通知のユーザー体験テスト。\n   - 大規模Mindmap/要件仕様でのパフォーマンス・安定性検証。\n4. 回帰・互換性テスト:\n   - テンプレート追加・更新時の既存機能への影響確認。\n   - RPG/DependencyGraph構造変更時の追従性。\n5. セキュリティ・安全性:\n   - ファイル上書き・削除時のユーザー確認ダイアログ、バックアップ生成のテスト。",
+        "status": "pending",
+        "dependencies": [
+          37,
+          38
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "テンプレートエンジン統合とテンプレート管理機構の実装",
+            "description": "Handlebars.js, EJS, Liquid等のテンプレートエンジンを選定・統合し、言語・フレームワーク別テンプレートの差し替えや拡張が容易なテンプレート管理機構を実装する。",
+            "dependencies": [],
+            "details": "RPGノード属性（ファイルパス、型、説明、依存関係）をテンプレートにバインドし、階層的なディレクトリ・ファイル生成を可能にする。テンプレートの追加・更新・バリデーションAPIも設計する。",
+            "status": "pending",
+            "testStrategy": "各テンプレートエンジンごとに正常系・異常系のテンプレートバインディングテスト、テンプレート差し替え・拡張時の動作検証。"
+          },
+          {
+            "id": 2,
+            "title": "コード生成アルゴリズムとファイル構造自動生成ロジックの実装",
+            "description": "MindmapDataおよび要件仕様を入力として、テンプレートと組み合わせて最適なファイル構造とソースコードを自動生成するアルゴリズムを実装する。",
+            "dependencies": [
+              "40.1"
+            ],
+            "details": "DependencyGraphを解析し、依存関係を考慮したファイル生成順序や階層構造を決定。生成ロジックはテンプレート管理層と疎結合とし、将来的な拡張性・保守性を担保する。",
+            "status": "pending",
+            "testStrategy": "MindmapData→ファイル構造・コード生成のユニットテスト、依存関係解決・異常系（循環依存等）の検証。"
+          },
+          {
+            "id": 3,
+            "title": "VSCode拡張とのファイル生成・リアルタイム統合機能の実装",
+            "description": "VSCodeのファイルシステムAPIを利用し、生成されたコードをワークスペースに即時反映する統合機能を実装する。ファイル変更イベント監視やコマンドパレット/サイドバーUIも含む。",
+            "dependencies": [
+              "40.2"
+            ],
+            "details": "ファイル生成・更新時に差分のみを再生成・適用するインクリメンタル生成、生成結果のプレビュー・差分ハイライト・エラー通知機能も実装。VSCode APIのベストプラクティスに従う。",
+            "status": "pending",
+            "testStrategy": "VSCode上でのファイル生成・更新・削除の統合テスト、コマンドUI・プレビュー・エラー通知のE2Eテスト。"
+          },
+          {
+            "id": 4,
+            "title": "リアルタイム生成・更新機能とパフォーマンス・セキュリティ対策の実装",
+            "description": "Mindmapや要件仕様の変更をリアルタイムで検知し、非同期・バッチ処理による大規模プロジェクト対応やファイル上書き時の安全確認（バックアップ・ユーザー承認）を実装する。",
+            "dependencies": [
+              "40.3"
+            ],
+            "details": "進捗通知やエラーリカバリー、テンプレート不整合・依存未解決時の例外処理も含め、パフォーマンスとセキュリティを両立させる。",
+            "status": "pending",
+            "testStrategy": "大規模データでの非同期生成・バッチ処理のパフォーマンステスト、ファイル上書き時の安全性・エラーリカバリーの検証。"
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "title": "RPG統合機能の統合テストスイートと品質保証システムの実装",
+        "description": "RPGアルゴリズム機能の統合テストスイートを実装し、既存のspec-graph機能との互換性確認、パフォーマンステスト、エラーハンドリングテストを含む包括的な品質保証システムを構築する。",
+        "details": "1. RPG統合テストスイートの設計\n   - RPGコアエンジン（Task37）、DependencyGraph拡張（Task38）、Repository Planning View（Task39）、CodebaseGenerationService（Task40）の統合テストを実装\n   - vitest v3.2.4とTesting Library v16.3.0を活用したE2Eテストフレームワーク構築\n   - spec-graphライブラリの既存テスト基盤（src/test/setup.ts、vitest.config.ts）と統合\n   \n2. 互換性テストシステム\n   - 既存のDependencyGraphクラス、IDManager、ViewModeシステムとのAPI互換性検証\n   - MindmapData構造（Task2のNodeSchema）からRPG構造への変換・復元の完全性テスト\n   - 既存のマインドマップビューア（Task4のD3.jsレンダリング）とRepository Planning Viewの並行動作確認\n   - ViewMode切り替え時のデータ整合性・状態同期テスト\n   \n3. パフォーマンステストスイート\n   - 大規模グラフ（1,000-10,000ノード）でのRPG構築・依存関係解析パフォーマンス測定\n   - メモリ使用量プロファイリング（existing performanceMonitor.ts活用）\n   - Cytoscape.jsグラフレンダリング性能（既存のDependencyGraphView.tsの拡張）\n   - コード生成処理の実行時間・スループット測定\n   - 並列処理（Web Worker利用）時のパフォーマンス検証\n   \n4. エラーハンドリング・堅牢性テスト\n   - 循環依存・孤立ノード検出の精度テスト（Task33のDataIntegrityCheckerとの連携）\n   - 不正RPG構造・破損データからのリカバリーテスト\n   - VSCode拡張環境でのファイルシステムエラー・権限エラー処理\n   - ネットワーク障害時のフォールバック機能テスト\n   - メモリ制限・CPU負荷上限時の適切なエラーハンドリング\n   \n5. 品質保証自動化システム\n   - CIパイプライン統合（pnpm test、pnpm test:coverage、pnpm test:vscode対応）\n   - テストカバレッジレポート（@vitest/coverage-v8 v3.2.4活用）\n   - 回帰テスト自動化（既存機能への影響検出）\n   - パフォーマンス劣化検出アラート\n   - コードメトリクス監視（複雑度、結合度、テスト密度）",
+        "testStrategy": "1. 単体テストレベル（vitest）\n   - RPGコアエンジンの各API（ノード・エッジ操作、永続化、ロード）の単体テスト\n   - DependencyGraph拡張機能（トポロジカルソート、循環検出、リファクタリング提案）のユニットテスト\n   - CodebaseGenerationServiceのテンプレート適用・コード生成ロジックのテスト\n   \n2. 統合テストレベル（Testing Library + vitest）\n   - MindmapData → RPG → DependencyGraph → Repository Planning View → コード生成の一連フロー検証\n   - 既存ビュー（mindmap/table/document）とrepository-planningビューの切り替え動作テスト\n   - VSCodeファイルシステム統合（Task36）との連携テスト\n   \n3. E2Eテストレベル（Playwright + vitest）\n   - VSCode拡張環境でのフルワークフロー（ファイル読み込み→RPG生成→コード出力→保存）テスト\n   - ユーザーインタラクション（グラフ操作、ビュー切り替え、設定変更）のE2Eテスト\n   - 複数ファイル・プロジェクト間でのRPG機能動作確認\n   \n4. パフォーマンス・負荷テストレベル\n   - ベンチマークテスト（1,000/5,000/10,000ノードでの処理時間測定）\n   - メモリリークテスト（長時間動作・繰り返し処理での検証）\n   - 並行処理ストレステスト（複数RPG構築の同時実行）\n   \n5. 互換性・回帰テストレベル\n   - 既存spec-graph機能の全テストスイート実行（regression prevention）\n   - ブラウザ・Node.js環境での動作確認\n   - TypeScript型安全性・ESLint品質チェック統合\n   - 継続的インテグレーション（CI）でのテスト自動実行・品質ゲート設定",
+        "status": "pending",
+        "dependencies": [
+          37,
+          38,
+          39,
+          40
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "RPG統合テストスイート基盤の実装とE2Eテストフレームワーク構築",
+            "description": "RPGコアエンジン、DependencyGraph拡張、Repository Planning View、CodebaseGenerationServiceの統合テストを実装し、vitestとTesting Libraryを活用したE2Eテストフレームワークを構築する。",
+            "dependencies": [],
+            "details": "既存のvitest.config.ts（ライブラリ用とVSCode拡張用）とsrc/test/setup.tsのテスト基盤を拡張し、RPG関連機能の統合テスト用セットアップを追加する。RPGコアエンジン（Task37）、DependencyGraph拡張（Task38）、Repository Planning View（Task39）、CodebaseGenerationService（Task40）のモックとテストヘルパーを作成し、各機能間の連携テストを実装する。E2Eテストシナリオとして、MindmapData→RPG構造変換→依存関係解析→リポジトリ構造可視化→コード生成の全フローテストを構築する。",
+            "status": "pending",
+            "testStrategy": "vitestを使用した統合テストの作成。モックサービスの作成とテストデータの準備。E2Eテストシナリオの実装とアサーション定義。"
+          },
+          {
+            "id": 2,
+            "title": "既存spec-graph機能との互換性テストシステムの実装",
+            "description": "既存のDependencyGraphクラス、IDManager、ViewModeシステムとのAPI互換性検証、MindmapData構造からRPG構造への変換・復元テスト、既存ビューアとの並行動作確認を実装する。",
+            "dependencies": [
+              "41.1"
+            ],
+            "details": "既存のDependencyGraphクラス（src/core/deps/DependencyGraph.ts）、IDManager（src/core/id/IDManager.ts）、ViewModeシステム（src/stores/viewMode.ts）との互換性テストを実装する。MindmapData構造（Task2のNodeSchema）からRPG構造への変換・復元の完全性テストを作成し、データの整合性を検証する。既存のマインドマップビューア（Task4のD3.jsレンダリング）とRepository Planning Viewの並行動作テスト、ViewMode切り替え時のデータ整合性・状態同期テストを実装する。",
+            "status": "pending",
+            "testStrategy": "API互換性テストの実装。データ変換・復元テストによる整合性検証。ViewMode切り替えテストとマルチビューテスト。"
+          },
+          {
+            "id": 3,
+            "title": "パフォーマンステストスイートとメモリプロファイリングの実装",
+            "description": "大規模グラフでのRPG構築・依存関係解析パフォーマンス測定、メモリ使用量プロファイリング、Cytoscape.jsグラフレンダリング性能測定、コード生成処理の実行時間・スループット測定を実装する。",
+            "dependencies": [
+              "41.1",
+              "41.2"
+            ],
+            "details": "既存のperformanceMonitor.ts（src/utils/performanceMonitor.ts）を活用し、大規模グラフ（1,000-10,000ノード）でのRPG構築・依存関係解析パフォーマンス測定システムを実装する。メモリ使用量プロファイリング機能を拡張し、Cytoscape.jsグラフレンダリング性能（既存のDependencyGraphView.tsの拡張）を測定する。コード生成処理の実行時間・スループット測定、並列処理（Web Worker利用）時のパフォーマンス検証システムを構築する。パフォーマンス劣化検出アラート機能を実装する。",
+            "status": "pending",
+            "testStrategy": "パフォーマンスベンチマークテストの実装。メモリ使用量監視とリーク検出。大規模データセットを使用した負荷テスト。"
+          },
+          {
+            "id": 4,
+            "title": "エラーハンドリング・堅牢性テストと品質保証自動化システムの実装",
+            "description": "循環依存・孤立ノード検出の精度テスト、不正RPG構造・破損データからのリカバリーテスト、VSCode拡張環境でのエラー処理テスト、CIパイプライン統合による品質保証自動化システムを実装する。",
+            "dependencies": [
+              "41.1",
+              "41.2",
+              "41.3"
+            ],
+            "details": "既存のDataIntegrityChecker（src/services/dataIntegrityChecker.ts）と連携し、循環依存・孤立ノード検出の精度テストを実装する。不正RPG構造・破損データからのリカバリーテスト、VSCode拡張環境でのファイルシステムエラー・権限エラー処理テストを作成する。ネットワーク障害時のフォールバック機能テスト、メモリ制限・CPU負荷上限時の適切なエラーハンドリングテストを実装する。CIパイプライン統合（pnpm test、pnpm test:coverage、pnpm test:vscode対応）、テストカバレッジレポート（@vitest/coverage-v8活用）、回帰テスト自動化システムを構築する。",
+            "status": "pending",
+            "testStrategy": "エラー条件シミュレーションテスト。リカバリー機能の検証。CIパイプライン統合とカバレッジレポート生成。回帰テスト自動化とコードメトリクス監視。"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-27T03:08:17.818Z",
+      "updated": "2025-09-28T09:44:11.938Z",
       "description": "Tasks for master context"
     }
   }
