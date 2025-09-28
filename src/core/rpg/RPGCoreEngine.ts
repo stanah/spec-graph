@@ -452,7 +452,7 @@ export class RPGCoreEngine implements IRPGCoreEngine {
           nodeIds: cycles.flat()
         });
       }
-    } catch (_e) {
+    } catch {
       errors.push({
         type: 'cycle',
         message: 'Error checking for cycles',
