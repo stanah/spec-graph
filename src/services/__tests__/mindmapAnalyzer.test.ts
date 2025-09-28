@@ -219,9 +219,51 @@ describe('MindmapAnalyzer', () => {
       expect(issues).toHaveLength(0);
     });
 
-    // 注意: 現在の実装では、ツリー構造内のすべてのノードは
-    // ルートから到達可能なため、孤立ノードは検出されない
-    // 実際の孤立ノード検出には、別のデータ構造（例：フラットな配列）が必要
+    it('ルートから到達できないノードを検出する', () => {
+      const floatingNode: MindmapNode = {
+        id: 'floating-node',
+        title: '浮遊ノード',
+        metadata: {
+          parentId: 'child1'
+        }
+      };
+
+      const issues = MindmapAnalyzer.detectOrphanedNodes(simpleMindmapData, {
+        additionalNodes: [floatingNode]
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        type: 'orphaned_node',
+        nodeId: 'floating-node',
+        severity: 'warning'
+      });
+      expect(issues[0].message).toContain('floating-node');
+      expect(issues[0].message).toContain('child1');
+    });
+
+    it('親情報が不整合なノードを検出し詳細を含める', () => {
+      const danglingNode: MindmapNode = {
+        id: 'dangling-node',
+        title: '孤児ノード',
+        metadata: {
+          parentId: 'missing-parent'
+        }
+      };
+
+      const issues = MindmapAnalyzer.detectOrphanedNodes(simpleMindmapData, {
+        additionalNodes: [danglingNode]
+      });
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        type: 'orphaned_node',
+        nodeId: 'dangling-node',
+        severity: 'error'
+      });
+      expect(issues[0].message).toContain('dangling-node');
+      expect(issues[0].message).toContain('missing-parent');
+    });
   });
 
   describe('analyzeStructure', () => {

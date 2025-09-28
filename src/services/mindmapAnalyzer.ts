@@ -67,9 +67,33 @@ export interface StructureIssue {
 }
 
 /**
+ * 孤立ノード検出時の追加コンテキスト
+ */
+export interface OrphanDetectionOptions {
+  /** ツリー外に存在する追加ノード */
+  additionalNodes?: MindmapNode[];
+  /** フラットなノードインデックス */
+  nodeIndex?: Map<string, MindmapNode> | Record<string, MindmapNode>;
+  /** ノードIDと親IDの対応表 */
+  parentIndex?: Map<string, string | null | undefined> | Record<string, string | null | undefined>;
+  /** メタデータ内で孤立ノード候補として走査するキー */
+  metadataNodeKeys?: string[];
+}
+
+/**
  * マインドマップ分析器クラス
  */
 export class MindmapAnalyzer {
+  private static readonly DEFAULT_METADATA_NODE_KEYS = [
+    'floatingNodes',
+    'detachedNodes',
+    'orphanNodes',
+    'unlinkedNodes',
+    'isolatedNodes',
+    'nodeIndex',
+    'nodes'
+  ];
+
   /**
    * マインドマップの統計情報を収集する
    * 
@@ -176,52 +200,93 @@ export class MindmapAnalyzer {
    * @param mindmapData - 検査対象のマインドマップデータ
    * @returns 検出された問題のリスト
    */
-  public static detectOrphanedNodes(mindmapData: MindmapData): StructureIssue[] {
+  public static detectOrphanedNodes(
+    mindmapData: MindmapData,
+    options: OrphanDetectionOptions = {}
+  ): StructureIssue[] {
     const issues: StructureIssue[] = [];
-    
-    if (!mindmapData.root) {
-      return issues;
+    const candidateNodes = new Map<string, { node: MindmapNode; parentId?: string | null }>();
+    const reachableNodes = new Set<string>();
+
+    const addCandidate = (node: MindmapNode, parentId?: string | null) => {
+      if (!node || typeof node.id !== 'string' || node.id.length === 0) {
+        return;
+      }
+
+      const existing = candidateNodes.get(node.id);
+      if (!existing) {
+        candidateNodes.set(node.id, { node, parentId });
+        return;
+      }
+
+      if (existing.parentId === undefined && parentId !== undefined) {
+        existing.parentId = parentId;
+      }
+    };
+
+    const traverse = (node: MindmapNode, parentId: string | null) => {
+      addCandidate(node, parentId);
+      reachableNodes.add(node.id);
+
+      if (node.children) {
+        for (const child of node.children) {
+          traverse(child, node.id);
+        }
+      }
+    };
+
+    if (mindmapData.root) {
+      traverse(mindmapData.root, null);
     }
 
-    const reachableNodes = new Set<string>();
-    
-    // ルートから到達可能なノードを収集
-    const collectReachable = (node: MindmapNode): void => {
-      reachableNodes.add(node.id);
-      
-      if (node.children) {
-        for (const child of node.children) {
-          collectReachable(child);
+    const metadataNodes = this.collectMetadataNodes(mindmapData, options);
+    const extraNodes: MindmapNode[] = [
+      ...(options.additionalNodes ?? []),
+      ...this.entriesToNodes(options.nodeIndex),
+      ...metadataNodes,
+    ];
+
+    for (const node of extraNodes) {
+      if (!node || typeof node.id !== 'string') {
+        continue;
+      }
+
+      const parentId = this.resolveParentId(node.id, node, options.parentIndex);
+      addCandidate(node, parentId);
+    }
+
+    for (const [nodeId, info] of candidateNodes.entries()) {
+      if (reachableNodes.has(nodeId)) {
+        continue;
+      }
+
+      const parentId = this.resolveParentId(
+        nodeId,
+        info.node,
+        options.parentIndex,
+        info.parentId
+      );
+
+      let severity: StructureIssue['severity'] = 'warning';
+      let message = `孤立ノードが検出されました: ${nodeId}`;
+
+      if (typeof parentId === 'string' && parentId.length > 0) {
+        if (!candidateNodes.has(parentId)) {
+          severity = 'error';
+          message = `親ノード(${parentId})が見つからない孤立ノードです: ${nodeId}`;
+        } else if (!reachableNodes.has(parentId)) {
+          message = `親ノード(${parentId})も孤立しているため、ノードが切り離されています: ${nodeId}`;
+        } else {
+          message = `親ノード(${parentId})から到達できないノードです: ${nodeId}`;
         }
       }
-    };
 
-    collectReachable(mindmapData.root);
-
-    // 全ノードIDを収集（実装では、実際のデータ構造に応じて調整が必要）
-    const allNodes = new Set<string>();
-    const collectAllNodes = (node: MindmapNode): void => {
-      allNodes.add(node.id);
-      
-      if (node.children) {
-        for (const child of node.children) {
-          collectAllNodes(child);
-        }
-      }
-    };
-
-    collectAllNodes(mindmapData.root);
-
-    // 到達不可能なノードを検出
-    for (const nodeId of allNodes) {
-      if (!reachableNodes.has(nodeId)) {
-        issues.push({
-          type: 'orphaned_node',
-          nodeId,
-          message: `孤立ノードが検出されました: ${nodeId}`,
-          severity: 'warning',
-        });
-      }
+      issues.push({
+        type: 'orphaned_node',
+        nodeId,
+        message,
+        severity,
+      });
     }
 
     return issues;
@@ -231,20 +296,171 @@ export class MindmapAnalyzer {
    * 包括的な構造分析を実行する
    * 
    * @param mindmapData - 分析対象のマインドマップデータ
+   * @param options - 追加分析オプション
    * @returns 分析結果
    */
-  public static analyzeStructure(mindmapData: MindmapData): {
+  public static analyzeStructure(
+    mindmapData: MindmapData,
+    options: OrphanDetectionOptions = {}
+  ): {
     statistics: MindmapStatistics;
     issues: StructureIssue[];
   } {
     const statistics = this.collectStatistics(mindmapData);
     const circularIssues = this.detectCircularReferences(mindmapData);
-    const orphanedIssues = this.detectOrphanedNodes(mindmapData);
+    const orphanedIssues = this.detectOrphanedNodes(mindmapData, options);
     
     return {
       statistics,
       issues: [...circularIssues, ...orphanedIssues],
     };
+  }
+
+  private static collectMetadataNodes(
+    mindmapData: MindmapData,
+    options: OrphanDetectionOptions
+  ): MindmapNode[] {
+    const metadata = mindmapData.metadata as Record<string, unknown> | undefined;
+    if (!metadata || typeof metadata !== 'object') {
+      return [];
+    }
+
+    const keys = options.metadataNodeKeys ?? this.DEFAULT_METADATA_NODE_KEYS;
+    const results: MindmapNode[] = [];
+
+    for (const key of keys) {
+      const value = (metadata as Record<string, unknown>)[key];
+      if (!value) {
+        continue;
+      }
+
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (this.isMindmapNodeLike(item)) {
+            results.push(item as MindmapNode);
+          }
+        }
+        continue;
+      }
+
+      if (this.isMindmapNodeLike(value)) {
+        results.push(value as MindmapNode);
+        continue;
+      }
+
+      if (typeof value === 'object') {
+        for (const item of Object.values(value as Record<string, unknown>)) {
+          if (this.isMindmapNodeLike(item)) {
+            results.push(item as MindmapNode);
+          }
+        }
+      }
+    }
+
+    return results;
+  }
+
+  private static entriesToNodes(
+    index?: Map<string, MindmapNode> | Record<string, MindmapNode>
+  ): MindmapNode[] {
+    if (!index) {
+      return [];
+    }
+
+    if (index instanceof Map) {
+      return Array.from(index.values());
+    }
+
+    return Object.values(index);
+  }
+
+  private static getParentFromIndex(
+    parentIndex: OrphanDetectionOptions['parentIndex'],
+    nodeId: string
+  ): string | null | undefined {
+    if (!parentIndex) {
+      return undefined;
+    }
+
+    if (parentIndex instanceof Map) {
+      return parentIndex.has(nodeId) ? parentIndex.get(nodeId) ?? null : undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(parentIndex, nodeId)) {
+      const value = parentIndex[nodeId];
+      return typeof value === 'string' ? value : value ?? null;
+    }
+
+    return undefined;
+  }
+
+  private static getParentFromMetadata(node: MindmapNode): string | null | undefined {
+    const metadata = node.metadata as Record<string, unknown> | undefined;
+    if (metadata && typeof metadata === 'object') {
+      const candidates = [
+        metadata.parentId,
+        metadata.parentID,
+        metadata.parent,
+        metadata.parentNodeId,
+        metadata.parentNodeID,
+      ];
+
+      for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.length > 0) {
+          return candidate;
+        }
+        if (candidate === null) {
+          return null;
+        }
+      }
+    }
+
+    const customFields = node.customFields as Record<string, unknown> | undefined;
+    if (customFields && typeof customFields === 'object') {
+      const customCandidates = [
+        customFields.parentId,
+        customFields.parentID,
+        customFields.parent,
+      ];
+
+      for (const candidate of customCandidates) {
+        if (typeof candidate === 'string' && candidate.length > 0) {
+          return candidate;
+        }
+        if (candidate === null) {
+          return null;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  private static resolveParentId(
+    nodeId: string,
+    node: MindmapNode,
+    parentIndex?: OrphanDetectionOptions['parentIndex'],
+    fallbackParentId?: string | null
+  ): string | null | undefined {
+    if (fallbackParentId !== undefined) {
+      return fallbackParentId;
+    }
+
+    const fromIndex = this.getParentFromIndex(parentIndex, nodeId);
+    if (fromIndex !== undefined) {
+      return fromIndex;
+    }
+
+    return this.getParentFromMetadata(node);
+  }
+
+  private static isMindmapNodeLike(value: unknown): value is MindmapNode {
+    if (!value || typeof value !== 'object') {
+      return false;
+    }
+
+    const obj = value as Record<string, unknown>;
+    return typeof obj.id === 'string' && obj.id.length > 0 && typeof obj.title === 'string';
   }
 }
 
