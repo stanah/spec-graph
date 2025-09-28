@@ -26,7 +26,7 @@ const BASE_ORDER: Array<keyof MindmapNode> = [
 export function buildMindmapColumns(
   samples: MindmapNode[],
   options: BuildColumnsOptions = {}
-): ColumnDef<MindmapNode, any>[] {
+): ColumnDef<MindmapNode>[] {
   const exclude = new Set(options.exclude ?? []);
   const include = new Set(options.include ?? []);
 
@@ -44,7 +44,7 @@ export function buildMindmapColumns(
   // Merge include
   for (const k of include) presentBase.add(k);
 
-  const baseColumns: ColumnDef<MindmapNode, any>[] = [];
+  const baseColumns: ColumnDef<MindmapNode>[] = [];
   for (const key of BASE_ORDER) {
     if (!presentBase.has(key as string)) continue;
     if (exclude.has(key as string)) continue;
@@ -80,7 +80,7 @@ export function buildMindmapColumns(
 
   // customFields columns
   const customKeys = collectCustomFieldKeys(samples);
-  const customColumns: ColumnDef<MindmapNode, any>[] = customKeys.map((ck) => ({
+  const customColumns: ColumnDef<MindmapNode>[] = customKeys.map((ck) => ({
     id: `custom:${ck}`,
     header: ck,
     accessorFn: (row) => formatValue((row.customFields as Record<string, unknown> | undefined)?.[ck]),
@@ -108,5 +108,5 @@ function formatValue(v: unknown): string | number | null {
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'object') return JSON.stringify(v);
   if (typeof v === 'boolean') return v ? 'true' : 'false';
-  return v as any;
+  return v as string | number;
 }

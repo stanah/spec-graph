@@ -25,7 +25,7 @@ class VSCodeApiSingleton {
   private static instance: VSCodeApiSingleton | null = null;
   private vscodeApi: VSCodeApi | null = null;
   private isInitialized = false;
-  private messageHandlers = new Map<string, (data: any) => void>();
+  private messageHandlers = new Map<string, (data: VSCodeMessageData) => void>();
 
   private constructor() {
     // メッセージリスナーを設定
@@ -189,7 +189,7 @@ class VSCodeApiSingleton {
   /**
    * 受信メッセージをバリデーションして処理
    */
-  private handleIncomingMessage(message: any): void {
+  private handleIncomingMessage(message: unknown): void {
     try {
       // メッセージをバリデーション
       if (!VSCodeMessageValidator.validateIncoming(message)) {
@@ -215,7 +215,7 @@ class VSCodeApiSingleton {
   /**
    * メッセージハンドラーを登録
    */
-  addMessageHandler(command: string, handler: (data: any) => void): void {
+  addMessageHandler(command: string, handler: (data: VSCodeMessageData) => void): void {
     this.messageHandlers.set(command, handler);
   }
 

@@ -7,7 +7,7 @@ export class NavigationHistory {
     // ブラウザHistory APIが使える場合は最低限同期（テスト環境ではメモリ運用）
     if (typeof window !== 'undefined' && window.addEventListener) {
       window.addEventListener('popstate', (e) => {
-        const state = (e.state as any) ?? {};
+        const state = (e.state as { nodeId?: string } | null) ?? {};
         if (state && typeof state.nodeId === 'string') {
           // popstateは過去/未来への移動なので、currentも差し替え
           this.current = state.nodeId;

@@ -10,7 +10,7 @@ import { createSafeDebounce, createSafeThrottle, TimerManager } from './memoryLe
 /**
  * 深い比較用のユーティリティ（循環参照対応版・改良版）
  */
-export function deepEqual(a: any, b: any, seen?: WeakSet<object>): boolean {
+export function deepEqual(a: unknown, b: unknown, seen?: WeakSet<object>): boolean {
   // 同じ参照の場合は即座にtrue
   if (a === b) return true;
   
@@ -107,7 +107,7 @@ export function useDeepMemo<T>(factory: () => T, deps: React.DependencyList): T 
  * 最適化されたコールバックフック
  * 深い比較を使用してより正確な依存関係チェックを行う
  */
-export function useDeepCallback<T extends (...args: any[]) => any>(
+export function useDeepCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   deps: React.DependencyList
 ): T {
@@ -192,7 +192,7 @@ export function useDebouncedStoreUpdate<T>(
   const lastValue = useRef<T | undefined>(undefined);
   
   const debouncedUpdate = useMemo(() => {
-    return createSafeDebounce((...args: unknown[]) => {
+    return createSafeDebounce((...args: readonly unknown[]) => {
       const value = args[0] as T;
       if (!deepEqual(lastValue.current, value)) {
         lastValue.current = value;
@@ -219,7 +219,7 @@ export function useDebouncedStoreUpdate<T>(
 /**
  * スロットル付きイベントハンドラーフック
  */
-export function useThrottledEventHandler<T extends (...args: any[]) => void>(
+export function useThrottledEventHandler<T extends (...args: unknown[]) => void>(
   handler: T,
   delay: number = 100
 ): T {

@@ -26,7 +26,7 @@ const BASE_ORDER: Array<keyof Omit<HierarchicalNodeInfo, '_level' | '_parentId' 
 export function buildHierarchicalMindmapColumns(
   samples: HierarchicalNodeInfo[],
   options: BuildHierarchicalColumnsOptions = {}
-): ColumnDef<HierarchicalNodeInfo, any>[] {
+): ColumnDef<HierarchicalNodeInfo>[] {
   const exclude = new Set(options.exclude ?? []);
   const include = new Set(options.include ?? []);
   const { showHierarchyInfo = true, showParentInfo = false } = options;
@@ -45,7 +45,7 @@ export function buildHierarchicalMindmapColumns(
   // Merge include
   for (const k of include) presentBase.add(k);
 
-  const baseColumns: ColumnDef<HierarchicalNodeInfo, any>[] = [];
+  const baseColumns: ColumnDef<HierarchicalNodeInfo>[] = [];
   
   for (const key of BASE_ORDER) {
     if (!presentBase.has(key as string)) continue;
@@ -81,7 +81,7 @@ export function buildHierarchicalMindmapColumns(
   }
 
   // 階層情報カラムを追加
-  const hierarchyColumns: ColumnDef<HierarchicalNodeInfo, any>[] = [];
+  const hierarchyColumns: ColumnDef<HierarchicalNodeInfo>[] = [];
   
   if (showHierarchyInfo) {
     hierarchyColumns.push({
@@ -139,7 +139,7 @@ export function buildHierarchicalMindmapColumns(
 
   // customFields columns
   const customKeys = collectCustomFieldKeys(samples);
-  const customColumns: ColumnDef<HierarchicalNodeInfo, any>[] = customKeys.map((ck) => ({
+  const customColumns: ColumnDef<HierarchicalNodeInfo>[] = customKeys.map((ck) => ({
     id: `custom:${ck}`,
     header: ck,
     accessorFn: (row) => formatValue((row.customFields as Record<string, unknown> | undefined)?.[ck]),
@@ -167,5 +167,5 @@ function formatValue(v: unknown): string | number | null {
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'object') return JSON.stringify(v);
   if (typeof v === 'boolean') return v ? 'true' : 'false';
-  return v as any;
+  return v as string | number;
 }
