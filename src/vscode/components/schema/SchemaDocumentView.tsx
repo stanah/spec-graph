@@ -2,10 +2,36 @@ import React from 'react';
 import type { JsonSchema } from '../../../services/schemaManager';
 import { StatusBadge, PriorityBadge } from '../../../components/table/Badges';
 
-type AnySchema = JsonSchema & {
+// JSON Schema 型定義の改善
+interface JsonSchemaObject extends JsonSchema {
+  type?: 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
   title?: string;
-  properties?: Record<string, any>;
-};
+  description?: string;
+  properties?: Record<string, JsonSchemaProperty>;
+  items?: JsonSchemaProperty;
+  enum?: unknown[];
+  'x-ui'?: UIHint;
+}
+
+interface JsonSchemaProperty {
+  type?: 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
+  title?: string;
+  description?: string;
+  properties?: Record<string, JsonSchemaProperty>;
+  items?: JsonSchemaProperty;
+  enum?: unknown[];
+  'x-ui'?: UIHint;
+}
+
+// データレコード型定義
+interface DataRecord {
+  id?: string | number;
+  title?: string;
+  description?: string;
+  priority?: string;
+  status?: string;
+  [key: string]: unknown;
+}
 
 type UIHint = {
   label?: string;
@@ -17,12 +43,12 @@ type UIHint = {
   itemTitle?: string; // for array/object items (e.g., 'id+title')
 };
 
-function getUiHint(s: any): UIHint {
-  const ui = (s && (s['x-ui'] as any)) || {};
+function getUiHint(s: JsonSchemaProperty | JsonSchemaObject | undefined): UIHint {
+  const ui = (s && s['x-ui']) || {};
   return ui;
 }
 
-function labelFor(propName: string, schema: any): string {
+function labelFor(propName: string, schema: JsonSchemaProperty | JsonSchemaObject): string {
   const ui = getUiHint(schema);
   if (ui.label) return ui.label;
   if (schema.title) return schema.title;
@@ -42,7 +68,7 @@ const chipClass = 'inline-block px-2 py-0.5 rounded border text-xs opacity-90 mr
 
 const metaRowClass = 'mt-1 text-xs opacity-80';
 
-function renderPrimitive(name: string, schema: any, value: unknown): React.ReactNode {
+function renderPrimitive(name: string, schema: JsonSchemaProperty, value: unknown): React.ReactNode {
   if (value === undefined || value === null) return null;
   const ui = getUiHint(schema);
   const lbl = labelFor(name, schema);
@@ -60,7 +86,7 @@ function renderPrimitive(name: string, schema: any, value: unknown): React.React
   );
 }
 
-function renderArrayOfStrings(name: string, schema: any, value: unknown): React.ReactNode {
+function renderArrayOfStrings(name: string, schema: JsonSchemaProperty, value: unknown): React.ReactNode {
   if (!Array.isArray(value)) return null;
   const ui = getUiHint(schema);
   const lbl = labelFor(name, schema);
@@ -82,7 +108,7 @@ function renderArrayOfStrings(name: string, schema: any, value: unknown): React.
   );
 }
 
-function renderArrayOfObjects(name: string, schema: any, value: unknown): React.ReactNode {
+function renderArrayOfObjects(name: string, schema: JsonSchemaProperty, value: unknown): React.ReactNode {
   if (!Array.isArray(value)) return null;
   const lbl = labelFor(name, schema);
   const itemSchema = (schema && schema.items) || {};
@@ -103,10 +129,10 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
               </tr>
             </thead>
             <tbody>
-              {value.map((row: any, i: number) => (
+              {value.map((row: DataRecord, i: number) => (
                 <tr key={i} className="align-top">
                   {cols.map((c) => (
-                    <td key={c} className="py-1 pr-2" style={{ whiteSpace: c === 'definition' ? 'pre-wrap' as any : undefined }}>
+                    <td key={c} className="py-1 pr-2" style={{ whiteSpace: c === 'definition' ? 'pre-wrap' : undefined }}>
                       {String(row?.[c] ?? '')}
                     </td>
                   ))}
@@ -134,7 +160,7 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
     cancelled: 'border-l-rose-500',
     deferred: 'border-l-gray-500',
   };
-  const accentClassFor = (item: any): string => {
+  const accentClassFor = (item: DataRecord): string => {
     const p = String(item?.priority || '').toLowerCase();
     const s = String(item?.status || '').toLowerCase();
     return priorityAccent[p] || statusAccent[s] || 'border-l-slate-300';
@@ -146,7 +172,7 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
           <div className="opacity-70">なし</div>
         ) : (
           <ul className="m-0 ml-4 space-y-2">
-            {value.map((r: any, idx: number) => (
+            {value.map((r: DataRecord, idx: number) => (
               <li
                 key={r?.id || idx}
                 className={`rounded border shadow-card p-3 border-slate-200 dark:border-slate-700 border-l-4 ${accentClassFor(r)}`}
@@ -169,7 +195,7 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
                 {/* 追加フィールド（role/availability/tagsなど x-ui を尊重） */}
                 {(() => {
                   const itemSchema = (schema && schema.items) || {};
-                  const props = (itemSchema.properties || {}) as Record<string, any>;
+                  const props = (itemSchema.properties || {}) as Record<string, JsonSchemaProperty>;
                   const ui = getUiHint(schema);
                   const tokens = (ui.itemTitle as string | undefined)?.split('+').map(s => s.trim()) ?? [];
                   const exclude = new Set<string>(['id', 'title', 'name', 'description', 'status', 'priority', ...tokens]);
@@ -227,7 +253,7 @@ function renderArrayOfObjects(name: string, schema: any, value: unknown): React.
     );
   }
 
-function renderProperty(name: string, schema: any, value: unknown): React.ReactNode {
+function renderProperty(name: string, schema: JsonSchemaProperty, value: unknown): React.ReactNode {
   const type = schema?.type;
   if (value === undefined) return null;
 
@@ -269,19 +295,19 @@ function renderProperty(name: string, schema: any, value: unknown): React.ReactN
   );
 }
 
-function orderOf(name: string, schema: any, defaultIndex: number): number {
+function orderOf(name: string, schema: JsonSchemaProperty, defaultIndex: number): number {
   const ui = getUiHint(schema);
   if (typeof ui.order === 'number') return ui.order;
   return defaultIndex;
 }
 
-export const SchemaDocumentView: React.FC<{ data: any; schema: AnySchema }>=({ data, schema }) => {
+export const SchemaDocumentView: React.FC<{ data: Record<string, unknown>; schema: JsonSchemaObject }>=({ data, schema }) => {
   // ヘッダー（title/version）
   const headerTitle = (data && (data.title as string)) || schema.title || 'Document';
   const headerVersion = (data && (data.version as string)) || undefined;
 
   // プロパティをセクションごとにグルーピング
-  const sections = new Map<string, Array<{ name: string; schema: any }>>();
+  const sections = new Map<string, Array<{ name: string; schema: JsonSchemaProperty }>>();
   const topProps = schema.properties || {};
   const keys = Object.keys(topProps);
   keys.forEach((k) => {
@@ -378,7 +404,7 @@ export const SchemaDocumentView: React.FC<{ data: any; schema: AnySchema }>=({ d
                 </div>
                 {!isCollapsed && (
                   <div className="mt-1">
-                    {renderProperty(name, ps, (data as any)?.[name])}
+                    {renderProperty(name, ps, data?.[name])}
                   </div>
                 )}
               </div>
