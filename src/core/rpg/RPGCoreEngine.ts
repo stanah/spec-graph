@@ -1954,4 +1954,666 @@ export class RPGCoreEngine implements IRPGCoreEngine {
 
     return false;
   }
+
+  // ============================================================================
+  // Batch Operations API (Task 37.5)
+  // ============================================================================
+
+  /**
+   * Add multiple nodes in a single batch operation
+   */
+  async addNodesBatch(nodes: Array<Omit<RPGNode, 'id' | 'createdAt' | 'updatedAt'>>, generateIds: boolean = true): Promise<RPGNode[]> {
+    this.ensureInitialized();
+    const results: RPGNode[] = [];
+    const now = new Date();
+
+    try {
+      for (const nodeData of nodes) {
+        const id = generateIds ? this.idManager.generate() : nodeData.id || this.idManager.generate();
+
+        const newNode: RPGNode = {
+          ...nodeData,
+          id,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        // Add to dependency graph if needed
+        this.dependencyGraph.addNode(id);
+
+        // Handle hierarchy
+        if (newNode.parentId) {
+          this.nodeParents.set(id, newNode.parentId);
+          if (!this.nodeChildren.has(newNode.parentId)) {
+            this.nodeChildren.set(newNode.parentId, new Set());
+          }
+          this.nodeChildren.get(newNode.parentId)!.add(id);
+        }
+
+        this.nodes.set(id, newNode);
+        results.push(newNode);
+      }
+
+      return results;
+    } catch (error) {
+      // Rollback on error
+      for (const node of results) {
+        this.nodes.delete(node.id);
+        this.dependencyGraph.removeNode(node.id);
+        if (node.parentId) {
+          this.nodeParents.delete(node.id);
+          this.nodeChildren.get(node.parentId)?.delete(node.id);
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Add multiple edges in a single batch operation
+   */
+  async addEdgesBatch(edges: Array<Omit<RPGEdge, 'id' | 'createdAt' | 'updatedAt'>>, generateIds: boolean = true): Promise<RPGEdge[]> {
+    this.ensureInitialized();
+    const results: RPGEdge[] = [];
+    const now = new Date();
+
+    try {
+      for (const edgeData of edges) {
+        const id = generateIds ? this.idManager.generate() : edgeData.id || this.idManager.generate();
+
+        // Validate nodes exist
+        if (!this.nodes.has(edgeData.fromId) || !this.nodes.has(edgeData.toId)) {
+          throw new Error(`Cannot create edge ${id}: one or both nodes do not exist`);
+        }
+
+        const newEdge: RPGEdge = {
+          ...edgeData,
+          id,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        // Add to dependency graph for certain edge types
+        if ([RPGEdgeType.DATA_FLOW, RPGEdgeType.IMPLEMENTATION,
+             RPGEdgeType.INTER_MODULE, RPGEdgeType.INTRA_MODULE].includes(newEdge.type)) {
+          this.dependencyGraph.addEdge(edgeData.fromId, edgeData.toId);
+        }
+
+        this.edges.set(id, newEdge);
+        results.push(newEdge);
+      }
+
+      return results;
+    } catch (error) {
+      // Rollback on error
+      for (const edge of results) {
+        this.edges.delete(edge.id);
+        try {
+          this.dependencyGraph.removeEdge(edge.fromId, edge.toId);
+        } catch {
+          // Ignore rollback errors
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Update multiple nodes in a single batch operation
+   */
+  async updateNodesBatch(updateRequests: Array<{ id: string; updates: Partial<RPGNode> }>): Promise<RPGNode[]> {
+    this.ensureInitialized();
+    const results: RPGNode[] = [];
+    const originalNodes: RPGNode[] = [];
+
+    try {
+      for (const { id, updates } of updateRequests) {
+        const node = this.nodes.get(id);
+        if (!node) {
+          throw new Error(`Node with ID ${id} not found`);
+        }
+
+        originalNodes.push({ ...node });
+
+        const updatedNode: RPGNode = {
+          ...node,
+          ...updates,
+          id: node.id, // Preserve original ID
+          createdAt: node.createdAt, // Preserve creation time
+          updatedAt: new Date()
+        };
+
+        this.nodes.set(id, updatedNode);
+        results.push(updatedNode);
+      }
+
+      return results;
+    } catch (error) {
+      // Rollback on error
+      for (let i = 0; i < originalNodes.length; i++) {
+        this.nodes.set(originalNodes[i].id, originalNodes[i]);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Remove multiple nodes in a single batch operation
+   */
+  async removeNodesBatch(nodeIds: string[]): Promise<boolean> {
+    this.ensureInitialized();
+    const removedNodes: Map<string, RPGNode> = new Map();
+    const removedEdges: Map<string, RPGEdge> = new Map();
+
+    try {
+      for (const nodeId of nodeIds) {
+        const node = this.nodes.get(nodeId);
+        if (!node) continue;
+
+        // Store for potential rollback
+        removedNodes.set(nodeId, node);
+
+        // Remove associated edges
+        const edgesToRemove = Array.from(this.edges.values()).filter(
+          edge => edge.fromId === nodeId || edge.toId === nodeId
+        );
+
+        for (const edge of edgesToRemove) {
+          removedEdges.set(edge.id, edge);
+          this.edges.delete(edge.id);
+          try {
+            this.dependencyGraph.removeEdge(edge.fromId, edge.toId);
+          } catch {
+            // Ignore errors for edges that weren't in dependency graph
+          }
+        }
+
+        // Remove from hierarchy
+        if (node.parentId) {
+          this.nodeParents.delete(nodeId);
+          this.nodeChildren.get(node.parentId)?.delete(nodeId);
+        }
+
+        // Remove children relationships
+        const children = this.nodeChildren.get(nodeId);
+        if (children) {
+          for (const childId of children) {
+            this.nodeParents.delete(childId);
+          }
+          this.nodeChildren.delete(nodeId);
+        }
+
+        // Remove from dependency graph and main storage
+        this.dependencyGraph.removeNode(nodeId);
+        this.nodes.delete(nodeId);
+      }
+
+      return true;
+    } catch (error) {
+      // Rollback on error
+      for (const [id, node] of removedNodes) {
+        this.nodes.set(id, node);
+        this.dependencyGraph.addNode(id);
+
+        if (node.parentId) {
+          this.nodeParents.set(id, node.parentId);
+          if (!this.nodeChildren.has(node.parentId)) {
+            this.nodeChildren.set(node.parentId, new Set());
+          }
+          this.nodeChildren.get(node.parentId)!.add(id);
+        }
+      }
+
+      for (const [id, edge] of removedEdges) {
+        this.edges.set(id, edge);
+        if ([RPGEdgeType.DATA_FLOW, RPGEdgeType.IMPLEMENTATION,
+             RPGEdgeType.INTER_MODULE, RPGEdgeType.INTRA_MODULE].includes(edge.type)) {
+          this.dependencyGraph.addEdge(edge.fromId, edge.toId);
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Execute multiple operations in a transaction-like manner
+   */
+  async transaction<T>(operations: () => Promise<T>): Promise<T> {
+    this.ensureInitialized();
+
+    // Create snapshot for rollback
+    const snapshot = await this.createSnapshot('Transaction Backup');
+
+    try {
+      const result = await operations();
+      // If successful, we can optionally clean up the backup snapshot
+      return result;
+    } catch (error) {
+      // Rollback to snapshot on error
+      await this.restoreSnapshot(snapshot);
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // Performance Optimization (Task 37.5)
+  // ============================================================================
+
+  private queryCache: Map<string, { result: any; timestamp: number; ttl: number }> = new Map();
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+  /**
+   * Get cached query result or execute and cache
+   */
+  private async getCachedQuery<T>(cacheKey: string, queryFn: () => Promise<T>, ttl: number = this.CACHE_TTL_MS): Promise<T> {
+    const cached = this.queryCache.get(cacheKey);
+    const now = Date.now();
+
+    if (cached && (now - cached.timestamp) < cached.ttl) {
+      return cached.result as T;
+    }
+
+    const result = await queryFn();
+    this.queryCache.set(cacheKey, {
+      result,
+      timestamp: now,
+      ttl
+    });
+
+    return result;
+  }
+
+  /**
+   * Clear query cache
+   */
+  clearCache(): void {
+    this.queryCache.clear();
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): { size: number; hitRate: number; memoryUsage: number } {
+    return {
+      size: this.queryCache.size,
+      hitRate: 0, // Would need hit/miss tracking for accurate rate
+      memoryUsage: JSON.stringify(Array.from(this.queryCache.values())).length
+    };
+  }
+
+  /**
+   * Optimized query with caching for frequently accessed data
+   */
+  async queryNodesOptimized(query: RPGNodeQuery): Promise<RPGNode[]> {
+    const cacheKey = `nodes:${JSON.stringify(query)}`;
+    return this.getCachedQuery(cacheKey, () => this.queryNodes(query));
+  }
+
+  /**
+   * Optimized edge query with caching
+   */
+  async queryEdgesOptimized(query: RPGEdgeQuery): Promise<RPGEdge[]> {
+    const cacheKey = `edges:${JSON.stringify(query)}`;
+    return this.getCachedQuery(cacheKey, () => this.queryEdges(query));
+  }
+
+  // ============================================================================
+  // Enhanced Validation API (Task 37.5)
+  // ============================================================================
+
+  /**
+   * Comprehensive validation with constraint checking
+   */
+  async validateExtended(): Promise<RPGValidationResult & {
+    performance: {
+      nodeCount: number;
+      edgeCount: number;
+      maxDepth: number;
+      cycleComplexity: number;
+    };
+    constraints: {
+      maxNodesPerLevel: { [level: string]: number };
+      recommendedModularization: string[];
+    };
+  }> {
+    this.ensureInitialized();
+    const basicValidation = await this.validate();
+
+    // Performance analysis
+    const nodeCount = this.nodes.size;
+    const edgeCount = this.edges.size;
+    const maxDepth = await this.calculateMaxDepth();
+    const cycleComplexity = await this.calculateCycleComplexity();
+
+    // Constraint analysis
+    const levelDistribution = await this.analyzeLevelDistribution();
+    const modularizationRecommendations = await this.analyzeModularization();
+
+    // Add performance warnings
+    const warnings = [...basicValidation.warnings];
+
+    if (nodeCount > 1000) {
+      warnings.push({
+        type: 'performance',
+        message: `Large graph detected (${nodeCount} nodes). Consider optimizations.`,
+        nodeIds: []
+      });
+    }
+
+    if (maxDepth > 10) {
+      warnings.push({
+        type: 'performance',
+        message: `Deep hierarchy detected (depth: ${maxDepth}). Consider flattening.`,
+        nodeIds: []
+      });
+    }
+
+    return {
+      ...basicValidation,
+      warnings,
+      performance: {
+        nodeCount,
+        edgeCount,
+        maxDepth,
+        cycleComplexity
+      },
+      constraints: {
+        maxNodesPerLevel: levelDistribution,
+        recommendedModularization: modularizationRecommendations
+      }
+    };
+  }
+
+  /**
+   * Validate schema constraints
+   */
+  async validateSchema(): Promise<{ isValid: boolean; violations: string[] }> {
+    this.ensureInitialized();
+    const violations: string[] = [];
+
+    // Check node schema constraints
+    for (const node of this.nodes.values()) {
+      if (!node.name || node.name.trim().length === 0) {
+        violations.push(`Node ${node.id} has empty or missing name`);
+      }
+
+      if (node.level === RPGNodeLevel.FILE_SYSTEM && !node.filePath) {
+        violations.push(`File system node ${node.id} missing filePath`);
+      }
+
+      if (node.type === RPGNodeType.FILE && !node.filePath) {
+        violations.push(`File node ${node.id} missing filePath`);
+      }
+    }
+
+    // Check edge schema constraints
+    for (const edge of this.edges.values()) {
+      if (edge.type === RPGEdgeType.DATA_FLOW && !edge.weight) {
+        violations.push(`Data flow edge ${edge.id} missing weight`);
+      }
+    }
+
+    return {
+      isValid: violations.length === 0,
+      violations
+    };
+  }
+
+  private async calculateMaxDepth(): Promise<number> {
+    let maxDepth = 0;
+
+    // Calculate depth for all nodes, not just root nodes
+    for (const node of this.nodes.values()) {
+      const depth = await this.getNodeDepth(node.id);
+      maxDepth = Math.max(maxDepth, depth);
+    }
+
+    return maxDepth;
+  }
+
+  private async calculateCycleComplexity(): Promise<number> {
+    try {
+      const cycles = this.dependencyGraph.findCycles();
+      return cycles.reduce((sum, cycle) => sum + cycle.length, 0);
+    } catch {
+      return 0;
+    }
+  }
+
+  private async analyzeLevelDistribution(): Promise<{ [level: string]: number }> {
+    const distribution: { [level: string]: number } = {};
+
+    for (const node of this.nodes.values()) {
+      distribution[node.level] = (distribution[node.level] || 0) + 1;
+    }
+
+    return distribution;
+  }
+
+  private async analyzeModularization(): Promise<string[]> {
+    const recommendations: string[] = [];
+
+    // Find modules with too many direct children
+    for (const [nodeId, children] of this.nodeChildren) {
+      if (children.size > 20) {
+        const node = this.nodes.get(nodeId);
+        recommendations.push(`Node ${node?.name || nodeId} has ${children.size} children - consider sub-grouping`);
+      }
+    }
+
+    return recommendations;
+  }
+
+  // ============================================================================
+  // Visualization API (Task 37.5)
+  // ============================================================================
+
+  /**
+   * Export graph data for D3.js visualization
+   */
+  async exportForD3(): Promise<{
+    nodes: Array<{
+      id: string;
+      name: string;
+      level: string;
+      type: string;
+      status: string;
+      group: number;
+      size: number;
+    }>;
+    links: Array<{
+      source: string;
+      target: string;
+      type: string;
+      weight: number;
+    }>;
+  }> {
+    this.ensureInitialized();
+
+    const nodes = Array.from(this.nodes.values()).map(node => ({
+      id: node.id,
+      name: node.name,
+      level: node.level,
+      type: node.type,
+      status: node.status,
+      group: this.getLevelGroup(node.level),
+      size: this.calculateNodeSize(node)
+    }));
+
+    const links = Array.from(this.edges.values()).map(edge => ({
+      source: edge.fromId,
+      target: edge.toId,
+      type: edge.type,
+      weight: edge.weight || 1
+    }));
+
+    return { nodes, links };
+  }
+
+  /**
+   * Export graph data for Cytoscape.js visualization
+   */
+  async exportForCytoscape(): Promise<{
+    elements: {
+      nodes: Array<{ data: any; position?: { x: number; y: number } }>;
+      edges: Array<{ data: any }>;
+    };
+  }> {
+    this.ensureInitialized();
+
+    const nodes = Array.from(this.nodes.values()).map((node, index) => ({
+      data: {
+        id: node.id,
+        label: node.name,
+        level: node.level,
+        type: node.type,
+        status: node.status,
+        parent: node.parentId
+      },
+      position: this.calculateNodePosition(node, index)
+    }));
+
+    const edges = Array.from(this.edges.values()).map(edge => ({
+      data: {
+        id: edge.id,
+        source: edge.fromId,
+        target: edge.toId,
+        type: edge.type,
+        weight: edge.weight || 1,
+        label: edge.type
+      }
+    }));
+
+    return {
+      elements: { nodes, edges }
+    };
+  }
+
+  /**
+   * Export graph data in Graphviz DOT format
+   */
+  async exportToDOT(): Promise<string> {
+    this.ensureInitialized();
+
+    let dot = 'digraph RPG {\n';
+    dot += '  rankdir=TB;\n';
+    dot += '  node [shape=box, style=filled];\n\n';
+
+    // Add nodes with styling
+    for (const node of this.nodes.values()) {
+      const color = this.getNodeColor(node.level);
+      const shape = this.getNodeShape(node.type);
+      dot += `  "${node.id}" [label="${node.name}", fillcolor="${color}", shape="${shape}"];\n`;
+    }
+
+    dot += '\n';
+
+    // Add edges
+    for (const edge of this.edges.values()) {
+      const style = this.getEdgeStyle(edge.type);
+      dot += `  "${edge.fromId}" -> "${edge.toId}" [label="${edge.type}", style="${style}"];\n`;
+    }
+
+    dot += '}\n';
+    return dot;
+  }
+
+  /**
+   * Export hierarchical tree structure for tree visualizations
+   */
+  async exportHierarchicalTree(): Promise<{
+    name: string;
+    id: string;
+    children?: any[];
+    size?: number;
+    level: string;
+    type: string;
+  }[]> {
+    this.ensureInitialized();
+
+    const rootNodes = await this.getRootNodes();
+    const trees: any[] = [];
+
+    for (const root of rootNodes) {
+      const tree = await this.buildTreeStructure(root);
+      trees.push(tree);
+    }
+
+    return trees;
+  }
+
+  private async buildTreeStructure(node: RPGNode): Promise<any> {
+    const children = await this.getChildNodes(node.id);
+    const treeNode: any = {
+      name: node.name,
+      id: node.id,
+      level: node.level,
+      type: node.type,
+      size: this.calculateNodeSize(node)
+    };
+
+    if (children.length > 0) {
+      treeNode.children = await Promise.all(
+        children.map(child => this.buildTreeStructure(child))
+      );
+    }
+
+    return treeNode;
+  }
+
+  private getLevelGroup(level: RPGNodeLevel): number {
+    const levelMap = {
+      [RPGNodeLevel.PROPOSAL]: 0,
+      [RPGNodeLevel.MODULE]: 1,
+      [RPGNodeLevel.IMPLEMENTATION]: 2,
+      [RPGNodeLevel.FILE_SYSTEM]: 3
+    };
+    return levelMap[level] || 0;
+  }
+
+  private calculateNodeSize(node: RPGNode): number {
+    const baseSize = 10;
+    const childCount = this.nodeChildren.get(node.id)?.size || 0;
+    return baseSize + (childCount * 2);
+  }
+
+  private calculateNodePosition(node: RPGNode, index: number): { x: number; y: number } {
+    const levelY = this.getLevelGroup(node.level) * 150;
+    const x = (index % 10) * 100;
+    return { x, y: levelY };
+  }
+
+  private getNodeColor(level: RPGNodeLevel): string {
+    const colorMap = {
+      [RPGNodeLevel.PROPOSAL]: '#ffcccb',
+      [RPGNodeLevel.MODULE]: '#add8e6',
+      [RPGNodeLevel.IMPLEMENTATION]: '#90ee90',
+      [RPGNodeLevel.FILE_SYSTEM]: '#dda0dd'
+    };
+    return colorMap[level] || '#ffffff';
+  }
+
+  private getNodeShape(type: RPGNodeType): string {
+    const shapeMap = {
+      [RPGNodeType.FEATURE]: 'ellipse',
+      [RPGNodeType.MODULE]: 'box',
+      [RPGNodeType.FUNCTION]: 'diamond',
+      [RPGNodeType.CLASS]: 'hexagon',
+      [RPGNodeType.FILE]: 'note',
+      [RPGNodeType.DIRECTORY]: 'folder'
+    };
+    return shapeMap[type] || 'box';
+  }
+
+  private getEdgeStyle(type: RPGEdgeType): string {
+    const styleMap = {
+      [RPGEdgeType.HIERARCHY]: 'solid',
+      [RPGEdgeType.DATA_FLOW]: 'dashed',
+      [RPGEdgeType.IMPLEMENTATION]: 'dotted',
+      [RPGEdgeType.INTER_MODULE]: 'bold',
+      [RPGEdgeType.INTRA_MODULE]: 'solid'
+    };
+    return styleMap[type] || 'solid';
+  }
 }
