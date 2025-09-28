@@ -308,6 +308,51 @@ describe('MindmapAnalyzer', () => {
         confidence: 'low'
       });
     });
+
+    it('メタデータに文字列IDのみが含まれる孤立ノードも検出する', () => {
+      const dataWithMetadataIds: MindmapData = {
+        ...simpleMindmapData,
+        metadata: {
+          ...(simpleMindmapData.metadata ?? {}),
+          floatingNodes: ['metadata-node']
+        }
+      };
+
+      const issues = MindmapAnalyzer.detectOrphanedNodes(dataWithMetadataIds);
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        type: 'orphaned_node',
+        nodeId: 'metadata-node',
+        cause: 'missing_parent_reference'
+      });
+      expect(issues[0].message).toContain('metadata-node');
+    });
+
+    it('メタデータ内の部分的なノード情報から親を解決する', () => {
+      const dataWithPartialMetadataNode: MindmapData = {
+        ...simpleMindmapData,
+        metadata: {
+          ...(simpleMindmapData.metadata ?? {}),
+          detachedNodes: [
+            {
+              id: 'metadata-partial',
+              parentId: 'child1'
+            }
+          ]
+        }
+      };
+
+      const issues = MindmapAnalyzer.detectOrphanedNodes(dataWithPartialMetadataNode);
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0]).toMatchObject({
+        type: 'orphaned_node',
+        nodeId: 'metadata-partial',
+        cause: 'detached_from_parent'
+      });
+      expect(issues[0].relatedNodeIds).toContain('child1');
+    });
   });
 
   describe('analyzeStructure', () => {

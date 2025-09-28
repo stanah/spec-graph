@@ -106,6 +106,11 @@ export interface OrphanDetectionOptions {
   metadataNodeKeys?: string[];
 }
 
+type MetadataNodeCandidate = {
+  node: MindmapNode;
+  parentId?: string | null;
+};
+
 /**
  * マインドマップ分析器クラス
  */
@@ -266,18 +271,24 @@ export class MindmapAnalyzer {
     }
 
     const metadataNodes = this.collectMetadataNodes(mindmapData, options);
-    const extraNodes: MindmapNode[] = [
-      ...(options.additionalNodes ?? []),
-      ...this.entriesToNodes(options.nodeIndex),
+    const extraNodes: MetadataNodeCandidate[] = [
       ...metadataNodes,
+      ...((options.additionalNodes ?? []).map((node) => ({ node })) as MetadataNodeCandidate[]),
+      ...this.entriesToNodes(options.nodeIndex).map((node) => ({ node })),
     ];
 
-    for (const node of extraNodes) {
+    for (const candidate of extraNodes) {
+      const { node } = candidate;
       if (!node || typeof node.id !== 'string') {
         continue;
       }
 
-      const parentId = this.resolveParentId(node.id, node, options.parentIndex);
+      const parentId = this.resolveParentId(
+        node.id,
+        node,
+        options.parentIndex,
+        candidate.parentId
+      );
       addCandidate(node, parentId);
     }
 
@@ -400,45 +411,217 @@ export class MindmapAnalyzer {
   private static collectMetadataNodes(
     mindmapData: MindmapData,
     options: OrphanDetectionOptions
-  ): MindmapNode[] {
+  ): MetadataNodeCandidate[] {
     const metadata = mindmapData.metadata as Record<string, unknown> | undefined;
     if (!metadata || typeof metadata !== 'object') {
       return [];
     }
 
     const keys = options.metadataNodeKeys ?? this.DEFAULT_METADATA_NODE_KEYS;
-    const results: MindmapNode[] = [];
+    const results: MetadataNodeCandidate[] = [];
+    const pushCandidate = (entry: unknown, contextKey: string) => {
+      const normalized = this.normalizeMetadataEntry(entry, contextKey);
+      if (normalized) {
+        results.push(normalized);
+      }
+    };
 
     for (const key of keys) {
       const value = (metadata as Record<string, unknown>)[key];
-      if (!value) {
+      if (value === undefined || value === null) {
         continue;
       }
 
       if (Array.isArray(value)) {
         for (const item of value) {
-          if (this.isMindmapNodeLike(item)) {
-            results.push(item as MindmapNode);
-          }
+          pushCandidate(item, key);
         }
         continue;
       }
 
-      if (this.isMindmapNodeLike(value)) {
-        results.push(value as MindmapNode);
+      if (value instanceof Map) {
+        for (const item of value.values()) {
+          pushCandidate(item, key);
+        }
         continue;
       }
 
       if (typeof value === 'object') {
-        for (const item of Object.values(value as Record<string, unknown>)) {
-          if (this.isMindmapNodeLike(item)) {
-            results.push(item as MindmapNode);
-          }
+        const normalized = this.normalizeMetadataEntry(value, key);
+        if (normalized) {
+          results.push(normalized);
+          continue;
         }
+
+        for (const item of Object.values(value as Record<string, unknown>)) {
+          pushCandidate(item, key);
+        }
+        continue;
       }
+
+      pushCandidate(value, key);
     }
 
     return results;
+  }
+
+  private static normalizeMetadataEntry(
+    entry: unknown,
+    contextKey?: string
+  ): MetadataNodeCandidate | null {
+    if (typeof entry === 'string') {
+      return { node: this.createVirtualNodeFromReference(entry, contextKey) };
+    }
+
+    if (!entry || typeof entry !== 'object' || entry instanceof Map) {
+      return null;
+    }
+
+    const record = entry as Record<string, unknown>;
+    const nodeId = this.extractNodeId(record);
+    if (!nodeId) {
+      return null;
+    }
+
+    const node: MindmapNode = {
+      id: nodeId,
+      title: this.extractTitle(record) ?? this.buildFallbackTitle(nodeId, contextKey),
+    };
+
+    if (typeof record.description === 'string') {
+      node.description = record.description;
+    }
+
+    if (typeof record.priority === 'string') {
+      node.priority = record.priority as MindmapNode['priority'];
+    }
+
+    if (typeof record.status === 'string') {
+      node.status = record.status as MindmapNode['status'];
+    }
+
+    if (Array.isArray(record.tags)) {
+      const tags = record.tags.filter((tag): tag is string => typeof tag === 'string');
+      if (tags.length > 0) {
+        node.tags = tags;
+      }
+    }
+
+    if (typeof record.color === 'string') {
+      node.color = record.color;
+    }
+
+    if (typeof record.collapsed === 'boolean') {
+      node.collapsed = record.collapsed;
+    }
+
+    if (record.customFields && typeof record.customFields === 'object') {
+      node.customFields = record.customFields as Record<string, unknown>;
+    }
+
+    if (record.metadata && typeof record.metadata === 'object') {
+      node.metadata = record.metadata as Record<string, unknown>;
+    }
+
+    if (typeof record.createdAt === 'string') {
+      node.createdAt = record.createdAt;
+    }
+
+    if (typeof record.updatedAt === 'string') {
+      node.updatedAt = record.updatedAt;
+    }
+
+    if (typeof record.deadline === 'string') {
+      node.deadline = record.deadline;
+    }
+
+    const parentReference = this.extractParentReference(record);
+    if (parentReference !== undefined) {
+      node.metadata = {
+        ...(node.metadata ?? {}),
+        parentId: parentReference,
+      };
+    }
+
+    return { node, parentId: parentReference };
+  }
+
+  private static createVirtualNodeFromReference(
+    nodeId: string,
+    contextKey?: string
+  ): MindmapNode {
+    return {
+      id: nodeId,
+      title: this.buildFallbackTitle(nodeId, contextKey),
+    };
+  }
+
+  private static buildFallbackTitle(nodeId: string, contextKey?: string): string {
+    return contextKey ? `${contextKey}:${nodeId}` : nodeId;
+  }
+
+  private static extractNodeId(record: Record<string, unknown>): string | undefined {
+    const candidates = [
+      record.id,
+      record.nodeId,
+      record.nodeID,
+      record.node_id,
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.length > 0) {
+        return candidate;
+      }
+    }
+
+    return undefined;
+  }
+
+  private static extractTitle(record: Record<string, unknown>): string | undefined {
+    const candidates = [record.title, record.name, record.label];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.length > 0) {
+        return candidate;
+      }
+    }
+
+    return undefined;
+  }
+
+  private static extractParentReference(
+    record: Record<string, unknown>
+  ): string | null | undefined {
+    const directCandidates = [
+      record.parentId,
+      record.parentID,
+      record.parentNodeId,
+      record.parentNodeID,
+    ];
+
+    for (const candidate of directCandidates) {
+      if (typeof candidate === 'string' && candidate.length > 0) {
+        return candidate;
+      }
+
+      if (candidate === null) {
+        return null;
+      }
+    }
+
+    const parent = record.parent;
+    if (typeof parent === 'string' && parent.length > 0) {
+      return parent;
+    }
+
+    if (parent && typeof parent === 'object') {
+      const parentId = this.extractNodeId(parent as Record<string, unknown>);
+      if (parentId) {
+        return parentId;
+      }
+    }
+
+    return undefined;
   }
 
   private static entriesToNodes(
