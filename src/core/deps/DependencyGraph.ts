@@ -2,9 +2,13 @@ export class DependencyGraph {
   private adj: Map<string, Set<string>> = new Map();
   private rev: Map<string, Set<string>> = new Map();
 
+  // Cache for Tarjan SCC results to avoid recomputation
+  private sccCache: { sccs: string[][]; cacheValid: boolean } = { sccs: [], cacheValid: false };
+
   addNode(id: string): void {
     if (!this.adj.has(id)) this.adj.set(id, new Set());
     if (!this.rev.has(id)) this.rev.set(id, new Set());
+    this.invalidateSCCCache();
   }
 
   hasNode(id: string): boolean {
@@ -30,6 +34,7 @@ export class DependencyGraph {
       }
     }
     this.rev.delete(id);
+    this.invalidateSCCCache();
   }
 
   addEdge(from: string, to: string): void {
@@ -37,11 +42,20 @@ export class DependencyGraph {
     this.addNode(to);
     this.adj.get(from)!.add(to);
     this.rev.get(to)!.add(from);
+    this.invalidateSCCCache();
   }
 
   removeEdge(from: string, to: string): void {
     this.adj.get(from)?.delete(to);
     this.rev.get(to)?.delete(from);
+    this.invalidateSCCCache();
+  }
+
+  /**
+   * Invalidate the SCC cache when graph structure changes
+   */
+  private invalidateSCCCache(): void {
+    this.sccCache.cacheValid = false;
   }
 
   hasEdge(from: string, to: string): boolean {
@@ -63,6 +77,7 @@ export class DependencyGraph {
   clear(): void {
     this.adj.clear();
     this.rev.clear();
+    this.invalidateSCCCache();
   }
 
   nodeCount(): number {
@@ -97,19 +112,81 @@ export class DependencyGraph {
     return cycles;
   }
 
+  /**
+   * Check if the graph contains a cycle (optimized with early termination)
+   * This method is faster than findCycles() when you only need to check for existence
+   */
   hasCycle(): boolean {
-    const sccs = this.tarjanSCC();
-    for (const comp of sccs) {
-      if (comp.length > 1) return true;
-      if (comp.length === 1) {
-        const v = comp[0];
-        if (this.hasEdge(v, v)) return true;
+    const nodes = [...this.adj.keys()];
+    const index = new Map<string, number>();
+    const lowlink = new Map<string, number>();
+    const onStack = new Set<string>();
+    const stack: string[] = [];
+    let idx = 0;
+    let cycleFound = false;
+
+    const strongConnect = (v: string): void => {
+      if (cycleFound) return; // Early termination
+
+      index.set(v, idx);
+      lowlink.set(v, idx);
+      idx++;
+      stack.push(v);
+      onStack.add(v);
+
+      for (const w of this.adj.get(v) ?? []) {
+        if (cycleFound) return; // Early termination
+
+        if (!index.has(w)) {
+          strongConnect(w);
+          lowlink.set(v, Math.min(lowlink.get(v)!, lowlink.get(w)!));
+        } else if (onStack.has(w)) {
+          lowlink.set(v, Math.min(lowlink.get(v)!, index.get(w)!));
+        }
       }
+
+      if (lowlink.get(v) === index.get(v)) {
+        const comp: string[] = [];
+        let w: string | undefined;
+        do {
+          w = stack.pop();
+          if (w === undefined) break;
+          onStack.delete(w);
+          comp.push(w);
+        } while (w !== v);
+
+        // Check if this SCC is a cycle
+        if (comp.length > 1) {
+          cycleFound = true;
+          return;
+        } else if (comp.length === 1) {
+          const node = comp[0];
+          if (this.hasEdge(node, node)) {
+            cycleFound = true;
+            return;
+          }
+        }
+      }
+    };
+
+    for (const v of nodes) {
+      if (cycleFound) break; // Early termination
+      if (!index.has(v)) strongConnect(v);
     }
-    return false;
+
+    return cycleFound;
   }
 
+  /**
+   * Tarjan's strongly connected components algorithm with caching
+   * Returns all SCCs in the graph
+   */
   private tarjanSCC(): string[][] {
+    // Return cached result if available
+    if (this.sccCache.cacheValid) {
+      return this.sccCache.sccs;
+    }
+
     const nodes = [...this.adj.keys()];
     const index = new Map<string, number>();
     const lowlink = new Map<string, number>();
@@ -150,6 +227,10 @@ export class DependencyGraph {
     for (const v of nodes) {
       if (!index.has(v)) strongConnect(v);
     }
+
+    // Cache the result
+    this.sccCache = { sccs, cacheValid: true };
+
     return sccs;
   }
 

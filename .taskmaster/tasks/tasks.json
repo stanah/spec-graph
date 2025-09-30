@@ -2423,7 +2423,7 @@
               "38.1"
             ],
             "details": "循環検出結果をRPG構造にフィードバックし、修正案のプレビュー・適用APIを提供する。インターフェース分離・責務分割の設計原則も考慮する[3][4]。",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "循環検出・詳細レポート生成・修正案プレビューAPIの単体テスト。循環解消提案の妥当性検証。"
           },
           {
@@ -2621,7 +2621,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-09-29T13:00:08.412Z",
+      "updated": "2025-09-30T15:06:51.850Z",
       "description": "Tasks for master context"
     }
   }

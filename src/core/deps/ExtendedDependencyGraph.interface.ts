@@ -105,13 +105,54 @@ export interface CycleDetectionResult {
   hasCycles: boolean;
   /** Detected cycles */
   cycles: string[][];
-  /** Cycle analysis */
+  /** Detailed cycle analysis */
   analysis: Array<{
     cycle: string[];
+    size: number;
     edgeTypes: RPGEdgeType[];
+    edgeDetails: Array<{
+      from: string;
+      to: string;
+      type?: RPGEdgeType;
+      weight?: number;
+      strength: number;
+      bidirectional?: boolean;
+    }>;
+    complexity: {
+      score: number;
+      level: 'low' | 'medium' | 'high';
+      factors: string[];
+    };
+    impact: {
+      level: 'low' | 'medium' | 'high';
+      affectedNodes: string[];
+      affectedNodesCount: number;
+      blocksTopologicalSort: boolean;
+      description: string;
+    };
     canBeResolved: boolean;
     resolutionSuggestions: RefactoringProposal[];
+    metadata: {
+      isSelfLoop: boolean;
+      isSimpleCycle: boolean;
+      hasWeakEdges: boolean;
+      hasStrongEdges: boolean;
+      affectedDescendants: number;
+    };
   }>;
+  /** Overall summary of all cycles */
+  summary?: {
+    totalCycles: number;
+    simpleCycles: number;
+    complexCycles: number;
+    selfLoops: number;
+    highImpactCycles: number;
+    overallComplexity: {
+      score: number;
+      level: 'low' | 'medium' | 'high';
+    };
+    recommendations: string[];
+  };
 }
 
 /**
@@ -121,7 +162,7 @@ export interface RefactoringProposal {
   /** Proposal ID */
   id: string;
   /** Proposal type */
-  type: 'split_node' | 'extract_interface' | 'reverse_dependency' | 'add_abstraction' | 'merge_nodes';
+  type: 'split_node' | 'extract_interface' | 'reverse_dependency' | 'add_abstraction' | 'merge_nodes' | 'remove_edge';
   /** Human-readable description */
   description: string;
   /** Detailed explanation */
@@ -143,6 +184,8 @@ export interface RefactoringProposal {
   };
   /** Whether this proposal can be auto-applied */
   autoApplicable: boolean;
+  /** Additional metadata for the proposal */
+  metadata?: Record<string, any>;
 }
 
 /**

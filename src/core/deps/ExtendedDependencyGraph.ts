@@ -200,27 +200,324 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
 
   // === Advanced cycle detection and resolution ===
 
+  /**
+   * Find all cycles with detailed analysis and resolution proposals
+   * Provides comprehensive information about each cycle including:
+   * - Cycle structure and size
+   * - Edge types and weights
+   * - Complexity score
+   * - Impact assessment
+   * - Prioritized resolution strategies
+   */
   findCyclesDetailed(): CycleDetectionResult {
     const cycles = this.findCycles();
     const hasCycles = cycles.length > 0;
 
     const analysis = cycles.map(cycle => {
+      // Collect edge information
       const edgeTypes = this.getEdgeTypesInCycle(cycle);
+      const edgeDetails = this.getEdgeDetailsInCycle(cycle);
+
+      // Calculate cycle metrics
+      const complexity = this.calculateCycleComplexity(cycle, edgeDetails);
+      const impact = this.assessCycleImpact(cycle);
+
+      // Generate resolution proposals with priority scoring
       const resolutionSuggestions = this.generateCycleResolutionProposalsForCycle(cycle);
+      const prioritizedSuggestions = this.prioritizeResolutionProposals(resolutionSuggestions, complexity, impact);
 
       return {
         cycle,
+        size: cycle.length,
         edgeTypes,
+        edgeDetails,
+        complexity,
+        impact,
         canBeResolved: resolutionSuggestions.length > 0,
-        resolutionSuggestions
+        resolutionSuggestions: prioritizedSuggestions,
+        metadata: {
+          isSelfLoop: cycle.length === 1 && this.hasEdge(cycle[0], cycle[0]),
+          isSimpleCycle: cycle.length === 2,
+          hasWeakEdges: edgeDetails.some(e => (e.weight || 1) < 1),
+          hasStrongEdges: edgeDetails.some(e => (e.weight || 1) > 2),
+          affectedDescendants: this.countAffectedDescendants(cycle)
+        }
       };
     });
+
+    // Calculate overall impact
+    const overallComplexity = this.calculateOverallCycleComplexity(analysis);
+    const recommendations = this.generateOverallRecommendations(analysis);
 
     return {
       hasCycles,
       cycles,
-      analysis
+      analysis,
+      summary: {
+        totalCycles: cycles.length,
+        simpleCycles: analysis.filter(a => a.size === 2).length,
+        complexCycles: analysis.filter(a => a.size > 2).length,
+        selfLoops: analysis.filter(a => a.metadata.isSelfLoop).length,
+        highImpactCycles: analysis.filter(a => a.impact.level === 'high').length,
+        overallComplexity,
+        recommendations
+      }
     };
+  }
+
+  /**
+   * Get detailed edge information for all edges in a cycle
+   */
+  private getEdgeDetailsInCycle(cycle: string[]): Array<{
+    from: string;
+    to: string;
+    type?: RPGEdgeType;
+    weight?: number;
+    strength: number;
+    bidirectional?: boolean;
+  }> {
+    const edgeDetails: Array<{
+      from: string;
+      to: string;
+      type?: RPGEdgeType;
+      weight?: number;
+      strength: number;
+      bidirectional?: boolean;
+    }> = [];
+
+    for (let i = 0; i < cycle.length; i++) {
+      const from = cycle[i];
+      const to = cycle[(i + 1) % cycle.length];
+      const attrs = this.getEdgeAttributes(from, to);
+
+      edgeDetails.push({
+        from,
+        to,
+        type: attrs?.type,
+        weight: attrs?.weight,
+        strength: this.calculateEdgeStrength(from, to),
+        bidirectional: attrs?.bidirectional
+      });
+    }
+
+    return edgeDetails;
+  }
+
+  /**
+   * Calculate complexity score for a cycle
+   * Higher score means more complex and harder to resolve
+   */
+  private calculateCycleComplexity(
+    cycle: string[],
+    edgeDetails: Array<{ from: string; to: string; strength: number }>
+  ): { score: number; level: 'low' | 'medium' | 'high'; factors: string[] } {
+    const factors: string[] = [];
+    let score = 0;
+
+    // Factor 1: Cycle size
+    const sizeScore = Math.min(cycle.length / 2, 5);
+    score += sizeScore;
+    if (cycle.length > 4) {
+      factors.push(`Large cycle with ${cycle.length} nodes`);
+    }
+
+    // Factor 2: Edge strength
+    const avgStrength = edgeDetails.reduce((sum, e) => sum + e.strength, 0) / edgeDetails.length;
+    const strengthScore = avgStrength / 2;
+    score += strengthScore;
+    if (avgStrength > 2) {
+      factors.push('Contains strong/critical edges');
+    }
+
+    // Factor 3: Node connectivity
+    let totalConnections = 0;
+    for (const node of cycle) {
+      totalConnections += this.getDependencies(node).length + this.getDependents(node).length;
+    }
+    const avgConnections = totalConnections / cycle.length;
+    const connectivityScore = Math.min(avgConnections / 3, 5);
+    score += connectivityScore;
+    if (avgConnections > 6) {
+      factors.push('Highly connected nodes');
+    }
+
+    // Factor 4: Hierarchical depth
+    const maxDepth = Math.max(...cycle.map(node => this.calculateNodeDepth(node)));
+    if (maxDepth > 3) {
+      score += 2;
+      factors.push('Deep hierarchical structure');
+    }
+
+    // Determine level
+    const level = score < 5 ? 'low' : score < 10 ? 'medium' : 'high';
+
+    return { score, level, factors };
+  }
+
+  /**
+   * Assess the impact of a cycle on the overall system
+   */
+  private assessCycleImpact(cycle: string[]): {
+    level: 'low' | 'medium' | 'high';
+    affectedNodes: string[];
+    affectedNodesCount: number;
+    blocksTopologicalSort: boolean;
+    description: string;
+  } {
+    // Find all nodes that depend on any node in the cycle
+    const affectedNodes = new Set<string>();
+    for (const node of cycle) {
+      const dependents = this.getDependents(node);
+      dependents.forEach(dep => affectedNodes.add(dep));
+    }
+
+    // Remove cycle nodes from affected set
+    cycle.forEach(node => affectedNodes.delete(node));
+
+    const affectedNodesCount = affectedNodes.size;
+    let level: 'low' | 'medium' | 'high' = 'low';
+    let description = '';
+
+    if (affectedNodesCount === 0) {
+      level = 'low';
+      description = 'Isolated cycle with no downstream dependencies';
+    } else if (affectedNodesCount < 5) {
+      level = 'medium';
+      description = `Affects ${affectedNodesCount} downstream node${affectedNodesCount > 1 ? 's' : ''}`;
+    } else {
+      level = 'high';
+      description = `Affects ${affectedNodesCount} downstream nodes - significant impact`;
+    }
+
+    return {
+      level,
+      affectedNodes: Array.from(affectedNodes),
+      affectedNodesCount,
+      blocksTopologicalSort: true,
+      description
+    };
+  }
+
+  /**
+   * Prioritize resolution proposals based on complexity and impact
+   */
+  private prioritizeResolutionProposals(
+    proposals: RefactoringProposal[],
+    complexity: { score: number; level: string },
+    impact: { level: string; affectedNodesCount: number }
+  ): RefactoringProposal[] {
+    // Calculate priority score for each proposal
+    const scoredProposals = proposals.map(proposal => {
+      let priorityScore = 0;
+
+      // Prefer lower complexity solutions
+      if (proposal.impact.complexity === 'low') priorityScore += 3;
+      else if (proposal.impact.complexity === 'medium') priorityScore += 2;
+      else priorityScore += 1;
+
+      // Prefer lower risk solutions
+      if (proposal.impact.riskLevel === 'low') priorityScore += 3;
+      else if (proposal.impact.riskLevel === 'medium') priorityScore += 2;
+      else priorityScore += 1;
+
+      // Adjust based on proposal type
+      if (proposal.type === 'extract_interface') priorityScore += 2; // Generally safe
+      if (proposal.type === 'remove_edge' && complexity.level === 'low') priorityScore += 2; // Good for simple cycles
+      if (proposal.type === 'split_node' && complexity.level === 'high') priorityScore += 1; // Good for complex cycles
+
+      // Auto-applicable proposals get bonus
+      if (proposal.autoApplicable) priorityScore += 1;
+
+      return { proposal, priorityScore };
+    });
+
+    // Sort by priority score (highest first)
+    scoredProposals.sort((a, b) => b.priorityScore - a.priorityScore);
+
+    // Add priority rank to proposals
+    return scoredProposals.map((sp, index) => ({
+      ...sp.proposal,
+      metadata: {
+        ...sp.proposal.metadata,
+        priorityRank: index + 1,
+        priorityScore: sp.priorityScore
+      }
+    }));
+  }
+
+  /**
+   * Count how many descendant nodes are affected by a cycle
+   */
+  private countAffectedDescendants(cycle: string[]): number {
+    const affected = new Set<string>();
+    for (const node of cycle) {
+      const descendants = this.getDescendants(node);
+      descendants.forEach(d => affected.add(d));
+    }
+    // Remove cycle nodes from count
+    cycle.forEach(node => affected.delete(node));
+    return affected.size;
+  }
+
+  /**
+   * Calculate overall cycle complexity for multiple cycles
+   */
+  private calculateOverallCycleComplexity(
+    analysis: Array<{ complexity: { score: number } }>
+  ): { score: number; level: 'low' | 'medium' | 'high' } {
+    if (analysis.length === 0) {
+      return { score: 0, level: 'low' };
+    }
+
+    const totalScore = analysis.reduce((sum, a) => sum + a.complexity.score, 0);
+    const avgScore = totalScore / analysis.length;
+    const level = avgScore < 5 ? 'low' : avgScore < 10 ? 'medium' : 'high';
+
+    return { score: avgScore, level };
+  }
+
+  /**
+   * Generate overall recommendations for resolving all cycles
+   */
+  private generateOverallRecommendations(
+    analysis: Array<{
+      size: number;
+      complexity: { level: string };
+      impact: { level: string };
+      resolutionSuggestions: RefactoringProposal[];
+    }>
+  ): string[] {
+    const recommendations: string[] = [];
+
+    // Recommend starting with simple cycles
+    const simpleCycles = analysis.filter(a => a.size === 2);
+    if (simpleCycles.length > 0) {
+      recommendations.push(`Start by resolving ${simpleCycles.length} simple 2-node cycle${simpleCycles.length > 1 ? 's' : ''}`);
+    }
+
+    // Recommend addressing high-impact cycles first
+    const highImpactCycles = analysis.filter(a => a.impact.level === 'high');
+    if (highImpactCycles.length > 0) {
+      recommendations.push(`Prioritize ${highImpactCycles.length} high-impact cycle${highImpactCycles.length > 1 ? 's' : ''} with many dependents`);
+    }
+
+    // Suggest batch resolution for similar cycles
+    if (analysis.length > 3) {
+      recommendations.push('Consider batch-resolving similar cycles using consistent strategies');
+    }
+
+    // Suggest architectural review for many complex cycles
+    const complexCycles = analysis.filter(a => a.complexity.level === 'high');
+    if (complexCycles.length > 2) {
+      recommendations.push('Multiple complex cycles detected - consider broader architectural refactoring');
+    }
+
+    // Default recommendation
+    if (recommendations.length === 0 && analysis.length > 0) {
+      recommendations.push('Review and apply the prioritized resolution suggestions for each cycle');
+    }
+
+    return recommendations;
   }
 
   private getEdgeTypesInCycle(cycle: string[]): RPGEdgeType[] {
@@ -313,6 +610,23 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       });
     }
 
+    // Strategy 3: Node split for large nodes with multiple responsibilities
+    const largeNodes = this.findLargeNodesInCycle(cycle);
+    for (const largeNode of largeNodes) {
+      const splitProposal = this.generateNodeSplitProposal(largeNode, cycle);
+      if (splitProposal) {
+        proposals.push(splitProposal);
+      }
+    }
+
+    // Strategy 4: Dependency edge restructuring
+    if (cycle.length > 2) {
+      const restructureProposal = this.generateDependencyRestructuringProposal(cycle);
+      if (restructureProposal) {
+        proposals.push(restructureProposal);
+      }
+    }
+
     return proposals;
   }
 
@@ -329,6 +643,290 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
     }
 
     return mostConnected;
+  }
+
+  /**
+   * Find large nodes in a cycle that could benefit from splitting
+   * A node is considered large if it has many connections or multiple responsibilities
+   */
+  private findLargeNodesInCycle(cycle: string[]): string[] {
+    const largeNodes: string[] = [];
+    const LARGE_NODE_THRESHOLD = 5; // Number of connections to be considered large
+
+    for (const node of cycle) {
+      const totalConnections = this.getDependencies(node).length + this.getDependents(node).length;
+      const attrs = this.getNodeAttributes(node);
+
+      // Check if node is large based on:
+      // 1. Number of connections
+      // 2. Node type (MODULE or FEATURE are typically larger)
+      // 3. Multiple children (indicating multiple responsibilities)
+      const hasManyConnections = totalConnections >= LARGE_NODE_THRESHOLD;
+      const isLargeType = attrs?.type === RPGNodeType.MODULE || attrs?.type === RPGNodeType.FEATURE;
+      const hasMultipleChildren = this.getChildNodes(node).length > 3;
+
+      if (hasManyConnections || (isLargeType && hasMultipleChildren)) {
+        largeNodes.push(node);
+      }
+    }
+
+    return largeNodes;
+  }
+
+  /**
+   * Generate a proposal to split a large node into smaller, more focused nodes
+   */
+  private generateNodeSplitProposal(nodeId: string, cycle: string[]): RefactoringProposal | null {
+    const attrs = this.getNodeAttributes(nodeId);
+    const dependencies = this.getDependencies(nodeId);
+    const dependents = this.getDependents(nodeId);
+
+    // Analyze the node's responsibilities based on its dependencies and dependents
+    const responsibilities = this.analyzeNodeResponsibilities(nodeId, dependencies, dependents);
+
+    if (responsibilities.length < 2) {
+      return null; // Not enough distinct responsibilities to split
+    }
+
+    // Generate split proposals
+    const splitNodes = responsibilities.map((resp, index) => ({
+      id: `${nodeId}_${resp.category}_${index}`,
+      category: resp.category,
+      relatedNodes: resp.relatedNodes
+    }));
+
+    const changes = splitNodes.map(splitNode => ({
+      action: 'add_node' as const,
+      target: splitNode.id,
+      details: {
+        type: attrs?.type || RPGNodeType.MODULE,
+        level: attrs?.level || RPGNodeLevel.IMPLEMENTATION,
+        description: `Split from ${nodeId} - handles ${splitNode.category}`,
+        parentId: attrs?.parentId
+      }
+    }));
+
+    // Add changes to remove original node and reconnect edges
+    changes.push({
+      action: 'remove_node' as const,
+      target: nodeId,
+      details: {}
+    });
+
+    return {
+      id: `split_node_${nodeId}_${Date.now()}`,
+      type: 'split_node',
+      description: `Split ${nodeId} into ${splitNodes.length} focused nodes`,
+      explanation: `The node ${nodeId} has multiple responsibilities: ${responsibilities.map(r => r.category).join(', ')}. Splitting it will improve maintainability and may help break the dependency cycle.`,
+      affectedNodes: [nodeId, ...cycle.filter(n => n !== nodeId)],
+      changes,
+      impact: {
+        complexity: 'high',
+        riskLevel: 'medium',
+        benefits: [
+          'Separates concerns',
+          'Reduces coupling',
+          'May break dependency cycle',
+          'Improves testability'
+        ],
+        drawbacks: [
+          'Requires significant refactoring',
+          'May increase total number of nodes',
+          'Needs careful dependency rewiring'
+        ]
+      },
+      autoApplicable: false,
+      metadata: {
+        splitNodes: splitNodes.map(n => n.id),
+        originalNode: nodeId,
+        responsibilities
+      }
+    };
+  }
+
+  /**
+   * Analyze a node's responsibilities based on its connections
+   */
+  private analyzeNodeResponsibilities(
+    nodeId: string,
+    dependencies: string[],
+    dependents: string[]
+  ): Array<{ category: string; relatedNodes: string[] }> {
+    const responsibilities: Array<{ category: string; relatedNodes: string[] }> = [];
+    const categorizedNodes = new Map<string, string[]>();
+
+    // Categorize dependencies by their type/domain
+    for (const dep of dependencies) {
+      const depAttrs = this.getNodeAttributes(dep);
+      const category = this.inferNodeCategory(dep, depAttrs);
+
+      if (!categorizedNodes.has(category)) {
+        categorizedNodes.set(category, []);
+      }
+      categorizedNodes.get(category)!.push(dep);
+    }
+
+    // Categorize dependents
+    for (const dependent of dependents) {
+      const depAttrs = this.getNodeAttributes(dependent);
+      const category = this.inferNodeCategory(dependent, depAttrs);
+
+      if (!categorizedNodes.has(category)) {
+        categorizedNodes.set(category, []);
+      }
+      categorizedNodes.get(category)!.push(dependent);
+    }
+
+    // Convert to responsibilities array
+    for (const [category, nodes] of categorizedNodes) {
+      if (nodes.length > 0) {
+        responsibilities.push({ category, relatedNodes: nodes });
+      }
+    }
+
+    return responsibilities;
+  }
+
+  /**
+   * Infer the category/domain of a node based on its attributes
+   */
+  private inferNodeCategory(nodeId: string, attrs: ExtendedNodeAttributes | undefined): string {
+    // Use type as primary category
+    if (attrs?.type) {
+      return attrs.type;
+    }
+
+    // Use file path to infer category
+    if (attrs?.filePath) {
+      const pathParts = attrs.filePath.split('/');
+      if (pathParts.length > 1) {
+        return pathParts[pathParts.length - 2]; // Use parent directory
+      }
+    }
+
+    // Use language as fallback
+    if (attrs?.language) {
+      return attrs.language;
+    }
+
+    return 'general';
+  }
+
+  /**
+   * Generate a proposal to restructure dependencies in a cycle
+   * This involves reordering or redirecting edges to break the cycle
+   */
+  private generateDependencyRestructuringProposal(cycle: string[]): RefactoringProposal | null {
+    if (cycle.length < 3) {
+      return null; // Too simple for restructuring
+    }
+
+    // Find the weakest edge in the cycle (edge with lowest weight or least critical)
+    const weakestEdge = this.findWeakestEdgeInCycle(cycle);
+    if (!weakestEdge) {
+      return null;
+    }
+
+    const { from, to } = weakestEdge;
+    const edgeAttrs = this.getEdgeAttributes(from, to);
+
+    return {
+      id: `restructure_cycle_${cycle.join('_')}_${Date.now()}`,
+      type: 'remove_edge',
+      description: `Remove weakest edge ${from} -> ${to} to break cycle`,
+      explanation: `The edge from ${from} to ${to} is the weakest in the cycle${edgeAttrs?.type ? ` (type: ${edgeAttrs.type})` : ''}. Removing it will break the circular dependency with minimal impact.`,
+      affectedNodes: cycle,
+      changes: [
+        {
+          action: 'remove_edge',
+          target: `${from}->${to}`,
+          details: {
+            reason: 'Breaking cycle by removing weakest edge',
+            originalType: edgeAttrs?.type,
+            originalWeight: edgeAttrs?.weight
+          }
+        }
+      ],
+      impact: {
+        complexity: 'low',
+        riskLevel: 'low',
+        benefits: [
+          'Breaks dependency cycle',
+          'Minimal impact on architecture',
+          'Easy to revert if needed'
+        ],
+        drawbacks: [
+          'May require alternative dependency mechanism',
+          'Could affect functionality if edge is actually needed'
+        ]
+      },
+      autoApplicable: false,
+      metadata: {
+        cycle,
+        removedEdge: { from, to },
+        edgeStrength: this.calculateEdgeStrength(from, to)
+      }
+    };
+  }
+
+  /**
+   * Find the weakest edge in a cycle
+   * Weakness is determined by edge weight, type, and criticality
+   */
+  private findWeakestEdgeInCycle(cycle: string[]): { from: string; to: string } | null {
+    let weakestEdge: { from: string; to: string; strength: number } | null = null;
+
+    for (let i = 0; i < cycle.length; i++) {
+      const from = cycle[i];
+      const to = cycle[(i + 1) % cycle.length];
+
+      const strength = this.calculateEdgeStrength(from, to);
+
+      if (!weakestEdge || strength < weakestEdge.strength) {
+        weakestEdge = { from, to, strength };
+      }
+    }
+
+    return weakestEdge ? { from: weakestEdge.from, to: weakestEdge.to } : null;
+  }
+
+  /**
+   * Calculate the strength/importance of an edge
+   * Higher value means stronger/more critical edge
+   */
+  private calculateEdgeStrength(from: string, to: string): number {
+    const attrs = this.getEdgeAttributes(from, to);
+    let strength = attrs?.weight || 1;
+
+    // Adjust strength based on edge type
+    if (attrs?.type) {
+      switch (attrs.type) {
+        case RPGEdgeType.IMPLEMENTATION:
+          strength *= 2; // Implementation edges are critical
+          break;
+        case RPGEdgeType.DATA_FLOW:
+          strength *= 1.5; // Data flow is important
+          break;
+        case RPGEdgeType.HIERARCHY:
+          strength *= 3; // Hierarchy edges are very critical
+          break;
+        case RPGEdgeType.CONFIG:
+          strength *= 0.5; // Config edges are less critical
+          break;
+      }
+    }
+
+    // Consider bidirectional edges as stronger
+    if (attrs?.bidirectional) {
+      strength *= 1.5;
+    }
+
+    // Consider constraint requirements
+    if (attrs?.constraint?.required) {
+      strength *= 2;
+    }
+
+    return strength;
   }
 
   // === Advanced topological sorting and build ordering ===
@@ -396,8 +994,13 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       }
     }
 
+    // Helper function to get node priority
+    const getNodePriority = (nodeId: string): number => {
+      const attrs = this.getNodeAttributes(nodeId);
+      return attrs?.priority || 0;
+    };
+
     // Priority queue implementation using array with custom sort
-    const self = this;
     class PriorityQueue {
       private items: string[] = [];
 
@@ -418,8 +1021,8 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
         this.items.sort((a, b) => {
           // Primary sort: higher priority first (if considering priorities)
           if (options?.considerPriorities) {
-            const priorityA = this.getNodePriority(a);
-            const priorityB = this.getNodePriority(b);
+            const priorityA = getNodePriority(a);
+            const priorityB = getNodePriority(b);
             if (priorityA !== priorityB) {
               return priorityB - priorityA; // Higher priority first
             }
@@ -428,11 +1031,6 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
           // Secondary sort: lexicographic for deterministic results
           return a.localeCompare(b);
         });
-      }
-
-      private getNodePriority(nodeId: string): number {
-        const attrs = self.getNodeAttributes(nodeId);
-        return attrs?.priority || 0;
       }
     }
 
@@ -688,15 +1286,32 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
 
   /**
    * Find the critical path (longest path) through the dependency graph
+   * Handles cycles by detecting them and skipping affected paths
    */
   private findCriticalPath(): { path: string[]; time: number } {
+    // Check for cycles first
+    if (this.hasCycle()) {
+      // For graphs with cycles, we can't compute a true critical path
+      // Return empty result or handle specially
+      return { path: [], time: 0 };
+    }
+
     const allNodes = [...this.adj.keys()];
     const memo = new Map<string, { path: string[]; time: number }>();
+    const visiting = new Set<string>();
 
     const findLongestPath = (nodeId: string): { path: string[]; time: number } => {
       if (memo.has(nodeId)) {
         return memo.get(nodeId)!;
       }
+
+      // Detect cycles during traversal
+      if (visiting.has(nodeId)) {
+        // Cycle detected, return empty path
+        return { path: [], time: 0 };
+      }
+
+      visiting.add(nodeId);
 
       const dependencies = this.getDependencies(nodeId);
       const nodeTime = this.estimateBuildTime(nodeId);
@@ -704,6 +1319,7 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       if (dependencies.length === 0) {
         const result = { path: [nodeId], time: nodeTime };
         memo.set(nodeId, result);
+        visiting.delete(nodeId);
         return result;
       }
 
@@ -722,6 +1338,7 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       };
 
       memo.set(nodeId, result);
+      visiting.delete(nodeId);
       return result;
     };
 
@@ -1027,19 +1644,21 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
           case 'remove_node':
             this.removeNode(change.target);
             break;
-          case 'add_edge':
+          case 'add_edge': {
             const [from, to] = change.target.split('->');
             this.addEdge(from, to, change.details);
             break;
-          case 'remove_edge':
+          }
+          case 'remove_edge': {
             const [removeFrom, removeTo] = change.target.split('->');
             this.removeEdge(removeFrom, removeTo);
             break;
+          }
           // Add more cases as needed
         }
       }
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -1059,15 +1678,17 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
         case 'remove_node':
           removedNodes.push(change.target);
           break;
-        case 'add_edge':
+        case 'add_edge': {
           const [from, to] = change.target.split('->');
           addedEdges.push({ from, to, attributes: change.details });
           break;
-        case 'remove_edge':
+        }
+        case 'remove_edge': {
           const [removeFrom, removeTo] = change.target.split('->');
           removedEdges.push({ from: removeFrom, to: removeTo });
           break;
-        case 'modify_node':
+        }
+        case 'modify_node': {
           const oldAttrs = this.getNodeAttributes(change.target) || {};
           modifiedNodes.push({
             id: change.target,
@@ -1075,6 +1696,7 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
             newAttributes: { ...oldAttrs, ...change.details }
           });
           break;
+        }
       }
     }
 
