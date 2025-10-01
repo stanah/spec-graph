@@ -1592,6 +1592,18 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       proposals.push(this.createDecouplingProposal(node));
     }
 
+    // Detect DIP (Dependency Inversion Principle) violations
+    const dipViolations = this.detectDIPViolations(nodes);
+    proposals.push(...dipViolations);
+
+    // Detect ISP (Interface Segregation Principle) violations
+    const ispViolations = this.detectISPViolations(nodes);
+    proposals.push(...ispViolations);
+
+    // Detect responsibility separation opportunities
+    const responsibilitySeparation = this.detectResponsibilitySeparationOpportunities(nodes);
+    proposals.push(...responsibilitySeparation);
+
     return proposals;
   }
 
@@ -2045,5 +2057,408 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       factors,
       recommendations
     };
+  }
+
+  // === Advanced Refactoring Proposals (DIP, ISP, etc.) ===
+
+  /**
+   * Detect Dependency Inversion Principle (DIP) violations
+   * DIP states: High-level modules should not depend on low-level modules.
+   * Both should depend on abstractions.
+   */
+  private detectDIPViolations(nodes: string[]): RefactoringProposal[] {
+    const proposals: RefactoringProposal[] = [];
+
+    for (const nodeId of nodes) {
+      const attrs = this.getNodeAttributes(nodeId);
+
+      // Skip if already an interface or abstraction
+      if (attrs?.type === RPGNodeType.INTERFACE) {
+        continue;
+      }
+
+      // Check if this is a high-level module (MODULE or FEATURE)
+      const isHighLevel = attrs?.type === RPGNodeType.MODULE || attrs?.type === RPGNodeType.FEATURE;
+
+      if (isHighLevel) {
+        const dependencies = this.getDependencies(nodeId);
+        const concreteDependencies: string[] = [];
+
+        // Find concrete (non-abstraction) dependencies
+        for (const dep of dependencies) {
+          const depAttrs = this.getNodeAttributes(dep);
+
+          // Check if dependency is concrete (not an interface/abstraction)
+          const isConcrete = depAttrs?.type !== RPGNodeType.INTERFACE &&
+                           depAttrs?.type !== RPGNodeType.CONFIG;
+
+          // Check if it's a lower-level module
+          const isLowerLevel = this.isLowerLevel(attrs.level, depAttrs?.level);
+
+          if (isConcrete && isLowerLevel) {
+            concreteDependencies.push(dep);
+          }
+        }
+
+        // If high-level module depends on concrete low-level modules, suggest abstraction
+        if (concreteDependencies.length > 0) {
+          const proposal = this.createDIPViolationProposal(nodeId, concreteDependencies);
+          if (proposal) {
+            proposals.push(proposal);
+          }
+        }
+      }
+    }
+
+    return proposals;
+  }
+
+  /**
+   * Check if level1 is higher than level2
+   */
+  private isLowerLevel(level1?: RPGNodeLevel, level2?: RPGNodeLevel): boolean {
+    if (!level1 || !level2) return false;
+
+    const levelOrder = {
+      [RPGNodeLevel.PROPOSAL]: 4,
+      [RPGNodeLevel.MODULE]: 3,
+      [RPGNodeLevel.IMPLEMENTATION]: 2,
+      [RPGNodeLevel.FILE_SYSTEM]: 1
+    };
+
+    return levelOrder[level1] > levelOrder[level2];
+  }
+
+  /**
+   * Create a DIP violation proposal
+   */
+  private createDIPViolationProposal(nodeId: string, concreteDeps: string[]): RefactoringProposal | null {
+    if (concreteDeps.length === 0) return null;
+
+    const attrs = this.getNodeAttributes(nodeId);
+    const changes = concreteDeps.map(dep => {
+      const interfaceId = `${dep}_Interface`;
+
+      return {
+        action: 'add_node' as const,
+        target: interfaceId,
+        details: {
+          type: RPGNodeType.INTERFACE,
+          level: attrs?.level || RPGNodeLevel.IMPLEMENTATION,
+          description: `Interface extracted from ${dep} to follow DIP`,
+          parentId: this.getNodeAttributes(dep)?.parentId
+        }
+      };
+    });
+
+    // Add edge redirection changes
+    for (const dep of concreteDeps) {
+      const interfaceId = `${dep}_Interface`;
+      changes.push(
+        {
+          action: 'remove_edge' as const,
+          target: `${dep}->${nodeId}`,
+          details: { reason: 'Replace with abstraction dependency' }
+        },
+        {
+          action: 'add_edge' as const,
+          target: `${interfaceId}->${nodeId}`,
+          details: { type: RPGEdgeType.IMPLEMENTATION }
+        },
+        {
+          action: 'add_edge' as const,
+          target: `${dep}->${interfaceId}`,
+          details: { type: RPGEdgeType.IMPLEMENTATION }
+        }
+      );
+    }
+
+    return {
+      id: `dip_violation_${nodeId}_${Date.now()}`,
+      type: 'extract_interface',
+      description: `Apply DIP: Extract interfaces for dependencies of ${nodeId}`,
+      explanation: `High-level module ${nodeId} depends on concrete low-level modules: ${concreteDeps.join(', ')}. According to the Dependency Inversion Principle, both should depend on abstractions. Extracting interfaces will invert the dependency direction and improve flexibility.`,
+      affectedNodes: [nodeId, ...concreteDeps],
+      changes,
+      impact: {
+        complexity: 'medium',
+        riskLevel: 'low',
+        benefits: [
+          'Follows Dependency Inversion Principle',
+          'Improves testability through dependency injection',
+          'Reduces coupling between layers',
+          'Enables easier module replacement'
+        ],
+        drawbacks: [
+          'Adds abstraction layer',
+          'May require dependency injection setup',
+          'Increases number of files'
+        ]
+      },
+      autoApplicable: false,
+      metadata: {
+        principle: 'DIP',
+        violationType: 'concrete_dependency',
+        affectedDependencies: concreteDeps
+      }
+    };
+  }
+
+  /**
+   * Detect Interface Segregation Principle (ISP) violations
+   * ISP states: Clients should not be forced to depend on interfaces they don't use.
+   */
+  private detectISPViolations(nodes: string[]): RefactoringProposal[] {
+    const proposals: RefactoringProposal[] = [];
+
+    for (const nodeId of nodes) {
+      const attrs = this.getNodeAttributes(nodeId);
+
+      // Focus on interfaces and large classes/modules
+      const isInterface = attrs?.type === RPGNodeType.INTERFACE;
+      const isLargeClass = attrs?.type === RPGNodeType.CLASS;
+      const isModule = attrs?.type === RPGNodeType.MODULE;
+
+      if (!isInterface && !isLargeClass && !isModule) {
+        continue;
+      }
+
+      // Check if node has many dependents (fat interface indicator)
+      const dependents = this.getDependents(nodeId);
+      const children = this.getChildNodes(nodeId);
+
+      // Fat interface: many dependents and many children (methods/properties)
+      const isFatInterface = dependents.length >= 3 && children.length >= 5;
+
+      if (isFatInterface) {
+        // Analyze which dependents use which children
+        const usagePattern = this.analyzeInterfaceUsage(nodeId, dependents, children);
+
+        if (usagePattern.canBeSplit) {
+          const proposal = this.createISPViolationProposal(nodeId, usagePattern);
+          if (proposal) {
+            proposals.push(proposal);
+          }
+        }
+      }
+    }
+
+    return proposals;
+  }
+
+  /**
+   * Analyze how dependents use an interface's members
+   */
+  private analyzeInterfaceUsage(
+    interfaceId: string,
+    dependents: string[],
+    children: string[]
+  ): {
+    canBeSplit: boolean;
+    groups: Array<{ name: string; members: string[]; users: string[] }>;
+  } {
+    // Simplified analysis: group by usage patterns
+    // In a real implementation, this would analyze actual usage via static analysis
+
+    const groups: Array<{ name: string; members: string[]; users: string[] }> = [];
+
+    // Split children into groups based on naming patterns or metadata
+    const groupedMembers = new Map<string, string[]>();
+
+    for (const child of children) {
+      const childAttrs = this.getNodeAttributes(child);
+      const category = this.inferMemberCategory(child, childAttrs);
+
+      if (!groupedMembers.has(category)) {
+        groupedMembers.set(category, []);
+      }
+      groupedMembers.get(category)!.push(child);
+    }
+
+    // Only split if we have meaningful groups
+    const canBeSplit = groupedMembers.size >= 2 &&
+                      Array.from(groupedMembers.values()).every(g => g.length >= 2);
+
+    if (canBeSplit) {
+      for (const [category, members] of groupedMembers) {
+        groups.push({
+          name: category,
+          members,
+          users: dependents // In real implementation, filter by actual usage
+        });
+      }
+    }
+
+    return { canBeSplit, groups };
+  }
+
+  /**
+   * Infer the category of an interface member
+   */
+  private inferMemberCategory(memberId: string, attrs: ExtendedNodeAttributes | undefined): string {
+    // Use type as primary categorization
+    if (attrs?.type === RPGNodeType.FUNCTION) {
+      // Analyze function name for patterns
+      if (memberId.toLowerCase().includes('read') || memberId.toLowerCase().includes('get') || memberId.toLowerCase().includes('fetch')) {
+        return 'reader';
+      }
+      if (memberId.toLowerCase().includes('write') || memberId.toLowerCase().includes('set') || memberId.toLowerCase().includes('update')) {
+        return 'writer';
+      }
+      if (memberId.toLowerCase().includes('delete') || memberId.toLowerCase().includes('remove')) {
+        return 'remover';
+      }
+      if (memberId.toLowerCase().includes('validate') || memberId.toLowerCase().includes('check')) {
+        return 'validator';
+      }
+    }
+
+    // Default category
+    return 'general';
+  }
+
+  /**
+   * Create an ISP violation proposal
+   */
+  private createISPViolationProposal(
+    nodeId: string,
+    usagePattern: { groups: Array<{ name: string; members: string[]; users: string[] }> }
+  ): RefactoringProposal | null {
+    const attrs = this.getNodeAttributes(nodeId);
+    const changes: Array<{
+      action: 'add_node' | 'remove_node' | 'modify_node' | 'add_edge' | 'remove_edge' | 'modify_edge';
+      target: string;
+      details: any;
+    }> = [];
+
+    // Create new focused interfaces
+    const newInterfaces = usagePattern.groups.map((group, index) => {
+      const newInterfaceId = `${nodeId}_${group.name}_${index}`;
+
+      changes.push({
+        action: 'add_node',
+        target: newInterfaceId,
+        details: {
+          type: RPGNodeType.INTERFACE,
+          level: attrs?.level || RPGNodeLevel.IMPLEMENTATION,
+          description: `Focused interface for ${group.name} operations (split from ${nodeId})`,
+          parentId: attrs?.parentId
+        }
+      });
+
+      return { id: newInterfaceId, group };
+    });
+
+    return {
+      id: `isp_violation_${nodeId}_${Date.now()}`,
+      type: 'split_node',
+      description: `Apply ISP: Split ${nodeId} into ${newInterfaces.length} focused interfaces`,
+      explanation: `Interface ${nodeId} is too large and forces clients to depend on methods they don't use. According to the Interface Segregation Principle, we should split it into smaller, focused interfaces: ${newInterfaces.map(i => i.id).join(', ')}. This allows clients to depend only on what they need.`,
+      affectedNodes: [nodeId],
+      changes,
+      impact: {
+        complexity: 'high',
+        riskLevel: 'medium',
+        benefits: [
+          'Follows Interface Segregation Principle',
+          'Reduces unnecessary dependencies',
+          'Improves code clarity and maintainability',
+          'Enables more flexible composition'
+        ],
+        drawbacks: [
+          'Increases number of interfaces',
+          'May require updating client code',
+          'More complex interface hierarchy'
+        ]
+      },
+      autoApplicable: false,
+      metadata: {
+        principle: 'ISP',
+        violationType: 'fat_interface',
+        splitCount: newInterfaces.length,
+        originalInterface: nodeId
+      }
+    };
+  }
+
+  /**
+   * Detect opportunities for responsibility separation
+   * Based on Single Responsibility Principle
+   */
+  private detectResponsibilitySeparationOpportunities(nodes: string[]): RefactoringProposal[] {
+    const proposals: RefactoringProposal[] = [];
+
+    for (const nodeId of nodes) {
+      const attrs = this.getNodeAttributes(nodeId);
+
+      // Focus on classes and modules
+      if (attrs?.type !== RPGNodeType.CLASS && attrs?.type !== RPGNodeType.MODULE) {
+        continue;
+      }
+
+      const children = this.getChildNodes(nodeId);
+      const dependencies = this.getDependencies(nodeId);
+
+      // Indicators of multiple responsibilities:
+      // 1. Many children (methods/properties)
+      // 2. Diverse dependency types
+      // 3. High coupling
+
+      const hasManyChildren = children.length >= 8;
+      const hasManyDependencies = dependencies.length >= 6;
+      const totalConnections = dependencies.length + this.getDependents(nodeId).length;
+      const hasHighCoupling = totalConnections >= 10;
+
+      if ((hasManyChildren && hasManyDependencies) || hasHighCoupling) {
+        // Analyze responsibilities
+        const responsibilities = this.analyzeNodeResponsibilities(nodeId, dependencies, this.getDependents(nodeId));
+
+        if (responsibilities.length >= 2) {
+          const proposal: RefactoringProposal = {
+            id: `srp_violation_${nodeId}_${Date.now()}`,
+            type: 'split_node',
+            description: `Separate responsibilities of ${nodeId}`,
+            explanation: `Node ${nodeId} appears to have multiple responsibilities: ${responsibilities.map(r => r.category).join(', ')}. Consider splitting it into focused components, each with a single, well-defined responsibility.`,
+            affectedNodes: [nodeId],
+            changes: responsibilities.map((resp, index) => ({
+              action: 'add_node' as const,
+              target: `${nodeId}_${resp.category}_${index}`,
+              details: {
+                type: attrs.type,
+                level: attrs.level,
+                description: `Handles ${resp.category} responsibilities (split from ${nodeId})`,
+                parentId: attrs.parentId
+              }
+            })),
+            impact: {
+              complexity: 'high',
+              riskLevel: 'medium',
+              benefits: [
+                'Follows Single Responsibility Principle',
+                'Improves maintainability',
+                'Reduces complexity per component',
+                'Easier to test and modify'
+              ],
+              drawbacks: [
+                'Requires significant refactoring',
+                'May need coordination between new components',
+                'More files to manage'
+              ]
+            },
+            autoApplicable: false,
+            metadata: {
+              principle: 'SRP',
+              violationType: 'multiple_responsibilities',
+              responsibilities: responsibilities.map(r => r.category),
+              originalNode: nodeId
+            }
+          };
+
+          proposals.push(proposal);
+        }
+      }
+    }
+
+    return proposals;
   }
 }
