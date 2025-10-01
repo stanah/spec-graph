@@ -1108,10 +1108,29 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       }
 
       if (currentGroup.length === 0) {
-        // Circular dependency or other issue - add remaining nodes
+        // Circular dependency detected - add remaining nodes in one group
         const remaining = allNodes.filter(n => !processed.has(n));
         if (remaining.length > 0) {
-          currentGroup.push(...remaining);
+          // Add remaining nodes as a special group
+          // Calculate dependencies for the remaining group
+          const dependsOnGroups: number[] = [];
+          for (let i = 0; i < groupIndex; i++) {
+            const hasDirectDependency = remaining.some(node => {
+              const deps = this.getBuildDependencies(node, options);
+              return deps.some(dep => groups[i].nodes.includes(dep));
+            });
+            if (hasDirectDependency) {
+              dependsOnGroups.push(i);
+            }
+          }
+
+          groups.push({
+            order: groupIndex,
+            nodes: remaining.sort(),
+            estimatedTime: this.estimateGroupBuildTime(remaining),
+            dependsOnGroups
+          });
+          remaining.forEach(node => processed.add(node));
         }
         break;
       }
@@ -1257,10 +1276,14 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
     const totalSequentialTime = allNodes.reduce((sum, node) => sum + this.estimateBuildTime(node), 0);
 
     // Find maximum parallelism (largest group size)
-    const maxParallelism = Math.max(...buildGroups.map(group => group.nodes.length));
+    const maxParallelism = buildGroups.length > 0
+      ? Math.max(...buildGroups.map(group => group.nodes.length))
+      : 0;
 
     // Calculate parallelization ratio
-    const parallelizationRatio = criticalPathTime > 0 ? 1 - (criticalPathTime / totalSequentialTime) : 0;
+    const parallelizationRatio = criticalPathTime > 0 && totalSequentialTime > 0
+      ? 1 - (criticalPathTime / totalSequentialTime)
+      : 0;
 
     // Identify bottlenecks
     const bottlenecks = this.identifyBottlenecks(buildGroups);

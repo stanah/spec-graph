@@ -583,10 +583,11 @@ describe('ExtendedDependencyGraph', () => {
 
       expect(buildOrder.length).toBeGreaterThan(0);
 
-      // First group should contain nodes with no dependencies
+      // First group should contain nodes with no dependencies (only 'core' has no deps)
       const firstGroup = buildOrder[0];
       expect(firstGroup.nodes).toContain('core');
-      expect(firstGroup.nodes).toContain('utils');
+      // utils depends on core, so it should be in a later group
+      expect(firstGroup.nodes).not.toContain('utils');
 
       // Each group should respect max parallelism
       buildOrder.forEach(group => {
@@ -669,8 +670,8 @@ describe('ExtendedDependencyGraph', () => {
     });
 
     test('should check if nodes can be built in parallel', () => {
-      // core and utils can be built in parallel (no dependency between them)
-      expect(graph.canBuildInParallel('core', 'utils')).toBe(true);
+      // core and utils cannot be built in parallel (utils depends on core)
+      expect(graph.canBuildInParallel('core', 'utils')).toBe(false);
 
       // core and tests cannot be built in parallel (tests depends on core)
       expect(graph.canBuildInParallel('core', 'tests')).toBe(false);
@@ -704,9 +705,18 @@ describe('ExtendedDependencyGraph', () => {
         metadata: { estimatedBuildTime: 10 } // Very slow build
       });
 
-      // Make many nodes depend on the bottleneck
-      ['ui', 'api', 'tests'].forEach(node => {
-        graph.addEdge('bottleneck', node, { type: RPGEdgeType.IMPLEMENTATION });
+      // Add more dummy nodes
+      for (let i = 0; i < 6; i++) {
+        graph.addNode(`dummy_${i}`, {
+          type: RPGNodeType.MODULE,
+          metadata: { estimatedBuildTime: 1 }
+        });
+      }
+
+      // Make many nodes depend on the bottleneck (need > 5 for fan-out detection)
+      // bottleneck is depended upon by many nodes (fan-out from bottleneck's perspective)
+      ['ui', 'api', 'tests', 'dummy_0', 'dummy_1', 'dummy_2'].forEach(node => {
+        graph.addEdge(node, 'bottleneck', { type: RPGEdgeType.IMPLEMENTATION });
       });
 
       const analysis = graph.analyzeParallelizationPotential();
