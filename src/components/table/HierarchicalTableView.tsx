@@ -53,34 +53,13 @@ export function HierarchicalTableView({
               : info.getValue();
 
             return (
-              <div 
+              <div
                 className="hierarchy-cell"
                 style={{ paddingLeft: `${indentLevel * hierarchyIndentPx}px` }}
+                data-level={indentLevel}
               >
-                <div className="hierarchy-indent">
-                  {/* 階層レベルインジケーター */}
-                  {indentLevel > 0 && (
-                    <span className={`hierarchy-connector level-${Math.min(indentLevel, 3)}`}>
-                      {'├─'.repeat(Math.min(indentLevel, 1))}
-                      {indentLevel > 1 && '└─'}
-                    </span>
-                  )}
-                  
-                  {/* 子ノードアイコン */}
-                  {hasChildren && (
-                    <span className={`hierarchy-folder-icon ${hasChildren ? 'has-children' : ''}`}>
-                      📁
-                    </span>
-                  )}
-                  
-                  {/* セル内容 */}
-                  <span>{originalCell}</span>
-                </div>
-                
-                {/* 階層レベル表示 */}
-                <span className={`hierarchy-level-badge level-${Math.min(indentLevel, 3)}`}>
-                  L{indentLevel}
-                </span>
+                {/* シンプルにテキストだけ表示 */}
+                <span className="hierarchy-content">{originalCell}</span>
               </div>
             );
           }
