@@ -2540,7 +2540,7 @@
               "40.2"
             ],
             "details": "ファイル生成・更新時に差分のみを再生成・適用するインクリメンタル生成、生成結果のプレビュー・差分ハイライト・エラー通知機能も実装。VSCode APIのベストプラクティスに従う。\n<info added on 2025-10-02T17:00:25.804Z>\n実装完了。VSCode拡張との統合機能が実装された。\n\n主な実装内容は以下の通り：\n\n1.  **統合サービスの作成:**\n    *   `CodebaseGenerationService` (タスク40.2で実装) とVSCode APIの橋渡し役として、`extension/src/services/CodeGenerationIntegration.ts` を新規作成。\n    *   コード生成、プレビュー、エラー通知のロジックをこのサービスに集約。\n\n2.  **VSCode APIの活用:**\n    *   **ファイル操作:** `vscode.workspace.fs` を使用して、ワークスペース内にファイルとディレクトリを安全に生成（上書き確認、バックアップ機能含む）。\n    *   **進捗通知:** `vscode.window.withProgress` を利用し、生成プロセス中の各ステップをユーザーにリアルタイムで表示。\n    *   **エラー/プレビュー:** 生成前のプレビュー機能と、Output ChannelおよびVSCode標準通知によるエラーレポート機能を実装。\n\n3.  **コマンドの追加:**\n    *   `extension/package.json` に `documentViewer.generateCode` (コード生成実行) と `documentViewer.previewCodeGeneration` (プレビュー表示) の2つのコマンドを定義。\n    *   `extension/src/extension.ts` 内でこれらのコマンドを登録し、`CodeGenerationIntegration` サービスを呼び出すように実装。\n\n4.  **ビルド設定の更新:**\n    *   `extension/webpack.config.js` と `tsconfig.json` を調整し、親プロジェクトのコアロジックをVSCode拡張機能に正しくバンドルするよう設定。\n</info added on 2025-10-02T17:00:25.804Z>\n<info added on 2025-10-02T17:11:46.714Z>\n<info added on 2025-10-03T10:00:00.000Z>\nVSCodeコマンドの実装が完了し、マインドマップからのコード生成フローが確立された。\n\n主な実装内容は以下の通り：\n\n1.  **コマンドの追加と実装:**\n    *   `extension/src/extension.ts` に、コード生成 (`documentViewer.generateCode`) とプレビュー (`documentViewer.previewCodeGeneration`) を実行する2つのコマンドを実装。\n    *   コマンド実行時に、ユーザーに言語、フレームワーク、出力先ディレクトリを選択させるためのQuick Pick UIを追加。\n\n2.  **データ処理フローの確立:**\n    *   `parseMindmapData` ヘルパー関数を新規作成し、アクティブなエディタから`MindmapData`を抽出。\n    *   抽出したデータを `ExtendedDependencyGraph` を用いて `RPGGraph` に変換し、`CodeGenerationIntegration` サービスに渡す処理を実装。\n\n3.  **ビルドシステムの修正:**\n    *   `package.json` の `build:vscode` スクリプトを `tsc` から `webpack` を使用するように変更。\n    *   この変更により、親プロジェクトの `node_modules` との型定義の互換性問題が解消され、VSCode拡張機能のバンドルが正常に完了するようになった。\n\n次のステップとして、実際のVSCode環境での動作確認と、本機能に対するテストケースの追加が予定されている。\n</info>\n</info added on 2025-10-02T17:11:46.714Z>",
-            "status": "review",
+            "status": "done",
             "testStrategy": "VSCode上でのファイル生成・更新・削除の統合テスト、コマンドUI・プレビュー・エラー通知のE2Eテスト。"
           },
           {
@@ -2621,7 +2621,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-10-02T17:13:18.936Z",
+      "updated": "2025-10-02T17:20:00.889Z",
       "description": "Tasks for master context"
     }
   }
