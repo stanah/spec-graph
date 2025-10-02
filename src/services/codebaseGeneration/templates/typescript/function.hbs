@@ -1,0 +1,22 @@
+{{!-- TypeScript Function Template --}}
+{{#if node.description}}
+/**
+ * {{node.description}}
+ {{#if node.metadata.parameters}}
+ {{#each node.metadata.parameters}}
+ * @param {{this.name}} {{this.description}}
+ {{/each}}
+ {{/if}}
+ {{#if node.typeSignature}}
+ * @returns {{node.typeSignature}}
+ {{/if}}
+ */
+{{/if}}
+export {{#if node.metadata.async}}async {{/if}}function {{node.name}}({{#if node.metadata.parameters}}{{#each node.metadata.parameters}}{{this.name}}{{#if this.type}}: {{this.type}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}){{#if node.typeSignature}}: {{node.typeSignature}}{{/if}} {
+{{#if node.implementation.content}}
+  {{node.implementation.content}}
+{{else}}
+  // TODO: Implement {{node.name}}
+  throw new Error('Not implemented');
+{{/if}}
+}

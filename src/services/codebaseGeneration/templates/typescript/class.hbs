@@ -1,0 +1,36 @@
+{{!-- TypeScript Class Template --}}
+{{#if node.description}}
+/**
+ * {{node.description}}
+ */
+{{/if}}
+export class {{node.name}} {
+{{#if incomingEdges}}
+  {{#each incomingEdges}}
+  {{#if this.dataFlow}}
+  private {{camelCase this.fromId}}: {{this.dataFlow.dataType}};
+  {{/if}}
+  {{/each}}
+{{/if}}
+
+{{#if children}}
+  {{#each children}}
+  {{#if (eq this.type 'function')}}
+  {{#if this.description}}
+  /**
+   * {{this.description}}
+   */
+  {{/if}}
+  {{#if this.metadata.visibility}}{{this.metadata.visibility}} {{else}}public {{/if}}{{#if this.metadata.async}}async {{/if}}{{this.name}}({{#if this.metadata.parameters}}{{join this.metadata.parameters ', '}}{{/if}}){{#if this.typeSignature}}: {{this.typeSignature}}{{/if}} {
+    {{#if this.implementation.content}}
+    {{this.implementation.content}}
+    {{else}}
+    // TODO: Implement {{this.name}}
+    throw new Error('Not implemented');
+    {{/if}}
+  }
+
+  {{/if}}
+  {{/each}}
+{{/if}}
+}

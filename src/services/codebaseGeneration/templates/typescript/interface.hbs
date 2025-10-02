@@ -1,0 +1,24 @@
+{{!-- TypeScript Interface Template --}}
+{{#if node.description}}
+/**
+ * {{node.description}}
+ */
+{{/if}}
+export interface {{node.name}} {
+{{#if children}}
+  {{#each children}}
+  {{#if this.description}}
+  /** {{this.description}} */
+  {{/if}}
+  {{this.name}}{{#if this.metadata.optional}}?{{/if}}{{#if this.typeSignature}}: {{this.typeSignature}}{{/if}};
+  {{/each}}
+{{/if}}
+{{#if node.metadata.properties}}
+  {{#each node.metadata.properties}}
+  {{#if this.description}}
+  /** {{this.description}} */
+  {{/if}}
+  {{this.name}}{{#if this.optional}}?{{/if}}: {{this.type}};
+  {{/each}}
+{{/if}}
+}
