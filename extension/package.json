@@ -99,6 +99,18 @@
         "title": "すべて展開",
         "category": "Document Viewer",
         "icon": "$(expand-all)"
+      },
+      {
+        "command": "documentViewer.generateCode",
+        "title": "コードを生成",
+        "category": "Document Viewer",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "documentViewer.previewCodeGeneration",
+        "title": "コード生成をプレビュー",
+        "category": "Document Viewer",
+        "icon": "$(preview)"
       }
     ],
     "menus": {

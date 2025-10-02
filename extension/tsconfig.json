@@ -7,7 +7,6 @@
             "ES2020"
         ],
         "sourceMap": true,
-        "rootDir": "src",
         "strict": true,
         "moduleResolution": "node",
         "baseUrl": "./",
@@ -19,12 +18,15 @@
         "types": ["vscode", "node"]
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "../src/**/*"
     ],
     "exclude": [
         "node_modules",
         ".vscode-test",
         "out",
-        "src/test/**/*"
+        "src/test/**/*",
+        "../src/**/*.test.ts",
+        "../src/**/__tests__/**/*"
     ]
 }

@@ -3,6 +3,7 @@ import * as path from 'path';
 import { DocumentEditorProvider } from './DocumentEditorProvider';
 import { DocumentWebviewProvider } from './DocumentWebviewProvider';
 import { DocumentTreeDataProvider, DocumentTreeItem } from './DocumentTreeDataProvider';
+import { CodeGenerationIntegration } from './services/CodeGenerationIntegration';
 
 /**
  * サイドバープレビュー用のWebviewViewプロバイダー
@@ -194,6 +195,8 @@ let diagnosticCollection: vscode.DiagnosticCollection | null = null;
 const _webviewProviderSingleton: DocumentWebviewProvider | null = null;
 // サイドバープレビュープロバイダーの参照
 let sidebarViewProviderSingleton: DocumentSidebarViewProvider | null = null;
+// コード生成統合サービスの参照
+let codeGenerationIntegration: CodeGenerationIntegration | null = null;
 
 function ensureDiagnosticCollection(context: vscode.ExtensionContext): vscode.DiagnosticCollection | null {
     try {
@@ -329,6 +332,10 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider('documentPreview', sidebarViewProvider)
     );
+
+    // コード生成統合サービスの初期化
+    codeGenerationIntegration = new CodeGenerationIntegration();
+    context.subscriptions.push(codeGenerationIntegration);
 
     // アクティブエディタの変更を監視してツリーとサイドバープレビューを更新
     context.subscriptions.push(
@@ -645,6 +652,23 @@ export function activate(context: vscode.ExtensionContext) {
             treeDataProvider.expandAll();
             if (treeView.visible) {
                 vscode.window.showInformationMessage('すべてのノードを展開しました');
+            }
+        }),
+
+        // コード生成関連コマンド
+        vscode.commands.registerCommand('documentViewer.generateCode', async () => {
+            try {
+                vscode.window.showInformationMessage('コード生成機能は開発中です。現在はプレビュー機能を利用できます。');
+            } catch (error) {
+                vscode.window.showErrorMessage(`コード生成に失敗しました: ${error}`);
+            }
+        }),
+
+        vscode.commands.registerCommand('documentViewer.previewCodeGeneration', async () => {
+            try {
+                vscode.window.showInformationMessage('コード生成プレビュー機能は開発中です');
+            } catch (error) {
+                vscode.window.showErrorMessage(`プレビュー表示に失敗しました: ${error}`);
             }
         })
     ];
