@@ -4,6 +4,8 @@ import { DocumentEditorProvider } from './DocumentEditorProvider';
 import { DocumentWebviewProvider } from './DocumentWebviewProvider';
 import { DocumentTreeDataProvider, DocumentTreeItem } from './DocumentTreeDataProvider';
 import { CodeGenerationIntegration } from './services/CodeGenerationIntegration';
+import { ExtendedDependencyGraph } from '../../src/core/deps/ExtendedDependencyGraph.ts';
+import type { MindmapData } from '../../src/core/MindmapData.ts';
 
 /**
  * サイドバープレビュー用のWebviewViewプロバイダー
@@ -658,17 +660,117 @@ export function activate(context: vscode.ExtensionContext) {
         // コード生成関連コマンド
         vscode.commands.registerCommand('documentViewer.generateCode', async () => {
             try {
-                vscode.window.showInformationMessage('コード生成機能は開発中です。現在はプレビュー機能を利用できます。');
+                const activeEditor = vscode.window.activeTextEditor;
+                if (!activeEditor) {
+                    vscode.window.showWarningMessage('アクティブなエディターがありません');
+                    return;
+                }
+
+                // MindmapDataを取得
+                const mindmapData = await parseMindmapData(activeEditor.document);
+                if (!mindmapData) {
+                    vscode.window.showErrorMessage('マインドマップデータの解析に失敗しました');
+                    return;
+                }
+
+                // RPGGraphに変換
+                const extGraph = new ExtendedDependencyGraph(mindmapData);
+                const rpgGraph = extGraph.toRPGGraph();
+
+                // コード生成オプションを取得
+                const language = await vscode.window.showQuickPick(
+                    ['typescript', 'javascript', 'python', 'java'],
+                    {
+                        placeHolder: '生成するコードの言語を選択してください',
+                        title: 'コード生成言語'
+                    }
+                );
+
+                if (!language) {
+                    return;
+                }
+
+                const framework = await vscode.window.showInputBox({
+                    prompt: 'フレームワークを指定してください（オプション、例: react, express）',
+                    placeHolder: 'フレームワーク名（省略可）'
+                });
+
+                const outputDir = await vscode.window.showInputBox({
+                    prompt: '出力先ディレクトリを指定してください',
+                    value: 'generated-code',
+                    placeHolder: '出力ディレクトリ'
+                });
+
+                if (!outputDir) {
+                    return;
+                }
+
+                // コード生成を実行
+                if (codeGenerationIntegration) {
+                    await codeGenerationIntegration.generateCodebase(rpgGraph, {
+                        language: language as any,
+                        framework: framework as any,
+                        outputDir,
+                        dryRun: false,
+                        overwrite: false,
+                        createBackups: true
+                    });
+                }
             } catch (error) {
                 vscode.window.showErrorMessage(`コード生成に失敗しました: ${error}`);
+                console.error(error);
             }
         }),
 
         vscode.commands.registerCommand('documentViewer.previewCodeGeneration', async () => {
             try {
-                vscode.window.showInformationMessage('コード生成プレビュー機能は開発中です');
+                const activeEditor = vscode.window.activeTextEditor;
+                if (!activeEditor) {
+                    vscode.window.showWarningMessage('アクティブなエディターがありません');
+                    return;
+                }
+
+                // MindmapDataを取得
+                const mindmapData = await parseMindmapData(activeEditor.document);
+                if (!mindmapData) {
+                    vscode.window.showErrorMessage('マインドマップデータの解析に失敗しました');
+                    return;
+                }
+
+                // RPGGraphに変換
+                const extGraph = new ExtendedDependencyGraph(mindmapData);
+                const rpgGraph = extGraph.toRPGGraph();
+
+                // コード生成オプションを取得
+                const language = await vscode.window.showQuickPick(
+                    ['typescript', 'javascript', 'python', 'java'],
+                    {
+                        placeHolder: '生成するコードの言語を選択してください',
+                        title: 'コード生成言語（プレビュー）'
+                    }
+                );
+
+                if (!language) {
+                    return;
+                }
+
+                const framework = await vscode.window.showInputBox({
+                    prompt: 'フレームワークを指定してください（オプション、例: react, express）',
+                    placeHolder: 'フレームワーク名（省略可）'
+                });
+
+                // プレビューを表示
+                if (codeGenerationIntegration) {
+                    await codeGenerationIntegration.previewCodeGeneration(rpgGraph, {
+                        language: language as any,
+                        framework: framework as any,
+                        outputDir: 'preview',
+                        dryRun: true
+                    });
+                }
             } catch (error) {
                 vscode.window.showErrorMessage(`プレビュー表示に失敗しました: ${error}`);
+                console.error(error);
             }
         })
     ];
@@ -906,6 +1008,35 @@ root:
 function updateSidebarPreview(document: vscode.TextDocument): void {
     if (sidebarViewProviderSingleton) {
         sidebarViewProviderSingleton.updateForDocument(document);
+    }
+}
+
+/**
+ * ドキュメントからMindmapDataをパースする関数
+ */
+async function parseMindmapData(document: vscode.TextDocument): Promise<MindmapData | null> {
+    try {
+        const content = document.getText();
+        const ext = path.extname(document.fileName).toLowerCase();
+
+        let data: unknown;
+        if (ext === '.yaml' || ext === '.yml') {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const yaml = require('js-yaml');
+            data = yaml.load(content);
+        } else {
+            data = JSON.parse(content);
+        }
+
+        // MindmapDataの型チェック
+        if (data && typeof data === 'object' && 'root' in data) {
+            return data as MindmapData;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Failed to parse mindmap data:', error);
+        return null;
     }
 }
 

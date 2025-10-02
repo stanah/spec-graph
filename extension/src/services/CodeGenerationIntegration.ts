@@ -8,15 +8,15 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 // Import from parent project
-import { CodebaseGenerationService } from '../../../src/services/codebaseGeneration/CodebaseGenerationService';
+import { CodebaseGenerationService } from '../../../src/services/codebaseGeneration/CodebaseGenerationService.ts';
 import type {
   CodeGenerationOptions,
   CodeGenerationResult,
   GeneratedFile,
   SupportedLanguage,
   SupportedFramework,
-} from '../../../src/services/codebaseGeneration/types';
-import type { RPGGraph } from '../../../src/core/rpg/types';
+} from '../../../src/services/codebaseGeneration/types.ts';
+import type { RPGGraph } from '../../../src/core/rpg/types.ts';
 
 /**
  * Progress notification for code generation

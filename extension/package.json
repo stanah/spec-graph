@@ -371,7 +371,7 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run webpack",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ --skipLibCheck",
     "webpack": "webpack --mode production",
     "webpack:dev": "webpack --mode development",
     "watch": "webpack --mode development --watch",

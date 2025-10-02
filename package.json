@@ -26,7 +26,7 @@
     "build": "pnpm run build:vscode",
     "build:lib": "vite build --config vite.config.lib.ts",
     "prepublishOnly": "pnpm run build:lib",
-    "build:vscode": "vite build --config vite.config.vscode.ts && rm -rf extension/webview && mkdir -p extension/webview && cp -r dist/webview/* extension/webview/ && cd extension && pnpm run compile",
+    "build:vscode": "vite build --config vite.config.vscode.ts && rm -rf extension/webview && mkdir -p extension/webview && cp -r dist/webview/* extension/webview/ && cd extension && pnpm run webpack",
     "build:vscode-package": "./scripts/build-vscode.sh",
     "build:browser": "vite build --config vite.config.browser.ts",
     "dev:browser": "vite --config vite.config.browser.ts",

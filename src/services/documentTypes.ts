@@ -1,5 +1,5 @@
 import type { JsonSchema } from './schemaManager';
-import { DependencyGraph } from '../core/deps/DependencyGraph';
+import { DependencyGraph } from '../core/deps/DependencyGraph.ts';
 
 export type DocumentTypeTheme = Record<string, unknown>;
 
