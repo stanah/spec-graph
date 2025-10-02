@@ -2529,7 +2529,7 @@
               "40.1"
             ],
             "details": "DependencyGraphを解析し、依存関係を考慮したファイル生成順序や階層構造を決定。生成ロジックはテンプレート管理層と疎結合とし、将来的な拡張性・保守性を担保する。",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "MindmapData→ファイル構造・コード生成のユニットテスト、依存関係解決・異常系（循環依存等）の検証。"
           },
           {
@@ -2621,7 +2621,7 @@
     ],
     "metadata": {
       "created": "2025-08-03T03:13:21.292Z",
-      "updated": "2025-10-02T16:01:13.805Z",
+      "updated": "2025-10-02T16:44:41.479Z",
       "description": "Tasks for master context"
     }
   }
