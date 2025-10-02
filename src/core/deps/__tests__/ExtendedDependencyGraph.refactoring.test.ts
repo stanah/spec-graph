@@ -29,7 +29,8 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
       });
 
       // High-level depends on concrete low-level (DIP violation)
-      graph.addEdge('LowLevelModule', 'HighLevelModule', {
+      // Edge direction: HighLevelModule -> LowLevelModule means "HighLevelModule depends on LowLevelModule"
+      graph.addEdge('HighLevelModule', 'LowLevelModule', {
         type: RPGEdgeType.IMPLEMENTATION
       });
 
@@ -62,7 +63,8 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
       });
 
       // High-level depends on interface (correct)
-      graph.addEdge('ILowLevelInterface', 'HighLevelModule', {
+      // Edge direction: HighLevelModule -> ILowLevelInterface means "HighLevelModule depends on ILowLevelInterface"
+      graph.addEdge('HighLevelModule', 'ILowLevelInterface', {
         type: RPGEdgeType.IMPLEMENTATION
       });
 
@@ -92,8 +94,9 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         level: RPGNodeLevel.IMPLEMENTATION
       });
 
-      graph.addEdge('ConcreteImpl1', 'HighLevelModule');
-      graph.addEdge('ConcreteImpl2', 'HighLevelModule');
+      // HighLevelModule depends on concrete implementations (DIP violation)
+      graph.addEdge('HighLevelModule', 'ConcreteImpl1');
+      graph.addEdge('HighLevelModule', 'ConcreteImpl2');
 
       const proposals = graph.generateRefactoringProposals();
       const dipProposal = proposals.find(p => p.metadata?.principle === 'DIP');
@@ -112,24 +115,30 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         level: RPGNodeLevel.IMPLEMENTATION
       });
 
-      // Add many children (methods)
-      for (let i = 0; i < 6; i++) {
-        const methodId = `method${i}`;
-        graph.addNode(methodId, {
+      // Add many children (methods) with meaningful names
+      ['readData', 'getData', 'fetchData'].forEach(name => {
+        graph.addNode(name, {
           type: RPGNodeType.FUNCTION,
           level: RPGNodeLevel.IMPLEMENTATION,
           parentId: 'FatInterface'
         });
-      }
+      });
+      ['writeData', 'setData', 'updateData'].forEach(name => {
+        graph.addNode(name, {
+          type: RPGNodeType.FUNCTION,
+          level: RPGNodeLevel.IMPLEMENTATION,
+          parentId: 'FatInterface'
+        });
+      });
 
-      // Add multiple dependents
+      // Add multiple dependents (clients depend on the fat interface)
       for (let i = 0; i < 4; i++) {
         const clientId = `client${i}`;
         graph.addNode(clientId, {
           type: RPGNodeType.CLASS,
           level: RPGNodeLevel.IMPLEMENTATION
         });
-        graph.addEdge('FatInterface', clientId);
+        graph.addEdge(clientId, 'FatInterface');
       }
 
       const proposals = graph.generateRefactoringProposals();
@@ -163,11 +172,11 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         parentId: 'SmallInterface'
       });
 
-      // Add a client
+      // Add a client (client depends on interface)
       graph.addNode('client', {
         type: RPGNodeType.CLASS
       });
-      graph.addEdge('SmallInterface', 'client');
+      graph.addEdge('client', 'SmallInterface');
 
       const proposals = graph.generateRefactoringProposals();
 
@@ -202,10 +211,10 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         });
       });
 
-      // Add clients
+      // Add clients (clients depend on the fat interface)
       ['client1', 'client2', 'client3'].forEach(name => {
         graph.addNode(name, { type: RPGNodeType.CLASS });
-        graph.addEdge('FatInterface', name);
+        graph.addEdge(name, 'FatInterface');
       });
 
       const proposals = graph.generateRefactoringProposals();
@@ -233,13 +242,24 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         });
       }
 
-      // Add many dependencies (6+)
-      for (let i = 0; i < 7; i++) {
-        graph.addNode(`dep${i}`, {
-          type: RPGNodeType.CLASS
-        });
-        graph.addEdge(`dep${i}`, 'GodClass');
-      }
+      // Add many dependencies (6+) - GodClass depends on different types (multiple responsibilities)
+      // Data layer
+      graph.addNode('dep0', { type: RPGNodeType.MODULE });
+      graph.addNode('dep1', { type: RPGNodeType.MODULE });
+      graph.addEdge('GodClass', 'dep0');
+      graph.addEdge('GodClass', 'dep1');
+      // UI layer
+      graph.addNode('dep2', { type: RPGNodeType.CLASS });
+      graph.addNode('dep3', { type: RPGNodeType.CLASS });
+      graph.addEdge('GodClass', 'dep2');
+      graph.addEdge('GodClass', 'dep3');
+      // Business logic
+      graph.addNode('dep4', { type: RPGNodeType.INTERFACE });
+      graph.addNode('dep5', { type: RPGNodeType.INTERFACE });
+      graph.addNode('dep6', { type: RPGNodeType.INTERFACE });
+      graph.addEdge('GodClass', 'dep4');
+      graph.addEdge('GodClass', 'dep5');
+      graph.addEdge('GodClass', 'dep6');
 
       const proposals = graph.generateRefactoringProposals();
 
@@ -270,12 +290,12 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         });
       }
 
-      // Add few dependencies
+      // Add few dependencies - FocusedClass depends on a few other classes
       for (let i = 0; i < 2; i++) {
         graph.addNode(`dep${i}`, {
           type: RPGNodeType.CLASS
         });
-        graph.addEdge(`dep${i}`, 'FocusedClass');
+        graph.addEdge('FocusedClass', `dep${i}`);
       }
 
       const proposals = graph.generateRefactoringProposals();
@@ -303,12 +323,26 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         });
       }
 
-      for (let i = 0; i < 7; i++) {
-        graph.addNode(`dep${i}`, {
-          type: RPGNodeType.MODULE
-        });
-        graph.addEdge(`dep${i}`, 'GodClass');
-      }
+      // GodClass depends on different types of nodes (multiple responsibilities)
+      // Data layer dependencies
+      graph.addNode('dep0', { type: RPGNodeType.MODULE });
+      graph.addNode('dep1', { type: RPGNodeType.MODULE });
+      graph.addEdge('GodClass', 'dep0');
+      graph.addEdge('GodClass', 'dep1');
+
+      // UI layer dependencies
+      graph.addNode('dep2', { type: RPGNodeType.CLASS });
+      graph.addNode('dep3', { type: RPGNodeType.CLASS });
+      graph.addEdge('GodClass', 'dep2');
+      graph.addEdge('GodClass', 'dep3');
+
+      // Business logic dependencies
+      graph.addNode('dep4', { type: RPGNodeType.INTERFACE });
+      graph.addNode('dep5', { type: RPGNodeType.INTERFACE });
+      graph.addNode('dep6', { type: RPGNodeType.INTERFACE });
+      graph.addEdge('GodClass', 'dep4');
+      graph.addEdge('GodClass', 'dep5');
+      graph.addEdge('GodClass', 'dep6');
 
       const proposals = graph.generateRefactoringProposals();
       const srpProposal = proposals.find(p => p.metadata?.principle === 'SRP');
@@ -333,23 +367,32 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         type: RPGNodeType.CLASS,
         level: RPGNodeLevel.IMPLEMENTATION
       });
-      graph.addEdge('Concrete', 'HighLevel');
+      // HighLevel depends on Concrete (DIP violation)
+      graph.addEdge('HighLevel', 'Concrete');
 
       // ISP violation: Fat interface
       graph.addNode('FatInterface', {
         type: RPGNodeType.INTERFACE
       });
-      for (let i = 0; i < 6; i++) {
-        graph.addNode(`ifaceMethod${i}`, {
+      // Add methods with meaningful names that can be categorized
+      ['readData', 'getData', 'fetchData'].forEach(name => {
+        graph.addNode(name, {
           type: RPGNodeType.FUNCTION,
           parentId: 'FatInterface'
         });
-      }
+      });
+      ['writeData', 'setData', 'updateData'].forEach(name => {
+        graph.addNode(name, {
+          type: RPGNodeType.FUNCTION,
+          parentId: 'FatInterface'
+        });
+      });
       for (let i = 0; i < 4; i++) {
         graph.addNode(`ifaceClient${i}`, {
           type: RPGNodeType.CLASS
         });
-        graph.addEdge('FatInterface', `ifaceClient${i}`);
+        // Clients depend on the fat interface
+        graph.addEdge(`ifaceClient${i}`, 'FatInterface');
       }
 
       // SRP violation: God class
@@ -362,12 +405,24 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
           parentId: 'GodClass'
         });
       }
-      for (let i = 0; i < 7; i++) {
-        graph.addNode(`godDep${i}`, {
-          type: RPGNodeType.CLASS
-        });
-        graph.addEdge(`godDep${i}`, 'GodClass');
-      }
+      // GodClass depends on different types of nodes (multiple responsibilities)
+      // Data layer
+      graph.addNode('godDep0', { type: RPGNodeType.MODULE });
+      graph.addNode('godDep1', { type: RPGNodeType.MODULE });
+      graph.addEdge('GodClass', 'godDep0');
+      graph.addEdge('GodClass', 'godDep1');
+      // UI layer
+      graph.addNode('godDep2', { type: RPGNodeType.CLASS });
+      graph.addNode('godDep3', { type: RPGNodeType.CLASS });
+      graph.addEdge('GodClass', 'godDep2');
+      graph.addEdge('GodClass', 'godDep3');
+      // Business logic
+      graph.addNode('godDep4', { type: RPGNodeType.INTERFACE });
+      graph.addNode('godDep5', { type: RPGNodeType.INTERFACE });
+      graph.addNode('godDep6', { type: RPGNodeType.INTERFACE });
+      graph.addEdge('GodClass', 'godDep4');
+      graph.addEdge('GodClass', 'godDep5');
+      graph.addEdge('GodClass', 'godDep6');
 
       const proposals = graph.generateRefactoringProposals();
 
@@ -416,7 +471,8 @@ describe('ExtendedDependencyGraph - Advanced Refactoring Proposals', () => {
         type: RPGNodeType.CLASS,
         level: RPGNodeLevel.IMPLEMENTATION
       });
-      graph.addEdge('Concrete', 'HighLevel');
+      // HighLevel depends on Concrete (DIP violation)
+      graph.addEdge('HighLevel', 'Concrete');
 
       const proposals = graph.generateRefactoringProposals();
       const dipProposal = proposals.find(p => p.metadata?.principle === 'DIP');

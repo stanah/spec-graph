@@ -1199,8 +1199,9 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       const deps = this.getDependencies(nodeId);
       for (const dep of deps) {
         if (requiredNodes.has(dep)) {
-          const edgeAttrs = this.getEdgeAttributes(dep, nodeId);
-          subgraph.addEdge(dep, nodeId, edgeAttrs);
+          // Edge is from nodeId to dep (nodeId -> dep means nodeId depends on dep)
+          const edgeAttrs = this.getEdgeAttributes(nodeId, dep);
+          subgraph.addEdge(nodeId, dep, edgeAttrs);
         }
       }
     }
@@ -1564,7 +1565,8 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
       for (const dep of deps) {
         // Apply edge type filtering if specified
         if (options?.edgeTypes) {
-          const attrs = this.getEdgeAttributes(dep, currentId);
+          // Edge is from currentId to dep (currentId -> dep means currentId depends on dep)
+          const attrs = this.getEdgeAttributes(currentId, dep);
           if (attrs?.type && !options.edgeTypes.includes(attrs.type)) {
             continue;
           }
@@ -1582,7 +1584,8 @@ export class ExtendedDependencyGraph extends DependencyGraph implements IExtende
     for (const dep of directDeps) {
       // Apply edge type filtering if specified
       if (options?.edgeTypes) {
-        const attrs = this.getEdgeAttributes(dep, nodeId);
+        // Edge is from nodeId to dep (nodeId -> dep means nodeId depends on dep)
+        const attrs = this.getEdgeAttributes(nodeId, dep);
         if (attrs?.type && !options.edgeTypes.includes(attrs.type)) {
           continue;
         }
