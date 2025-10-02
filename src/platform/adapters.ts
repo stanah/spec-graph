@@ -1,5 +1,6 @@
 import type { PlatformAdapter } from './interfaces';
 import { VSCodePlatformAdapter } from './vscode';
+import { BrowserPlatformAdapter } from './browser';
 
 /**
  * プラットフォームアダプターのファクトリー
@@ -35,17 +36,23 @@ export class PlatformAdapterFactory {
       return new VSCodePlatformAdapter();
     }
 
+    // ブラウザ環境の検出
+    if (this.isBrowserEnvironment()) {
+      console.log('[PlatformAdapterFactory] ブラウザ環境を検出、BrowserPlatformAdapterを作成');
+      return new BrowserPlatformAdapter();
+    }
+
     // サポートされていないプラットフォーム
-    const platformName: 'browser' | 'vscode' | 'unknown' = typeof window !== 'undefined' ? 'browser' : 'unknown';
+    const platformName: 'browser' | 'vscode' | 'unknown' = 'unknown';
     const context = {
       hasWindow: typeof window !== 'undefined',
       hasAcquireVsCodeApi: typeof window !== 'undefined' && 'acquireVsCodeApi' in window,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       nodeEnv: process.env.NODE_ENV
     };
-    
+
     throw new PlatformError(
-      'サポートされていないプラットフォーム: VSCode環境のみサポート',
+      'サポートされていないプラットフォーム',
       platformName,
       'UNSUPPORTED_PLATFORM',
       context
@@ -61,6 +68,18 @@ export class PlatformAdapterFactory {
     return (
       typeof window !== 'undefined' &&
       'acquireVsCodeApi' in window
+    );
+  }
+
+  /**
+   * ブラウザ環境かどうかを判定
+   */
+  private static isBrowserEnvironment(): boolean {
+    // ブラウザ環境の検出ロジック
+    // windowが存在し、VSCode APIが無い場合はブラウザ環境
+    return (
+      typeof window !== 'undefined' &&
+      !('acquireVsCodeApi' in window)
     );
   }
 
@@ -120,13 +139,12 @@ export function getPlatformType(): 'browser' | 'vscode' {
  */
 export function isPlatformCapabilityAvailable(capability: string): boolean {
   const adapter = getPlatformAdapter();
-  
-  // VSCodeアダプターのみサポート
+
+  // VSCodeアダプター
   if (adapter instanceof VSCodePlatformAdapter) {
-    // VSCodeアダプターの機能チェック
     switch (capability) {
       case 'fileSystem':
-        return true; // ファイルシステムは常に利用可能
+        return true;
       case 'editor':
         return adapter.editor !== undefined;
       case 'ui':
@@ -135,6 +153,24 @@ export function isPlatformCapabilityAvailable(capability: string): boolean {
         return adapter.settings !== undefined;
       case 'vscodeApi':
         return adapter.getPlatformType() === 'vscode';
+      default:
+        return false;
+    }
+  }
+
+  // ブラウザアダプター
+  if (adapter instanceof BrowserPlatformAdapter) {
+    switch (capability) {
+      case 'fileSystem':
+        return true; // LocalStorage/File API
+      case 'editor':
+        return false; // ブラウザ版では編集機能なし
+      case 'ui':
+        return true; // ブラウザネイティブUI
+      case 'settings':
+        return true; // LocalStorage設定
+      case 'vscodeApi':
+        return false;
       default:
         return false;
     }
