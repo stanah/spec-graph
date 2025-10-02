@@ -4,8 +4,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CodebaseGenerationService } from '../../codebaseGeneration/CodebaseGenerationService';
-import type { RPGGraph, RPGNode } from '../../../core/rpg/types';
-import { RPGNodeType, RPGNodeLevel, RPGNodeStatus } from '../../../core/rpg/types';
+import type { RPGGraph, RPGNode, RPGEdge } from '../../../core/rpg/types';
+import { RPGNodeType, RPGNodeLevel, RPGNodeStatus, RPGEdgeType } from '../../../core/rpg/types';
 import type { CodeGenerationOptions } from '../../codebaseGeneration/types';
 
 describe('CodebaseGenerationService', () => {
@@ -274,6 +274,390 @@ describe('CodebaseGenerationService', () => {
 
       expect(() => service.registerTemplate(customTemplate)).not.toThrow();
       expect(service.getRegistry().get('custom-class')).toBeDefined();
+    });
+  });
+
+  describe('dependency resolution and generation order', () => {
+    it('should generate files in dependency order', async () => {
+      // Create nodes with dependencies: Interface -> Class -> Function
+      const interfaceNode: RPGNode = {
+        id: 'user-interface',
+        name: 'IUser',
+        description: 'User interface',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.INTERFACE,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const classNode: RPGNode = {
+        id: 'user-class',
+        name: 'User',
+        description: 'User class implementing IUser',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const functionNode: RPGNode = {
+        id: 'create-user',
+        name: 'createUser',
+        description: 'Function to create a user',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.FUNCTION,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Define dependencies: classNode depends on interfaceNode, functionNode depends on classNode
+      const edge1: RPGEdge = {
+        id: 'edge-class-interface',
+        name: 'Class depends on Interface',
+        fromId: 'user-class',
+        toId: 'user-interface',
+        type: RPGEdgeType.IMPLEMENTATION,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const edge2: RPGEdge = {
+        id: 'edge-function-class',
+        name: 'Function depends on Class',
+        fromId: 'create-user',
+        toId: 'user-class',
+        type: RPGEdgeType.IMPLEMENTATION,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map([
+          ['user-interface', interfaceNode],
+          ['user-class', classNode],
+          ['create-user', functionNode],
+        ]),
+        edges: new Map([
+          ['edge-class-interface', edge1],
+          ['edge-function-class', edge2],
+        ]),
+        rootNodeIds: ['user-interface'],
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+      };
+
+      const result = await service.generate(graph, options);
+
+      // All files should be generated
+      expect(result.structure.files).toHaveLength(3);
+      expect(result.metadata.fileCount).toBe(3);
+      expect(result.errors).toBeUndefined();
+
+      // Files should be in dependency order: interface, class, function
+      const fileIds = result.structure.files.map(f => f.sourceNodeId);
+      const interfaceIndex = fileIds.indexOf('user-interface');
+      const classIndex = fileIds.indexOf('user-class');
+      const functionIndex = fileIds.indexOf('create-user');
+
+      // Interface should come before class
+      expect(interfaceIndex).toBeLessThan(classIndex);
+      // Class should come before function
+      expect(classIndex).toBeLessThan(functionIndex);
+    });
+
+    it('should detect and warn about circular dependencies', async () => {
+      // Create nodes with circular dependency: A -> B -> C -> A
+      const nodeA: RPGNode = {
+        id: 'class-a',
+        name: 'ClassA',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const nodeB: RPGNode = {
+        id: 'class-b',
+        name: 'ClassB',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const nodeC: RPGNode = {
+        id: 'class-c',
+        name: 'ClassC',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const edgeAB: RPGEdge = {
+        id: 'edge-a-b',
+        name: 'A depends on B',
+        fromId: 'class-a',
+        toId: 'class-b',
+        type: RPGEdgeType.IMPLEMENTATION,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const edgeBC: RPGEdge = {
+        id: 'edge-b-c',
+        name: 'B depends on C',
+        fromId: 'class-b',
+        toId: 'class-c',
+        type: RPGEdgeType.IMPLEMENTATION,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const edgeCA: RPGEdge = {
+        id: 'edge-c-a',
+        name: 'C depends on A (creates cycle)',
+        fromId: 'class-c',
+        toId: 'class-a',
+        type: RPGEdgeType.IMPLEMENTATION,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map([
+          ['class-a', nodeA],
+          ['class-b', nodeB],
+          ['class-c', nodeC],
+        ]),
+        edges: new Map([
+          ['edge-a-b', edgeAB],
+          ['edge-b-c', edgeBC],
+          ['edge-c-a', edgeCA],
+        ]),
+        rootNodeIds: ['class-a'],
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+      };
+
+      const result = await service.generate(graph, options);
+
+      // Files should still be generated despite cycles
+      expect(result.structure.files).toHaveLength(3);
+
+      // Should have warnings about circular dependencies
+      expect(result.warnings).toBeDefined();
+      const circularDependencyWarning = result.warnings?.find(w =>
+        w.message.includes('circular dependencies') || w.message.includes('Circular dependency')
+      );
+      expect(circularDependencyWarning).toBeDefined();
+    });
+
+    it('should handle complex dependency graphs', async () => {
+      // Create a diamond dependency pattern: D depends on B and C, both depend on A
+      const nodeA: RPGNode = {
+        id: 'base-interface',
+        name: 'IBase',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.INTERFACE,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const nodeB: RPGNode = {
+        id: 'service-b',
+        name: 'ServiceB',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const nodeC: RPGNode = {
+        id: 'service-c',
+        name: 'ServiceC',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const nodeD: RPGNode = {
+        id: 'controller',
+        name: 'Controller',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const edges: RPGEdge[] = [
+        {
+          id: 'edge-b-a',
+          name: 'B depends on A',
+          fromId: 'service-b',
+          toId: 'base-interface',
+          type: RPGEdgeType.IMPLEMENTATION,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'edge-c-a',
+          name: 'C depends on A',
+          fromId: 'service-c',
+          toId: 'base-interface',
+          type: RPGEdgeType.IMPLEMENTATION,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'edge-d-b',
+          name: 'D depends on B',
+          fromId: 'controller',
+          toId: 'service-b',
+          type: RPGEdgeType.IMPLEMENTATION,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'edge-d-c',
+          name: 'D depends on C',
+          fromId: 'controller',
+          toId: 'service-c',
+          type: RPGEdgeType.IMPLEMENTATION,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map([
+          ['base-interface', nodeA],
+          ['service-b', nodeB],
+          ['service-c', nodeC],
+          ['controller', nodeD],
+        ]),
+        edges: new Map(edges.map(e => [e.id, e])),
+        rootNodeIds: ['base-interface'],
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+      };
+
+      const result = await service.generate(graph, options);
+
+      // All files should be generated
+      expect(result.structure.files).toHaveLength(4);
+      expect(result.metadata.fileCount).toBe(4);
+
+      // Base interface should be generated first
+      const fileIds = result.structure.files.map(f => f.sourceNodeId);
+      const baseIndex = fileIds.indexOf('base-interface');
+      const serviceBIndex = fileIds.indexOf('service-b');
+      const serviceCIndex = fileIds.indexOf('service-c');
+      const controllerIndex = fileIds.indexOf('controller');
+
+      // Base should come before both services
+      expect(baseIndex).toBeLessThan(serviceBIndex);
+      expect(baseIndex).toBeLessThan(serviceCIndex);
+
+      // Both services should come before controller
+      expect(serviceBIndex).toBeLessThan(controllerIndex);
+      expect(serviceCIndex).toBeLessThan(controllerIndex);
+    });
+  });
+
+  describe('file hierarchy generation', () => {
+    it('should generate hierarchical directory structure', () => {
+      const nodes: RPGNode[] = [
+        {
+          id: 'model',
+          name: 'User',
+          level: RPGNodeLevel.IMPLEMENTATION,
+          type: RPGNodeType.CLASS,
+          status: RPGNodeStatus.PENDING,
+          filePath: 'models/User.ts',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'service',
+          name: 'UserService',
+          level: RPGNodeLevel.IMPLEMENTATION,
+          type: RPGNodeType.CLASS,
+          status: RPGNodeStatus.PENDING,
+          filePath: 'services/UserService.ts',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'controller',
+          name: 'UserController',
+          level: RPGNodeLevel.IMPLEMENTATION,
+          type: RPGNodeType.CLASS,
+          status: RPGNodeStatus.PENDING,
+          filePath: 'controllers/UserController.ts',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map(nodes.map(n => [n.id, n])),
+        edges: new Map(),
+        rootNodeIds: nodes.map(n => n.id),
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+      };
+
+      const hierarchy = service.generateFileHierarchy(graph, options);
+
+      // Should have structure entries for directories
+      expect(hierarchy.structure.size).toBeGreaterThan(0);
+
+      // Should have root directories
+      expect(hierarchy.rootDirectories.length).toBeGreaterThan(0);
     });
   });
 });

@@ -16,6 +16,8 @@ import type {
 import type { RPGGraph, RPGNode, RPGEdge } from '../../core/rpg/types';
 import { TemplateRegistry } from './TemplateRegistry';
 import { defaultTemplates } from './templates/defaultTemplates';
+import { ExtendedDependencyGraph } from '../../core/deps/ExtendedDependencyGraph';
+import type { BuildOrderOptions } from '../../core/deps/ExtendedDependencyGraph.interface';
 
 /**
  * Service for generating codebase from RPG data
@@ -56,8 +58,42 @@ export class CodebaseGenerationService {
     const directories: GeneratedDirectory[] = [];
     const templatesUsed = new Set<string>();
 
-    // Process all nodes
-    for (const [nodeId, node] of graph.nodes.entries()) {
+    // Build dependency graph from RPG graph
+    const depGraph = this.buildDependencyGraph(graph);
+
+    // Detect and handle cycles
+    const cycles = depGraph.findCycles();
+    if (cycles.length > 0) {
+      warnings.push({
+        nodeId: 'graph',
+        message: `Detected ${cycles.length} circular dependencies. Generation order may not be optimal.`,
+      });
+      cycles.forEach((cycle, index) => {
+        warnings.push({
+          nodeId: cycle[0],
+          message: `Circular dependency ${index + 1}: ${cycle.join(' -> ')}`,
+        });
+      });
+    }
+
+    // Get optimal generation order
+    let nodeOrder: string[];
+    try {
+      nodeOrder = this.determineGenerationOrder(depGraph, options);
+    } catch (error) {
+      // Fallback to simple iteration if topological sort fails
+      warnings.push({
+        nodeId: 'graph',
+        message: 'Failed to determine optimal generation order, using default order',
+      });
+      nodeOrder = Array.from(graph.nodes.keys());
+    }
+
+    // Process nodes in dependency order
+    for (const nodeId of nodeOrder) {
+      const node = graph.nodes.get(nodeId);
+      if (!node) continue;
+
       try {
         // Find appropriate template for this node
         const template = this.findTemplateForNode(node, options);
@@ -306,6 +342,185 @@ export class CodebaseGenerationService {
    */
   getRegistry(): TemplateRegistry {
     return this.registry;
+  }
+
+  /**
+   * Build dependency graph from RPG graph
+   * This creates an ExtendedDependencyGraph for analyzing dependencies
+   * and determining optimal generation order
+   */
+  private buildDependencyGraph(graph: RPGGraph): ExtendedDependencyGraph {
+    const depGraph = new ExtendedDependencyGraph();
+
+    // Add all nodes with their attributes
+    for (const [nodeId, node] of graph.nodes.entries()) {
+      depGraph.addNode(nodeId, {
+        level: node.level,
+        type: node.type,
+        status: node.status,
+        filePath: node.filePath,
+        language: node.language,
+        typeSignature: node.typeSignature,
+        parentId: node.parentId,
+        metadata: node.metadata,
+        implementation: node.implementation,
+      });
+    }
+
+    // Add all edges with their attributes
+    for (const edge of graph.edges.values()) {
+      depGraph.addEdge(edge.fromId, edge.toId, {
+        type: edge.type,
+        weight: edge.weight,
+        bidirectional: edge.bidirectional,
+        constraint: edge.constraint,
+        dataFlow: edge.dataFlow,
+        metadata: edge.metadata,
+      });
+    }
+
+    return depGraph;
+  }
+
+  /**
+   * Determine optimal generation order based on dependencies
+   * Uses topological sort to ensure dependencies are generated before dependents
+   */
+  private determineGenerationOrder(
+    depGraph: ExtendedDependencyGraph,
+    options: CodeGenerationOptions
+  ): string[] {
+    // Build order options for controlling the generation sequence
+    const buildOptions: BuildOrderOptions = {
+      considerPriorities: true,
+      considerWeights: true,
+    };
+
+    // Try topological sort with cycle handling
+    if (depGraph.hasCycle()) {
+      // If there are cycles, use build order groups
+      // which can handle cycles more gracefully
+      const buildGroups = depGraph.generateBuildOrder(buildOptions);
+
+      // Flatten groups into a single ordered list
+      const order: string[] = [];
+      for (const group of buildGroups) {
+        // Sort nodes within each group by priority and dependencies
+        const sortedNodes = this.sortNodesWithinGroup(group.nodes, depGraph);
+        order.push(...sortedNodes);
+      }
+
+      return order;
+    } else {
+      // No cycles, use advanced topological sort
+      return depGraph.topologicalSortAdvanced(buildOptions);
+    }
+  }
+
+  /**
+   * Sort nodes within a build group
+   * Used when there are cycles and we need to order nodes within parallel groups
+   */
+  private sortNodesWithinGroup(nodeIds: string[], depGraph: ExtendedDependencyGraph): string[] {
+    return nodeIds.sort((a, b) => {
+      const attrsA = depGraph.getNodeAttributes(a);
+      const attrsB = depGraph.getNodeAttributes(b);
+
+      // Sort by priority (higher priority first)
+      const priorityA = attrsA?.priority || 0;
+      const priorityB = attrsB?.priority || 0;
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA;
+      }
+
+      // Sort by level (higher level first)
+      const levelOrder = {
+        proposal: 4,
+        module: 3,
+        implementation: 2,
+        file_system: 1,
+      };
+      const levelA = levelOrder[attrsA?.level || 'implementation'];
+      const levelB = levelOrder[attrsB?.level || 'implementation'];
+      if (levelA !== levelB) {
+        return levelB - levelA;
+      }
+
+      // Sort by number of dependencies (fewer dependencies first)
+      const depsA = depGraph.getDependencies(a).length;
+      const depsB = depGraph.getDependencies(b).length;
+      if (depsA !== depsB) {
+        return depsA - depsB;
+      }
+
+      // Lexicographic order for stability
+      return a.localeCompare(b);
+    });
+  }
+
+  /**
+   * Generate file structure hierarchy
+   * Creates a hierarchical directory structure based on node relationships
+   */
+  generateFileHierarchy(
+    graph: RPGGraph,
+    options: CodeGenerationOptions
+  ): {
+    structure: Map<string, { directories: string[]; files: string[] }>;
+    rootDirectories: string[];
+  } {
+    const structure = new Map<string, { directories: string[]; files: string[] }>();
+    const allDirectories = new Set<string>();
+
+    // Build directory structure from nodes
+    for (const [nodeId, node] of graph.nodes.entries()) {
+      const filePath = this.determineFilePath(node, options);
+      const dirPath = this.getDirectoryPath(filePath);
+
+      if (dirPath) {
+        allDirectories.add(dirPath);
+
+        // Track parent-child directory relationships
+        const parentDir = this.getParentDirectory(dirPath);
+        if (parentDir && parentDir !== dirPath) {
+          allDirectories.add(parentDir);
+
+          if (!structure.has(parentDir)) {
+            structure.set(parentDir, { directories: [], files: [] });
+          }
+
+          const parentEntry = structure.get(parentDir)!;
+          if (!parentEntry.directories.includes(dirPath)) {
+            parentEntry.directories.push(dirPath);
+          }
+        }
+
+        // Add file to directory
+        if (!structure.has(dirPath)) {
+          structure.set(dirPath, { directories: [], files: [] });
+        }
+        structure.get(dirPath)!.files.push(filePath);
+      }
+    }
+
+    // Find root directories (those with no parent in the structure)
+    const rootDirectories = Array.from(allDirectories).filter(dir => {
+      const parent = this.getParentDirectory(dir);
+      return !parent || !allDirectories.has(parent);
+    });
+
+    return { structure, rootDirectories };
+  }
+
+  /**
+   * Get parent directory path
+   */
+  private getParentDirectory(dirPath: string): string {
+    const parts = dirPath.split('/').filter(p => p.length > 0);
+    if (parts.length <= 1) {
+      return '';
+    }
+    return parts.slice(0, -1).join('/');
   }
 }
 
