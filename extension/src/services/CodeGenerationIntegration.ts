@@ -33,6 +33,9 @@ interface GenerationProgress {
 export class CodeGenerationIntegration {
   private service: CodebaseGenerationService;
   private outputChannel: vscode.OutputChannel;
+  private fileWatchers: vscode.FileSystemWatcher[] = [];
+  private watcherEnabled: boolean = false;
+  private lastGenerationState: Map<string, { graph: RPGGraph; options: CodeGenerationOptions }> = new Map();
 
   constructor() {
     this.service = new CodebaseGenerationService();
@@ -334,6 +337,190 @@ export class CodeGenerationIntegration {
   }
 
   /**
+   * Enable real-time file watching for automatic code regeneration
+   */
+  enableFileWatching(patterns: string[] = ['**/*.yaml', '**/*.yml']): void {
+    if (this.watcherEnabled) {
+      return;
+    }
+
+    this.outputChannel.appendLine('Enabling real-time file watching...');
+
+    for (const pattern of patterns) {
+      const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+      // Handle file changes
+      watcher.onDidChange(async (uri) => {
+        await this.handleFileChange(uri, 'changed');
+      });
+
+      // Handle file creation
+      watcher.onDidCreate(async (uri) => {
+        await this.handleFileChange(uri, 'created');
+      });
+
+      // Handle file deletion
+      watcher.onDidDelete(async (uri) => {
+        await this.handleFileChange(uri, 'deleted');
+      });
+
+      this.fileWatchers.push(watcher);
+    }
+
+    this.watcherEnabled = true;
+    this.outputChannel.appendLine(`File watching enabled for patterns: ${patterns.join(', ')}`);
+  }
+
+  /**
+   * Disable file watching
+   */
+  disableFileWatching(): void {
+    if (!this.watcherEnabled) {
+      return;
+    }
+
+    this.outputChannel.appendLine('Disabling file watching...');
+
+    for (const watcher of this.fileWatchers) {
+      watcher.dispose();
+    }
+
+    this.fileWatchers = [];
+    this.watcherEnabled = false;
+    this.outputChannel.appendLine('File watching disabled');
+  }
+
+  /**
+   * Handle file change events
+   */
+  private async handleFileChange(
+    uri: vscode.Uri,
+    changeType: 'changed' | 'created' | 'deleted'
+  ): Promise<void> {
+    this.outputChannel.appendLine(`File ${changeType}: ${uri.fsPath}`);
+
+    // Get the stored generation state for this file
+    const stateKey = uri.fsPath;
+    const state = this.lastGenerationState.get(stateKey);
+
+    if (!state) {
+      // No previous generation state, skip regeneration
+      this.outputChannel.appendLine('No previous generation state found, skipping regeneration');
+      return;
+    }
+
+    if (changeType === 'deleted') {
+      // Remove state for deleted file
+      this.lastGenerationState.delete(stateKey);
+      this.outputChannel.appendLine('File deleted, removing generation state');
+      return;
+    }
+
+    // Regenerate code with incremental update
+    try {
+      await this.regenerateCodeIncremental(uri, state.graph, state.options);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.outputChannel.appendLine(`Failed to regenerate code: ${message}`);
+      vscode.window.showWarningMessage(
+        `Failed to regenerate code for ${uri.fsPath}: ${message}`
+      );
+    }
+  }
+
+  /**
+   * Regenerate code incrementally (only changed files)
+   */
+  private async regenerateCodeIncremental(
+    sourceUri: vscode.Uri,
+    graph: RPGGraph,
+    options: CodeGenerationOptions
+  ): Promise<void> {
+    this.outputChannel.appendLine('Starting incremental regeneration...');
+
+    // TODO: Implement incremental update logic
+    // For now, we'll regenerate everything but this could be optimized
+    // to only regenerate affected files based on the changed nodes
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: 'Regenerating code (incremental)',
+        cancellable: false,
+      },
+      async (progress) => {
+        progress.report({ increment: 0, message: 'Analyzing changes...' });
+
+        // Generate new code
+        const result = await this.service.generate(graph, options);
+
+        progress.report({ increment: 50, message: 'Updating files...' });
+
+        // Only update files that have changed
+        if (!options.dryRun) {
+          await this.updateChangedFiles(result, options, progress);
+        }
+
+        progress.report({ increment: 100, message: 'Complete!' });
+
+        this.outputChannel.appendLine(
+          `Incremental regeneration completed: ${result.structure.files.length} files processed`
+        );
+      }
+    );
+  }
+
+  /**
+   * Update only changed files (incremental update)
+   */
+  private async updateChangedFiles(
+    result: CodeGenerationResult,
+    options: CodeGenerationOptions,
+    progress: vscode.Progress<{ increment?: number; message?: string }>
+  ): Promise<void> {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) {
+      throw new Error('No workspace folder open');
+    }
+
+    const rootPath = workspaceFolder.uri.fsPath;
+    let updatedCount = 0;
+
+    for (const file of result.structure.files) {
+      const filePath = path.join(rootPath, file.path);
+
+      // Check if file content has changed
+      if (fs.existsSync(filePath)) {
+        const existingContent = await fs.promises.readFile(filePath, 'utf-8');
+        if (existingContent === file.content) {
+          // Skip unchanged files
+          continue;
+        }
+      }
+
+      // Create backup if file exists
+      if (fs.existsSync(filePath) && options.createBackups) {
+        await this.createBackup(filePath);
+      }
+
+      // Write updated file
+      await this.writeFile(filePath, file);
+      updatedCount++;
+    }
+
+    this.outputChannel.appendLine(`Updated ${updatedCount} changed files`);
+  }
+
+  /**
+   * Store generation state for future incremental updates
+   */
+  storeGenerationState(sourceUri: vscode.Uri, graph: RPGGraph, options: CodeGenerationOptions): void {
+    const stateKey = sourceUri.fsPath;
+    this.lastGenerationState.set(stateKey, { graph, options });
+    this.outputChannel.appendLine(`Stored generation state for ${sourceUri.fsPath}`);
+  }
+
+  /**
    * Get output channel
    */
   getOutputChannel(): vscode.OutputChannel {
@@ -341,9 +528,18 @@ export class CodeGenerationIntegration {
   }
 
   /**
+   * Check if file watching is enabled
+   */
+  isFileWatchingEnabled(): boolean {
+    return this.watcherEnabled;
+  }
+
+  /**
    * Dispose resources
    */
   dispose(): void {
+    this.disableFileWatching();
     this.outputChannel.dispose();
+    this.lastGenerationState.clear();
   }
 }

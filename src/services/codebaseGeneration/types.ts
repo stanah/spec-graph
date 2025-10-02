@@ -173,6 +173,12 @@ export interface CodeGenerationOptions {
   customContext?: Record<string, any>;
   /** Dry run (generate but don't write files) */
   dryRun?: boolean;
+  /** Batch size for processing (default: 10, 0 = no batching) */
+  batchSize?: number;
+  /** Enable progress callbacks during generation */
+  enableProgress?: boolean;
+  /** Maximum retry attempts on failure */
+  maxRetries?: number;
 }
 
 /**

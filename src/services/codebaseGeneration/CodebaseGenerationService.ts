@@ -89,57 +89,37 @@ export class CodebaseGenerationService {
       nodeOrder = Array.from(graph.nodes.keys());
     }
 
-    // Process nodes in dependency order
-    for (const nodeId of nodeOrder) {
-      const node = graph.nodes.get(nodeId);
-      if (!node) continue;
+    // Determine batch size
+    const batchSize = options.batchSize ?? 10;
+    const maxRetries = options.maxRetries ?? 3;
 
-      try {
-        // Find appropriate template for this node
-        const template = this.findTemplateForNode(node, options);
-
-        if (!template) {
-          warnings.push({
-            nodeId,
-            message: `No template found for node type ${node.type}`,
-          });
-          continue;
-        }
-
-        templatesUsed.add(template.metadata.id);
-
-        // Build template context
-        const context = this.buildContext(graph, node, options);
-
-        // Render template
-        const content = this.renderTemplate(template, context);
-
-        // Determine file path
-        const filePath = this.determineFilePath(node, options);
-
-        // Add generated file
-        files.push({
-          path: filePath,
-          content,
-          sourceNodeId: nodeId,
-          templateId: template.metadata.id,
-          encoding: options.encoding || 'utf-8',
-        });
-
-        // Add directory if needed
-        const dirPath = this.getDirectoryPath(filePath);
-        if (dirPath && !directories.find(d => d.path === dirPath)) {
-          directories.push({
-            path: dirPath,
-            sourceNodeId: nodeId,
-          });
-        }
-      } catch (error) {
-        errors.push({
-          nodeId,
-          message: error instanceof Error ? error.message : String(error),
-        });
-      }
+    // Process nodes in batches if batch size is set
+    if (batchSize > 0 && nodeOrder.length > batchSize) {
+      await this.processBatches(
+        nodeOrder,
+        graph,
+        options,
+        batchSize,
+        maxRetries,
+        files,
+        directories,
+        templatesUsed,
+        errors,
+        warnings
+      );
+    } else {
+      // Process all nodes at once
+      await this.processNodes(
+        nodeOrder,
+        graph,
+        options,
+        maxRetries,
+        files,
+        directories,
+        templatesUsed,
+        errors,
+        warnings
+      );
     }
 
     return {
@@ -159,6 +139,132 @@ export class CodebaseGenerationService {
       errors: errors.length > 0 ? errors : undefined,
       warnings: warnings.length > 0 ? warnings : undefined,
     };
+  }
+
+  /**
+   * Process nodes in batches
+   */
+  private async processBatches(
+    nodeOrder: string[],
+    graph: RPGGraph,
+    options: CodeGenerationOptions,
+    batchSize: number,
+    maxRetries: number,
+    files: GeneratedFile[],
+    directories: GeneratedDirectory[],
+    templatesUsed: Set<string>,
+    errors: Array<{ nodeId: string; message: string; templateId?: string }>,
+    warnings: Array<{ nodeId: string; message: string; templateId?: string }>
+  ): Promise<void> {
+    const totalBatches = Math.ceil(nodeOrder.length / batchSize);
+
+    for (let i = 0; i < totalBatches; i++) {
+      const start = i * batchSize;
+      const end = Math.min(start + batchSize, nodeOrder.length);
+      const batch = nodeOrder.slice(start, end);
+
+      console.log(`Processing batch ${i + 1}/${totalBatches} (${batch.length} nodes)`);
+
+      await this.processNodes(
+        batch,
+        graph,
+        options,
+        maxRetries,
+        files,
+        directories,
+        templatesUsed,
+        errors,
+        warnings
+      );
+
+      // Small delay between batches to prevent resource exhaustion
+      if (i < totalBatches - 1) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    }
+  }
+
+  /**
+   * Process a set of nodes
+   */
+  private async processNodes(
+    nodeIds: string[],
+    graph: RPGGraph,
+    options: CodeGenerationOptions,
+    maxRetries: number,
+    files: GeneratedFile[],
+    directories: GeneratedDirectory[],
+    templatesUsed: Set<string>,
+    errors: Array<{ nodeId: string; message: string; templateId?: string }>,
+    warnings: Array<{ nodeId: string; message: string; templateId?: string }>
+  ): Promise<void> {
+    for (const nodeId of nodeIds) {
+      const node = graph.nodes.get(nodeId);
+      if (!node) continue;
+
+      let retries = 0;
+      let success = false;
+
+      while (retries < maxRetries && !success) {
+        try {
+          // Find appropriate template for this node
+          const template = this.findTemplateForNode(node, options);
+
+          if (!template) {
+            warnings.push({
+              nodeId,
+              message: `No template found for node type ${node.type}`,
+            });
+            break;
+          }
+
+          templatesUsed.add(template.metadata.id);
+
+          // Build template context
+          const context = this.buildContext(graph, node, options);
+
+          // Render template
+          const content = this.renderTemplate(template, context);
+
+          // Determine file path
+          const filePath = this.determineFilePath(node, options);
+
+          // Add generated file
+          files.push({
+            path: filePath,
+            content,
+            sourceNodeId: nodeId,
+            templateId: template.metadata.id,
+            encoding: options.encoding || 'utf-8',
+          });
+
+          // Add directory if needed
+          const dirPath = this.getDirectoryPath(filePath);
+          if (dirPath && !directories.find(d => d.path === dirPath)) {
+            directories.push({
+              path: dirPath,
+              sourceNodeId: nodeId,
+            });
+          }
+
+          success = true;
+        } catch (error) {
+          retries++;
+          const message = error instanceof Error ? error.message : String(error);
+
+          if (retries >= maxRetries) {
+            errors.push({
+              nodeId,
+              message: `Failed after ${maxRetries} retries: ${message}`,
+            });
+          } else {
+            console.warn(`Retry ${retries}/${maxRetries} for node ${nodeId}: ${message}`);
+            // Small delay before retry
+            await new Promise(resolve => setTimeout(resolve, 100 * retries));
+          }
+        }
+      }
+    }
   }
 
   /**

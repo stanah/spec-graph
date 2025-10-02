@@ -660,4 +660,178 @@ describe('CodebaseGenerationService', () => {
       expect(hierarchy.rootDirectories.length).toBeGreaterThan(0);
     });
   });
+
+  describe('batch processing and performance', () => {
+    it('should process nodes in batches when batch size is set', async () => {
+      // Create a large number of nodes
+      const nodes: RPGNode[] = [];
+      for (let i = 0; i < 25; i++) {
+        nodes.push({
+          id: `class-${i}`,
+          name: `Class${i}`,
+          level: RPGNodeLevel.IMPLEMENTATION,
+          type: RPGNodeType.CLASS,
+          status: RPGNodeStatus.PENDING,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map(nodes.map(n => [n.id, n])),
+        edges: new Map(),
+        rootNodeIds: nodes.map(n => n.id),
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+        batchSize: 5,
+      };
+
+      const result = await service.generate(graph, options);
+
+      // All files should be generated
+      expect(result.structure.files).toHaveLength(25);
+      expect(result.metadata.fileCount).toBe(25);
+    });
+
+    it('should not batch when batch size is 0', async () => {
+      const nodes: RPGNode[] = [];
+      for (let i = 0; i < 15; i++) {
+        nodes.push({
+          id: `class-${i}`,
+          name: `Class${i}`,
+          level: RPGNodeLevel.IMPLEMENTATION,
+          type: RPGNodeType.CLASS,
+          status: RPGNodeStatus.PENDING,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map(nodes.map(n => [n.id, n])),
+        edges: new Map(),
+        rootNodeIds: nodes.map(n => n.id),
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+        batchSize: 0, // Disable batching
+      };
+
+      const result = await service.generate(graph, options);
+
+      // All files should be generated without batching
+      expect(result.structure.files).toHaveLength(15);
+      expect(result.metadata.fileCount).toBe(15);
+    });
+  });
+
+  describe('error recovery', () => {
+    it('should retry failed template rendering', async () => {
+      // Create a node that might fail template rendering
+      const node: RPGNode = {
+        id: 'test-class',
+        name: 'TestClass',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map([['test-class', node]]),
+        edges: new Map(),
+        rootNodeIds: ['test-class'],
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+        maxRetries: 3,
+      };
+
+      const result = await service.generate(graph, options);
+
+      // Should complete successfully (template rendering should work)
+      expect(result.structure.files).toHaveLength(1);
+      expect(result.errors).toBeUndefined();
+    });
+
+    it('should report errors after max retries exceeded', async () => {
+      // Create a node with invalid template data that will fail
+      const node: RPGNode = {
+        id: 'invalid-node',
+        name: 'Invalid',
+        level: RPGNodeLevel.IMPLEMENTATION,
+        type: RPGNodeType.CLASS,
+        status: RPGNodeStatus.PENDING,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Register a template that will fail due to invalid syntax
+      const failingTemplate = {
+        metadata: {
+          id: 'failing-template',
+          name: 'Failing Template',
+          language: 'typescript' as const,
+          nodeTypes: [RPGNodeType.CLASS],
+          version: '1.0.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        // Template with unclosed block which will fail to compile
+        template: '{{#each items}}unclosed block',
+      };
+
+      service.registerTemplate(failingTemplate);
+
+      const graph: RPGGraph = {
+        metadata: {
+          version: '1.0',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        nodes: new Map([['invalid-node', node]]),
+        edges: new Map(),
+        rootNodeIds: ['invalid-node'],
+      };
+
+      const options: CodeGenerationOptions = {
+        language: 'typescript',
+        outputDir: 'src',
+        maxRetries: 2,
+        templateOverrides: {
+          class: 'failing-template',
+        },
+      };
+
+      const result = await service.generate(graph, options);
+
+      // Should have errors after retries
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.length).toBeGreaterThan(0);
+      expect(result.errors?.[0].message).toContain('retries');
+    });
+  });
 });
